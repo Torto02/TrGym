@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">TrGym</string>
+    <string name="exercisesBtn">Exercises</string>
+    <string name="homeBtn">Home</string>
+    <string name="profileBtn">Profile</string>
+    <string name="all_muscles">All muscles</string>
+    <string name="all_equipment">All equipments</string>
+    <string name="app_logo">app logo</string>
+    <string name="login_button">Login</string>
+    <string name="SignInGoogle">Signin with Google</string>
+    <string name="NoAccount">Don\'t have an account?</string>
+    <string name="register_button">Create account</string>
+    <string name="email_hint">Email\n</string>
+    <string name="password_hint">Password</string>
+    <string name="fullName">Full name</string>
+    <string name="email">Email</string>
+    <string name="user_info">Info</string>
+    <string name="goal">Goals</string>
+    <string name="hystory">History</string>
+    <string name="options">Options</string>
+    <string name="logoutBtn">Logout</string>
+    <string name="username_hint">Username</string>
+    <string name="password_check_hint">Confirm password</string>
+    <string name="existingAccount">Already have an account?</string>
+</resources>

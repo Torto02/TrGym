@@ -1,0 +1,18 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:background="@color/white">
+
+    <item
+        android:id="@+id/exercisesFragment"
+        android:icon="@drawable/ic_fitness_center"
+        android:title="@string/exercisesBtn" />
+    <item
+        android:id="@+id/homeFragment"
+        android:icon="@drawable/ic_home"
+        android:title="@string/homeBtn" />
+
+    <item
+        android:id="@+id/profileFragment"
+        android:icon="@drawable/ic_account"
+        android:title="@string/profileBtn" />
+</menu>
