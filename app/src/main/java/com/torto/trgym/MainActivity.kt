@@ -53,6 +53,49 @@ class MainActivity : AppCompatActivity() {
         observeAuthenticationStatus()
     }
 
+//    private fun setupNavigation() {
+//        val navHostFragment = supportFragmentManager
+//            .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+//        navController = navHostFragment.navController
+//        navController.setGraph(R.navigation.nav_graph)
+//
+//        bottomNavigationView = findViewById(R.id.bottom_nav)
+//        bottomNavigationView.visibility = View.GONE
+//
+//        bottomNavigationView.setOnItemSelectedListener { item ->
+//            val builder = NavOptions.Builder()
+//                .setLaunchSingleTop(true)
+//                .setRestoreState(true)
+//                .setEnterAnim(0).setExitAnim(0)
+//                .setPopEnterAnim(0).setPopExitAnim(0)
+//
+//            if (item.order and Menu.CATEGORY_SECONDARY == 0) {
+//                builder.setPopUpTo(
+//                    navController.graph.findStartDestination().id,
+//                    inclusive = false,
+//                    saveState = true
+//                )
+//            }
+//
+//            val options = builder.build()
+//            try {
+//                navController.navigate(item.itemId, null, options)
+//                true
+//            } catch (e: IllegalArgumentException) {
+//                false
+//            }
+//        }
+//
+//        navController.addOnDestinationChangedListener { _, destination, _ ->
+//            bottomNavigationView.visibility = when (destination.id) {
+//                R.id.loginFragment, R.id.registerFragment -> View.GONE
+//                else -> View.VISIBLE
+//            }
+//            bottomNavigationView.menu.findItem(destination.id)?.isChecked = true
+//        }
+//    }
+
+
     private fun setupNavigation() {
         val navHostFragment = supportFragmentManager
             .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
@@ -66,8 +109,6 @@ class MainActivity : AppCompatActivity() {
             val builder = NavOptions.Builder()
                 .setLaunchSingleTop(true)
                 .setRestoreState(true)
-                .setEnterAnim(0).setExitAnim(0)
-                .setPopEnterAnim(0).setPopExitAnim(0)
 
             if (item.order and Menu.CATEGORY_SECONDARY == 0) {
                 builder.setPopUpTo(

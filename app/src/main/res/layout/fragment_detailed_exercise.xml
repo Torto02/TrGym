@@ -8,11 +8,15 @@
     android:fitsSystemWindows="true"
     android:fillViewport="true">
 
+
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingTop="20dp"
         android:paddingBottom="16dp">
+
+
 
         <!-- Back button e titolo esercizio -->
         <TextView
@@ -174,5 +178,8 @@
 
         </com.google.android.material.card.MaterialCardView>
 
+
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+
 </androidx.core.widget.NestedScrollView>

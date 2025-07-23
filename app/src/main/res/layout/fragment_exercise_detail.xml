@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/scrollExerciseDetail"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    android:background="@color/white">
+
+    <LinearLayout
+        android:id="@+id/containerExerciseDetail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Immagine di anteprima -->
+        <ImageView
+            android:id="@+id/detailImage"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:adjustViewBounds="true"
+            android:scaleType="fitCenter"
+            android:contentDescription="@string/exercise_image_desc"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Nome esercizio -->
+        <TextView
+            android:id="@+id/detailName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?attr/textAppearanceHeadline6"
+            android:textColor="@color/black"
+            android:layout_marginBottom="8dp" />
+
+        <!-- Tipo esercizio -->
+        <TextView
+            android:id="@+id/detailType"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?attr/textAppearanceSubtitle2"
+            android:layout_marginBottom="16dp"
+            android:text="Exercise Type" />
+
+        <!-- Sezione Tips -->
+        <TextView
+            android:id="@+id/labelTips"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/tips_label"
+            android:textAppearance="?attr/textAppearanceSubtitle1"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:id="@+id/detailTips"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?attr/textAppearanceBody2"
+            android:textColor="@color/black"
+            android:layout_marginBottom="16dp"
+            android:text="• Tip 1\n• Tip 2" />
+
+        <!-- Sezione Muscles -->
+        <TextView
+            android:id="@+id/labelMuscles"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/muscles_label"
+            android:textAppearance="?attr/textAppearanceSubtitle1"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:id="@+id/detailMuscles"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?attr/textAppearanceBody2"
+            android:textColor="@color/black"
+            android:layout_marginBottom="16dp"
+            android:text="Muscle A, Muscle B" />
+
+        <!-- Sezione Equipment -->
+        <TextView
+            android:id="@+id/labelEquipment"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/equipment_label"
+            android:textAppearance="?attr/textAppearanceSubtitle1"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:id="@+id/detailEquipment"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?attr/textAppearanceBody2"
+            android:textColor="@color/black"
+            android:layout_marginBottom="24dp"
+            android:text="Equipment A, Equipment B" />
+
+    </LinearLayout>
+</ScrollView>

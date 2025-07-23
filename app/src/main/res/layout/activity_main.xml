@@ -24,6 +24,7 @@
         app:itemIconSize="28dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:menu="@menu/bottom_nav_menu"
+        app:itemActiveIndicatorStyle="@style/CustomActiveIndicator"
         app:itemIconTint="@color/bottom_nav_icon_colors"
         app:itemTextColor="@color/bottom_nav_icon_colors" />
 

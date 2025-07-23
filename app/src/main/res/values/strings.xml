@@ -22,4 +22,8 @@
     <string name="username_hint">Username</string>
     <string name="password_check_hint">Confirm password</string>
     <string name="existingAccount">Already have an account?</string>
+    <string name="muscles_label">Muscles involved</string>
+    <string name="equipment_label">Equipments involved</string>
+    <string name="tips_label">Exercise tips</string>
+    <string name="exercise_image_desc">exercise Img</string>
 </resources>

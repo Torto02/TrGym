@@ -3,6 +3,9 @@ plugins {
     alias(libs.plugins.kotlin.android)
     id("kotlin-kapt")
     id("dagger.hilt.android.plugin")
+    id("kotlin-parcelize")
+    id("androidx.navigation.safeargs.kotlin")
+
 
 }
 
@@ -35,6 +38,9 @@ android {
     }
     kotlinOptions {
         jvmTarget = "11"
+    }
+    buildFeatures {
+        viewBinding = true
     }
 }
 
@@ -84,5 +90,11 @@ dependencies {
 
     implementation("androidx.navigation:navigation-fragment-ktx:2.7.5")
     implementation("androidx.navigation:navigation-ui-ktx:2.7.5")
+
+    implementation("com.github.bumptech.glide:glide:4.16.0") // o ultima versione
+    kapt("com.github.bumptech.glide:compiler:4.16.0")
+    implementation("io.coil-kt:coil:2.5.0") // o l'ultima versione disponibile
+    implementation("io.coil-kt:coil-gif:2.4.0")
+
 
 }
