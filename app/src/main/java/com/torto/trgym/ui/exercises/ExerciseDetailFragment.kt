@@ -1,7 +1,8 @@
 package com.torto.trgym.ui.exercises
 
-import android.graphics.Color
+
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -15,10 +16,10 @@ import android.widget.Toast
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import coil.load
 import com.bumptech.glide.Glide
-import com.google.android.material.transition.MaterialContainerTransform
+import android.widget.LinearLayout
 
 import kotlinx.coroutines.launch
 
@@ -51,13 +52,13 @@ class ExerciseDetailFragment : Fragment(R.layout.fragment_exercise_detail) {
 
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        // Recupera i riferimenti ai componenti della vista.
         val anim = view.findViewById<ImageView>(R.id.detailImage)
         val name = view.findViewById<TextView>(R.id.detailName)
         val type = view.findViewById<TextView>(R.id.detailType)
         val tips = view.findViewById<TextView>(R.id.detailTips)
         val muscles = view.findViewById<TextView>(R.id.detailMuscles)
         val equip = view.findViewById<TextView>(R.id.detailEquipment)
+        val backBtn = view.findViewById<LinearLayout>(R.id.backButton)
 
         // Avvia la raccolta dello stato del ViewModel.
         viewLifecycleOwner.lifecycleScope.launch {
@@ -82,7 +83,12 @@ class ExerciseDetailFragment : Fragment(R.layout.fragment_exercise_detail) {
                         }
                     }
                 }
+
             }
+        }
+        backBtn.setOnClickListener {
+            findNavController().popBackStack()
+            Log.d("ExerciseDetailFragment", "Back button clicked")
         }
     }
 }

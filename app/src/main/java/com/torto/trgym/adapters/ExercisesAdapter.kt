@@ -1,6 +1,5 @@
 package com.torto.trgym.adapters
 
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.navigation.findNavController
@@ -40,7 +39,8 @@ class ExercisesAdapter :
                 }
             }
 
-            binding.ExerciseName.text = item.name
+            binding.ExerciseName.text = item.title
+            binding.ExerciseType.text = item.type
             binding.root.setOnClickListener {
                 val action = ExercisesFragmentDirections
                     .actionExercisesFragmentToExerciseDetailFragment(item.id,)

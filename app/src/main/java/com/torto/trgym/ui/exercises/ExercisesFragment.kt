@@ -11,7 +11,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.torto.trgym.adapters.ExercisesAdapter
 import dagger.hilt.android.AndroidEntryPoint
-
+import com.google.android.material.card.MaterialCardView
 import com.torto.trgym.viewmodel.exercises.ExercisesViewModel
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.launch
@@ -63,7 +63,10 @@ class ExercisesFragment : Fragment(R.layout.fragment_exercises) {
         }
 
         // Configura i listener per i pulsanti di filtro (placeholder).
-        view.findViewById<Button>(R.id.btnFilterMuscles).setOnClickListener { /* TODO */ }
-        view.findViewById<Button>(R.id.btnFilterEquipment).setOnClickListener { /* TODO */ }
+//        view.findViewById<Button>(R.id.btnFilterMuscles).setOnClickListener { /* TODO */ }
+//        view.findViewById<Button>(R.id.btnFilterEquipment).setOnClickListener { /* TODO */ }
+        // Configura i listener per i pulsanti di filtro
+        view.findViewById<MaterialCardView>(R.id.btnFilterMuscles).setOnClickListener { /* TODO */ }
+        view.findViewById<MaterialCardView>(R.id.btnFilterEquipment).setOnClickListener { /* TODO */ }
     }
 }

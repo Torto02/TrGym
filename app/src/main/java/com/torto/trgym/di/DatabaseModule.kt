@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.torto.trgym.database.AppDatabase
 import com.torto.trgym.database.dao.ExerciseDao
+import com.torto.trgym.database.dao.LanguageDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -49,5 +50,9 @@ object DatabaseModule {
     @Provides
     fun provideExerciseDao(db: AppDatabase): ExerciseDao {
         return db.exerciseDao()
+    }
+    @Provides
+    fun provideLanguageDao(db: AppDatabase): LanguageDao {
+        return db.languageDao()
     }
 }

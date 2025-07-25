@@ -74,6 +74,9 @@
         <argument
             android:name="exerciseId"
             app:argType="integer" />
+        <action
+            android:id="@+id/action_exerciseDetailFragment_to_exercisesFragment"
+            app:destination="@id/exercisesFragment" />
     </fragment>
 
 

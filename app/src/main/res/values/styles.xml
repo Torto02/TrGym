@@ -5,4 +5,41 @@
         <item name="android:color">#008C8C90</item>
     </style>
 
+
+
+
+<style name="TextAppearance.IOS.Headline" parent="TextAppearance.MaterialComponents.Headline5">
+    <item name="android:textSize">28sp</item>
+
+</style>
+
+
+<style name="TextAppearance.IOS.BodyBold" parent="TextAppearance.MaterialComponents.Body1">
+    <item name="android:textSize">17sp</item>
+
+</style>
+
+    <!-- res/values/styles.xml -->
+    <style name="TextAppearance.IOS.HeadlineBold" parent="TextAppearance.MaterialComponents.Headline6">
+        <item name="android:textSize">28sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:letterSpacing">-0.02</item>
+    </style>
+
+    <style name="TextAppearance.IOS.Subhead" parent="TextAppearance.MaterialComponents.Subtitle1">
+        <item name="android:textSize">17sp</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textColor">@color/ios_secondaryLabel</item>
+    </style>
+
+    <style name="TextAppearance.IOS.LabelSemibold" parent="TextAppearance.MaterialComponents.Subtitle2">
+        <item name="android:textSize">17sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <style name="TextAppearance.IOS.Body" parent="TextAppearance.MaterialComponents.Body1">
+        <item name="android:textSize">17sp</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:lineSpacingExtra">4dp</item>
+    </style>
 </resources>

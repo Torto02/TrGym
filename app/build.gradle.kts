@@ -64,9 +64,13 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
 
     // Room dependencies con versioni corrette
-    implementation(libs.room.runtime)
-    kapt(libs.room.compiler)
-    implementation(libs.room.ktx)
+//    implementation(libs.room.runtime)
+//    kapt(libs.room.compiler)
+//    implementation(libs.room.ktx)
+    val roomVersion = "2.8.0-alpha01"
+    implementation("androidx.room:room-runtime:$roomVersion")
+    kapt("androidx.room:room-compiler:$roomVersion")
+    implementation("androidx.room:room-ktx:$roomVersion")
 
     // Supabase dependencies
     implementation(platform("io.github.jan-tennert.supabase:bom:3.2.0-beta-1"))

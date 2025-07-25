@@ -5,6 +5,7 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.torto.trgym.database.dao.ExerciseDao
+import com.torto.trgym.database.dao.LanguageDao
 import com.torto.trgym.database.entities.*
 
 /**
@@ -30,4 +31,5 @@ abstract class AppDatabase : RoomDatabase() {
      * @return Un'istanza di [ExerciseDao].
      */
     abstract fun exerciseDao(): ExerciseDao
+    abstract fun languageDao(): LanguageDao
 }

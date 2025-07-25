@@ -4,7 +4,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.View
-import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
@@ -13,12 +12,11 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.NavHostFragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.torto.trgym.R
 import com.torto.trgym.data.repository.AuthRepository
-//import com.torto.trgym.ui.viewmodel.ExercisesViewModel
+import com.torto.trgym.data.repository.ExerciseRepository
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.jan.supabase.auth.status.SessionStatus
-import io.github.jan.supabase.auth.handleDeeplinks
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -27,6 +25,8 @@ class MainActivity : AppCompatActivity() {
 
     // Inietto AuthRepository tramite Hilt
     @Inject lateinit var authRepository: AuthRepository
+    @Inject lateinit var exerciseRepo: ExerciseRepository
+
 
     private lateinit var navController: NavController
     private lateinit var bottomNavigationView: BottomNavigationView
@@ -141,6 +141,7 @@ class MainActivity : AppCompatActivity() {
             authRepository.observeAuthStatus().collect { status ->
                 when (status) {
                     is SessionStatus.Authenticated -> {
+                        preloadExercises()
                         navController.currentDestination?.id.let { current ->
                             if (current == R.id.loginFragment || current == R.id.registerFragment) {
                                 navController.navigate(R.id.homeFragment)
@@ -164,5 +165,15 @@ class MainActivity : AppCompatActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         authRepository.handleDeeplinks(intent)
+    }
+
+    private fun preloadExercises() {
+        // Lancio in background: prende la prima emissione e poi si cancella da solo
+        lifecycleScope.launch {
+            exerciseRepo
+                .allExercises()          // Flow<List<ExerciseWithImage>>
+                .first()                 // sospende finché la prima lista non arriva
+            // a questo punto il DB è stato letto e la cache di Room è "calda"
+        }
     }
 }

@@ -5,4 +5,12 @@
     <color name="primary">#3151E7</color>
     <color name="gray">#FFCCCCCC</color>
     <color name="lightGray">#FFF5F5F5</color>
+
+     <color name="ios_systemBackground">#FFFFFF</color>
+    <color name="ios_systemGray6">#F2F2F7</color>
+    <color name="ios_label">#000000</color>
+    <color name="ios_secondaryLabel">#8E8E93</color>
+    <color name="ios_systemBlue_light">#E3F2FD</color>
+    <color name="shimmer_placeholder">#DDDDDD</color>
+
 </resources>

@@ -1,59 +1,92 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@android:color/transparent"
     android:foreground="?android:attr/selectableItemBackground"
-    android:minHeight="90dp"
-    android:paddingHorizontal="16dp">
+    android:paddingHorizontal="20dp"
+    android:paddingVertical="12dp">
 
-    <ImageView
-        android:id="@+id/ExercisePrev"
-        android:layout_width="60dp"
-        android:layout_height="60dp"
-        android:adjustViewBounds="true"
-        android:contentDescription="@string/app_name"
-        android:paddingEnd="4dp"
-        tools:src="@tools:sample/avatars"
-        android:scaleType="fitCenter"
-        app:layout_constraintBottom_toBottomOf="parent"
+    <!-- Immagine esercizio con forma circolare -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/imageContainer"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        app:cardCornerRadius="28dp"
+        app:cardElevation="0dp"
+        app:strokeWidth="0dp"
+        android:backgroundTint="@color/white"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
 
-    <!-- Chevron destro tipico iOS -->
-    <TextView
-        android:id="@+id/ExerciseName"
+        <ImageView
+            android:id="@+id/ExercisePrev"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_gravity="center"
+            android:scaleType="fitCenter"
+            android:adjustViewBounds="true"
+            android:contentDescription="@string/app_name" />
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Contenuto testo -->
+    <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:fontFamily="sans-serif"
-        android:letterSpacing="0"
-        android:text="Panca Piana"
-        android:textColor="#000000"
-        android:textSize="17sp"
-        android:textStyle="normal"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginEnd="12dp"
+        android:orientation="vertical"
+        app:layout_constraintStart_toEndOf="@id/imageContainer"
+        app:layout_constraintEnd_toStartOf="@id/chevronIcon"
+        app:layout_constraintTop_toTopOf="@id/imageContainer"
+        app:layout_constraintBottom_toBottomOf="@id/imageContainer">
+
+        <TextView
+            android:id="@+id/ExerciseName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Panca Piana"
+            android:textColor="@color/ios_label"
+            android:textSize="17sp"
+            android:textStyle="normal"
+            android:fontFamily="sans-serif-medium"
+            android:maxLines="1"
+            android:ellipsize="end" />
+
+        <TextView
+            android:id="@+id/ExerciseType"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="Chest • Strength"
+            android:textColor="@color/ios_secondaryLabel"
+            android:textSize="14sp"
+            android:maxLines="1"
+            android:ellipsize="end" />
+    </LinearLayout>
+
+    <!-- Chevron iOS style -->
+    <ImageView
+        android:id="@+id/chevronIcon"
+        android:layout_width="12dp"
+        android:layout_height="20dp"
+        android:contentDescription="View details"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toEndOf="@id/ExercisePrev"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.5"
-        app:layout_constraintVertical_chainStyle="packed" />
+        app:layout_constraintTop_toTopOf="@id/imageContainer"
+        app:layout_constraintBottom_toBottomOf="@id/imageContainer" />
 
-
-    <!-- Separatore sottile tra gli elementi -->
+    <!-- Separatore sottile -->
     <View
         android:id="@+id/separator"
         android:layout_width="0dp"
         android:layout_height="0.5dp"
-        android:background="#E5E5EA"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
+        android:layout_marginTop="12dp"
+        android:background="#F2F2F2"
+        app:layout_constraintTop_toBottomOf="@id/imageContainer"
         app:layout_constraintStart_toStartOf="@id/ExerciseName"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="1.0" />
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
