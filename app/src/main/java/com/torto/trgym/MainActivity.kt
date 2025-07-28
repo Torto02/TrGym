@@ -19,6 +19,8 @@ import io.github.jan.supabase.auth.status.SessionStatus
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import androidx.activity.viewModels
+import com.torto.trgym.viewmodel.exercises.ExercisesViewModel
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -27,12 +29,10 @@ class MainActivity : AppCompatActivity() {
     @Inject lateinit var authRepository: AuthRepository
     @Inject lateinit var exerciseRepo: ExerciseRepository
 
+    private val exercisesViewModel: ExercisesViewModel by viewModels()
 
     private lateinit var navController: NavController
     private lateinit var bottomNavigationView: BottomNavigationView
-
-    // ExercisesViewModel già iniettato con Hilt
-//    private val exercisesViewModel: ExercisesViewModel by viewModels()
 
     // Controllo la splash finché non risolvo l'autenticazione
     private var isAuthenticationResolved = false
@@ -46,6 +46,8 @@ class MainActivity : AppCompatActivity() {
 
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        // Pre‐carica fin da subito gli esercizi nella cache di Room
+        exercisesViewModel
 
         authRepository.handleDeeplinks(intent)
 

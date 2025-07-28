@@ -51,7 +51,7 @@
     <fragment
         android:id="@+id/profileFragment"
         android:name="com.torto.trgym.ui.profile.ProfileFragment"
-        android:label="ProfileFragment" >
+        tools:layout="@layout/fragment_profile">
         <action
             android:id="@+id/action_profileFragment_to_loginFragment"
             app:destination="@id/loginFragment" />
@@ -60,7 +60,7 @@
     <fragment
         android:id="@+id/exercisesFragment"
         android:name="com.torto.trgym.ui.exercises.ExercisesFragment"
-        android:label="ExercisesFragment" >
+        tools:layout="@layout/fragment_exercises">
         <action
             android:id="@+id/action_exercisesFragment_to_exerciseDetailFragment"
             app:destination="@id/exerciseDetailFragment"

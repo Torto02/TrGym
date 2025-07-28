@@ -15,7 +15,6 @@
         android:layout_height="60dp"
         android:adjustViewBounds="true"
         android:contentDescription="@string/app_name"
-        android:paddingEnd="4dp"
         tools:src="@tools:sample/avatars"
         android:scaleType="fitCenter"
         app:layout_constraintBottom_toBottomOf="parent"

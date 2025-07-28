@@ -63,10 +63,6 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 
-    // Room dependencies con versioni corrette
-//    implementation(libs.room.runtime)
-//    kapt(libs.room.compiler)
-//    implementation(libs.room.ktx)
     val roomVersion = "2.8.0-alpha01"
     implementation("androidx.room:room-runtime:$roomVersion")
     kapt("androidx.room:room-compiler:$roomVersion")

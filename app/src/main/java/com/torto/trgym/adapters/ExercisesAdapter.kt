@@ -43,7 +43,7 @@ class ExercisesAdapter :
             binding.ExerciseType.text = item.type
             binding.root.setOnClickListener {
                 val action = ExercisesFragmentDirections
-                    .actionExercisesFragmentToExerciseDetailFragment(item.id,)
+                    .actionExercisesFragmentToExerciseDetailFragment(item.id)
                 it.findNavController().navigate(action)
 
 

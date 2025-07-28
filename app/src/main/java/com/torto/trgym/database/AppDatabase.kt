@@ -4,8 +4,7 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.torto.trgym.database.dao.ExerciseDao
-import com.torto.trgym.database.dao.LanguageDao
+import com.torto.trgym.database.dao.*
 import com.torto.trgym.database.entities.*
 
 /**
@@ -32,4 +31,6 @@ abstract class AppDatabase : RoomDatabase() {
      */
     abstract fun exerciseDao(): ExerciseDao
     abstract fun languageDao(): LanguageDao
+    abstract fun muscleDao(): MuscleDao
+    abstract fun equipmentDao(): EquipmentDao
 }

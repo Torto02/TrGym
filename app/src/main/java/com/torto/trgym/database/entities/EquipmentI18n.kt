@@ -29,5 +29,5 @@ import androidx.room.Index
 data class EquipmentI18n(
     val equipment_id: Int,
     val language_id: Int,
-    val name: String // <-- assicurati che sia NON NULL
+    val name: String
 )

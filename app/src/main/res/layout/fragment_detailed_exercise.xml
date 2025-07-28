@@ -2,7 +2,6 @@
 <androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/ios_systemBackground">
@@ -43,7 +42,7 @@
                 android:layout_height="wrap_content"
                 android:text="Back"
                 android:textColor="@color/ios_label"
-                android:textSize="16sp"
+                android:textSize="23sp"
                 android:paddingStart="8dp"
                 android:textStyle="bold"/>
         </LinearLayout>
@@ -90,9 +89,7 @@
                     android:id="@+id/contentCard"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="6dp"
                     app:cardBackgroundColor="@color/white"
-                    app:cardCornerRadius="20dp"
                     app:cardElevation="0dp"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
@@ -102,7 +99,7 @@
                     <androidx.constraintlayout.widget.ConstraintLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:padding="24dp">
+                        android:padding="20dp">
 
                         <TextView
                             android:id="@+id/detailName"

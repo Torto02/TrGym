@@ -23,33 +23,11 @@ import android.widget.LinearLayout
 
 import kotlinx.coroutines.launch
 
-/**
- * Fragment per la visualizzazione dei dettagli di un esercizio.
- * Utilizza un ViewModel per gestire lo stato dell'interfaccia utente e i dati dell'esercizio.
- */
 @AndroidEntryPoint
 class ExerciseDetailFragment : Fragment(R.layout.fragment_exercise_detail) {
-
-
-
-
-
-    // Argomenti passati al Fragment tramite Navigation Component.
     private val args: ExerciseDetailFragmentArgs by navArgs()
 
-    // ViewModel per gestire lo stato dell'interfaccia utente e i dati dell'esercizio.
     private val vm: ExerciseDetailViewModel by viewModels()
-
-    /**
-     * Metodo chiamato quando la vista del Fragment è stata creata.
-     * Configura i componenti della vista e avvia la raccolta dello stato del ViewModel.
-     *
-     * @param view La vista associata al Fragment.
-     * @param savedInstanceState Lo stato salvato del Fragment, se disponibile.
-     */
-
-
-
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val anim = view.findViewById<ImageView>(R.id.detailImage)
@@ -67,8 +45,9 @@ class ExerciseDetailFragment : Fragment(R.layout.fragment_exercise_detail) {
                     when (state) {
                         is ExerciseDetailViewModel.UiState.Loading -> {}
                         is ExerciseDetailViewModel.UiState.Success -> {
+                            Log.d("ExerciseDetailFragment", "Received exercise detail: ${state.detail}")
                             val d = state.detail
-                            name.text = d.exercise.name
+                            name.text = d.translations[0].title // Assuming the first translation is the default
                             type.text = d.exercise.type
                             tips.text = d.steps.mapIndexed { index, step -> "${index + 1}. ${step.description}" }.joinToString("\n")
                             muscles.text = d.muscles.joinToString(", ") { it.name }

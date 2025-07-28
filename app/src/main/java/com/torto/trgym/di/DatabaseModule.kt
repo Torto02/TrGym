@@ -3,8 +3,7 @@ package com.torto.trgym.di
 import android.content.Context
 import androidx.room.Room
 import com.torto.trgym.database.AppDatabase
-import com.torto.trgym.database.dao.ExerciseDao
-import com.torto.trgym.database.dao.LanguageDao
+import com.torto.trgym.database.dao.*
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -54,5 +53,15 @@ object DatabaseModule {
     @Provides
     fun provideLanguageDao(db: AppDatabase): LanguageDao {
         return db.languageDao()
+    }
+
+    @Provides
+    fun provideMuscleDao(db: AppDatabase): MuscleDao {
+        return db.muscleDao()
+    }
+
+    @Provides
+    fun provideEquipment(db: AppDatabase): EquipmentDao {
+        return db.equipmentDao()
     }
 }

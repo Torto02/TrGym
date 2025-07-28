@@ -27,4 +27,7 @@
     <string name="tips_label">Exercise tips</string>
     <string name="exercise_image_desc">exercise Img</string>
     <string name="back_content_desc">description</string>
+    <string name="all_exercises">All</string>
+    <string name="exercise_type">Exercise type</string>
+    <string name="star_icon">star icon</string>
 </resources>
