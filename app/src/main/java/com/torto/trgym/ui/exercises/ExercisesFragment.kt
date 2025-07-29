@@ -5,10 +5,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.collectLatest
 
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -19,34 +17,18 @@ import dagger.hilt.android.AndroidEntryPoint
 import com.google.android.material.card.MaterialCardView
 import com.torto.trgym.viewmodel.exercises.ExercisesViewModel
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.coroutines.launch
 import com.torto.trgym.R
-
 import android.view.Menu
 import android.widget.PopupMenu
 import android.widget.TextView
+import android.widget.ImageView
+import androidx.core.content.ContextCompat
 
-/**
- * Fragment per la visualizzazione degli esercizi.
- * Utilizza un RecyclerView per mostrare una lista di esercizi e include pulsanti per filtrare i dati.
- */
 @AndroidEntryPoint
 class ExercisesFragment : Fragment(R.layout.fragment_exercises) {
 
-
-
-    // ViewModel per gestire lo stato dell'interfaccia utente e i dati degli esercizi.
     private val viewModel: ExercisesViewModel by activityViewModels()
-
     private lateinit var adapter: ExercisesAdapter
-
-    /**
-     * Metodo chiamato quando la vista del Fragment è stata creata.
-     * Configura il RecyclerView e avvia la raccolta dello stato dell'interfaccia utente.
-     *
-     * @param view La vista associata al Fragment.
-     * @param savedInstanceState Lo stato salvato del Fragment, se disponibile.
-     */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         // Configura l'adapter per il RecyclerView.
         adapter = ExercisesAdapter()
@@ -64,6 +46,7 @@ class ExercisesFragment : Fragment(R.layout.fragment_exercises) {
         val btnFilterEquipment = view.findViewById<MaterialCardView>(R.id.btnFilterEquipment)
         val selectedMuscle = view.findViewById<TextView>(R.id.selectedMuscle)
         val selectedEquipment = view.findViewById<TextView>(R.id.selectedEquipment)
+        val starBtn = view.findViewById<ImageView>(R.id.starButton)
 
         // Osserva e aggiorna i testi selezionati
         viewLifecycleOwner.lifecycleScope.launch {
@@ -85,6 +68,15 @@ class ExercisesFragment : Fragment(R.layout.fragment_exercises) {
                         // Aggiorna la lista degli esercizi nell'adapter.
                         adapter.submitList(state.exercises)
                     }
+                }
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                //osserva il valore del filtro degli esercizi preferiti
+                viewModel.starredFilter.collectLatest { isStarred ->
+                    updateStarButton(starBtn, isStarred)
                 }
             }
         }
@@ -117,6 +109,7 @@ class ExercisesFragment : Fragment(R.layout.fragment_exercises) {
                 popup.show()
             }
         }
+
         btnFilterEquipment.setOnClickListener {
             viewLifecycleOwner.lifecycleScope.launch {
                 val equipment = viewModel.equipments.first()
@@ -140,9 +133,28 @@ class ExercisesFragment : Fragment(R.layout.fragment_exercises) {
                 popup.show()
             }
         }
+
         filterAllBtn.setOnClickListener {
-            viewModel.clearMuscleGroupFilter()
-            viewModel.clearEquipmentFilter()
+            viewModel.clearAllFilters()
+        }
+
+        starBtn.setOnClickListener {
+            viewModel.starredExercise()
+            updateStarButton(starBtn, viewModel.starredFilter.value)
+        }
+
+
+
+
+    }
+    private fun updateStarButton(starButton: ImageView, isStarred: Boolean) {
+        if (isStarred) {
+            starButton.setImageResource(R.drawable.ic_star_filled)
+            starButton.setColorFilter(ContextCompat.getColor(requireContext(), android.R.color.holo_orange_light))
+        } else {
+            starButton.setImageResource(R.drawable.ic_star_outline)
+            starButton.setColorFilter(ContextCompat.getColor(requireContext(), R.color.ios_secondaryLabel))
         }
     }
 }
+

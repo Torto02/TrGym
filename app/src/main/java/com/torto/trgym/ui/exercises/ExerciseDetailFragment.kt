@@ -1,12 +1,10 @@
 package com.torto.trgym.ui.exercises
 
-
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-
 import com.torto.trgym.R
 import dagger.hilt.android.AndroidEntryPoint
 import com.torto.trgym.viewmodel.exercises.ExerciseDetailViewModel
@@ -20,13 +18,11 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.bumptech.glide.Glide
 import android.widget.LinearLayout
-
+import androidx.core.content.ContextCompat
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class ExerciseDetailFragment : Fragment(R.layout.fragment_exercise_detail) {
-    private val args: ExerciseDetailFragmentArgs by navArgs()
-
     private val vm: ExerciseDetailViewModel by viewModels()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -36,9 +32,10 @@ class ExerciseDetailFragment : Fragment(R.layout.fragment_exercise_detail) {
         val tips = view.findViewById<TextView>(R.id.detailTips)
         val muscles = view.findViewById<TextView>(R.id.detailMuscles)
         val equip = view.findViewById<TextView>(R.id.detailEquipment)
-        val backBtn = view.findViewById<LinearLayout>(R.id.backButton)
+        val backBtn = view.findViewById<TextView>(R.id.backButton)
+        val starButton = view.findViewById<ImageView>(R.id.starButton)
 
-        // Avvia la raccolta dello stato del ViewModel.
+        // Avvia la raccolta dello stato del ViewModel per i dettagli dell'esercizio
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 vm.uiState.collect { state ->
@@ -57,18 +54,48 @@ class ExerciseDetailFragment : Fragment(R.layout.fragment_exercise_detail) {
                             Glide.with(requireContext()).load(gif).into(anim)
                         }
                         is ExerciseDetailViewModel.UiState.Error -> {
-
                             Toast.makeText(requireContext(), state.msg, Toast.LENGTH_LONG).show()
                         }
                     }
                 }
+            }
 
+        }
+
+        // Avvia la raccolta dello stato del preferito
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                vm.isStarred.collect { isStarred ->
+                    updateStarButton(starButton, isStarred)
+                }
             }
         }
+
+        // Gestione click del pulsante back
         backBtn.setOnClickListener {
             findNavController().popBackStack()
             Log.d("ExerciseDetailFragment", "Back button clicked")
         }
+
+        // Gestione click del pulsante stella
+        starButton.setOnClickListener {
+            vm.toggleStarred()
+            Log.d("ExerciseDetailFragment", "Star button clicked")
+        }
+    }
+
+    /**
+     * Aggiorna l'aspetto del pulsante stella in base allo stato del preferito
+     */
+    private fun updateStarButton(starButton: ImageView, isStarred: Boolean) {
+        if (isStarred) {
+            starButton.setImageResource(R.drawable.ic_star_filled)
+            starButton.setColorFilter(ContextCompat.getColor(requireContext(), android.R.color.holo_orange_light))
+        } else {
+            starButton.setImageResource(R.drawable.ic_star_outline)
+            starButton.setColorFilter(ContextCompat.getColor(requireContext(), R.color.ios_secondaryLabel))
+        }
     }
 }
+
 

@@ -30,4 +30,8 @@
     <string name="all_exercises">All</string>
     <string name="exercise_type">Exercise type</string>
     <string name="star_icon">star icon</string>
+    <string name="favorite_button_desc">favorite btn</string>
+    <string name="detail_tips_desc">Exercise tips: \n1. step 1\n \n2. step 2</string>
+    <string name="ex_name">exercise name</string>
+    <string name="backBtn">Back</string>
 </resources>

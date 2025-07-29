@@ -2,6 +2,7 @@ package com.torto.trgym
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
@@ -55,47 +56,6 @@ class MainActivity : AppCompatActivity() {
         observeAuthenticationStatus()
     }
 
-//    private fun setupNavigation() {
-//        val navHostFragment = supportFragmentManager
-//            .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
-//        navController = navHostFragment.navController
-//        navController.setGraph(R.navigation.nav_graph)
-//
-//        bottomNavigationView = findViewById(R.id.bottom_nav)
-//        bottomNavigationView.visibility = View.GONE
-//
-//        bottomNavigationView.setOnItemSelectedListener { item ->
-//            val builder = NavOptions.Builder()
-//                .setLaunchSingleTop(true)
-//                .setRestoreState(true)
-//                .setEnterAnim(0).setExitAnim(0)
-//                .setPopEnterAnim(0).setPopExitAnim(0)
-//
-//            if (item.order and Menu.CATEGORY_SECONDARY == 0) {
-//                builder.setPopUpTo(
-//                    navController.graph.findStartDestination().id,
-//                    inclusive = false,
-//                    saveState = true
-//                )
-//            }
-//
-//            val options = builder.build()
-//            try {
-//                navController.navigate(item.itemId, null, options)
-//                true
-//            } catch (e: IllegalArgumentException) {
-//                false
-//            }
-//        }
-//
-//        navController.addOnDestinationChangedListener { _, destination, _ ->
-//            bottomNavigationView.visibility = when (destination.id) {
-//                R.id.loginFragment, R.id.registerFragment -> View.GONE
-//                else -> View.VISIBLE
-//            }
-//            bottomNavigationView.menu.findItem(destination.id)?.isChecked = true
-//        }
-//    }
 
 
     private fun setupNavigation() {
@@ -144,6 +104,8 @@ class MainActivity : AppCompatActivity() {
                 when (status) {
                     is SessionStatus.Authenticated -> {
                         preloadExercises()
+                        // Sincronizza gli esercizi preferiti dopo l'autenticazione
+                        syncStarredExercises()
                         navController.currentDestination?.id.let { current ->
                             if (current == R.id.loginFragment || current == R.id.registerFragment) {
                                 navController.navigate(R.id.homeFragment)
@@ -160,6 +122,16 @@ class MainActivity : AppCompatActivity() {
                         // altri stati (Restored, etc.)
                     }
                 }
+            }
+        }
+    }
+
+    private fun syncStarredExercises() {
+        lifecycleScope.launch {
+            try {
+                exerciseRepo.syncStarredExercises()
+            } catch (e: Exception) {
+                Log.e("MainActivity", "Error syncing starred exercises", e)
             }
         }
     }

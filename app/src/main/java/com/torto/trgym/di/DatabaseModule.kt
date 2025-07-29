@@ -28,16 +28,14 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideDatabase(@ApplicationContext appContext: Context): AppDatabase {
-        return Room.databaseBuilder(
+        val builder = Room.databaseBuilder(
             appContext,
             AppDatabase::class.java,
             "TrGym.db"
         )
-            // Crea il database a partire da un asset predefinito.
             .createFromAsset("TrGym.db")
-            // Permette una migrazione distruttiva in caso di incompatibilità di schema.
-            .fallbackToDestructiveMigration()
-            .build()
+//            .fallbackToDestructiveMigration() // Permette la migrazione distruttiva in caso di cambiamenti nel database
+        return builder.build()
     }
 
     /**
@@ -50,6 +48,7 @@ object DatabaseModule {
     fun provideExerciseDao(db: AppDatabase): ExerciseDao {
         return db.exerciseDao()
     }
+
     @Provides
     fun provideLanguageDao(db: AppDatabase): LanguageDao {
         return db.languageDao()
@@ -61,7 +60,18 @@ object DatabaseModule {
     }
 
     @Provides
-    fun provideEquipment(db: AppDatabase): EquipmentDao {
+    fun provideEquipmentDao(db: AppDatabase): EquipmentDao {
         return db.equipmentDao()
+    }
+
+    /**
+     * Fornisce un'istanza di [StarredExerciseDao] per l'accesso ai dati relativi agli esercizi preferiti.
+     *
+     * @param db L'istanza di [AppDatabase] da cui ottenere il DAO.
+     * @return Un'istanza di [StarredExerciseDao].
+     */
+    @Provides
+    fun provideStarredExerciseDao(db: AppDatabase): StarredExerciseDao {
+        return db.starredExerciseDao()
     }
 }

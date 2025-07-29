@@ -26,7 +26,7 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class ExercisesViewModel @Inject constructor(
-    private val repo: ExerciseRepository,
+    private val exerciseRepo: ExerciseRepository,
     private val muscleRepo: MuscleRepository,
     private val equipmentRepo: EquipmentRepository
 ) : ViewModel() {
@@ -35,9 +35,13 @@ class ExercisesViewModel @Inject constructor(
     val muscleGroups: StateFlow<List<MuscleGroupI18n>> = _muscleGroups
     private val _equipments = MutableStateFlow<List<EquipmentI18n>>(emptyList())
     val equipments: StateFlow<List<EquipmentI18n>> = _equipments
-
     private val _muscleFilterId = MutableStateFlow<Int?>(null)
     private val _equipmentFilterId = MutableStateFlow<Int?>(null)
+    private val _starredFilter = MutableStateFlow(false)
+    val starredFilter: StateFlow<Boolean> = _starredFilter
+
+    private val _starredIds = MutableStateFlow<Set<Int>>(emptySet())
+    val starredIds: StateFlow<Set<Int>> = _starredIds
 
     // Expose selected names for UI
     val selectedMuscleName = combine(_muscleFilterId, _muscleGroups) { id, list ->
@@ -53,8 +57,18 @@ class ExercisesViewModel @Inject constructor(
     val uiState: StateFlow<ExercisesUiState> = _uiState
 
     init {
+        // Sincronizza gli esercizi preferiti all'avvio
         viewModelScope.launch {
-            repo.allExercises().collect { list ->
+            exerciseRepo.syncStarredExercises()
+        }
+
+        viewModelScope.launch(Dispatchers.IO) {
+            exerciseRepo.getAllStarredExercises().collect { list ->
+                _uiState.value = ExercisesUiState.Data(list)
+            }
+        }
+        viewModelScope.launch {
+            exerciseRepo.allExercises().collect { list ->
                 _uiState.value = ExercisesUiState.Data(list)
             }
         }
@@ -73,30 +87,70 @@ class ExercisesViewModel @Inject constructor(
     private fun loadExercisesBasedOnFilters() {
         viewModelScope.launch {
             when {
+                // starred + muscle + equipment
+                _starredFilter.value && _muscleFilterId.value != null && _equipmentFilterId.value != null -> {
+                    combine(
+                        exerciseRepo.getAllStarredExercises(),
+                        exerciseRepo.filteredExercisesByMuscleGroup(_muscleFilterId.value!!),
+                        exerciseRepo.filteredExercisesByEquipment(_equipmentFilterId.value!!)
+                    ) { starList, muscleList, equipList ->
+                        val muscleIds = muscleList.map { it.id }.toSet()
+                        val equipIds = equipList.map { it.id }.toSet()
+                        starList.filter { it.id in muscleIds && it.id in equipIds }
+                    }.collect { _uiState.value = ExercisesUiState.Data(it) }
+                }
+                // starred + muscle
+                _starredFilter.value && _muscleFilterId.value != null -> {
+                    combine(
+                        exerciseRepo.getAllStarredExercises(),
+                        exerciseRepo.filteredExercisesByMuscleGroup(_muscleFilterId.value!!)
+                    ) { starList, muscleList ->
+                        val muscleIds = muscleList.map { it.id }.toSet()
+                        starList.filter { it.id in muscleIds }
+                    }.collect { _uiState.value = ExercisesUiState.Data(it) }
+                }
+                // starred + equipment
+                _starredFilter.value && _equipmentFilterId.value != null -> {
+                    combine(
+                        exerciseRepo.getAllStarredExercises(),
+                        exerciseRepo.filteredExercisesByEquipment(_equipmentFilterId.value!!)
+                    ) { starList, equipList ->
+                        val equipIds = equipList.map { it.id }.toSet()
+                        starList.filter { it.id in equipIds }
+                    }.collect { _uiState.value = ExercisesUiState.Data(it) }
+                }
+                // starred only
+                _starredFilter.value -> {
+                    exerciseRepo.getAllStarredExercises().collect {
+                        _uiState.value = ExercisesUiState.Data(it)
+                    }
+                }
+                // muscle + equipment
                 _muscleFilterId.value != null && _equipmentFilterId.value != null -> {
                     combine(
-                        repo.filteredExercisesByMuscleGroup(_muscleFilterId.value!!),
-                        repo.filteredExercisesByEquipment(_equipmentFilterId.value!!)
-                    ) { muscleList, equipmentList ->
-                        val equipmentIds = equipmentList.map { it.id }.toSet()
-                        muscleList.filter { it.id in equipmentIds }
-                    }.collect { list ->
-                        _uiState.value = ExercisesUiState.Data(list)
-                    }
+                        exerciseRepo.filteredExercisesByMuscleGroup(_muscleFilterId.value!!),
+                        exerciseRepo.filteredExercisesByEquipment(_equipmentFilterId.value!!)
+                    ) { muscleList, equList ->
+                        val equIds = equList.map { it.id }.toSet()
+                        muscleList.filter { it.id in equIds }
+                    }.collect { _uiState.value = ExercisesUiState.Data(it) }
                 }
+                // muscle only
                 _muscleFilterId.value != null -> {
-                    repo.filteredExercisesByMuscleGroup(_muscleFilterId.value!!).collect { list ->
-                        _uiState.value = ExercisesUiState.Data(list)
+                    exerciseRepo.filteredExercisesByMuscleGroup(_muscleFilterId.value!!).collect {
+                        _uiState.value = ExercisesUiState.Data(it)
                     }
                 }
+                // equipment only
                 _equipmentFilterId.value != null -> {
-                    repo.filteredExercisesByEquipment(_equipmentFilterId.value!!).collect { list ->
-                        _uiState.value = ExercisesUiState.Data(list)
+                    exerciseRepo.filteredExercisesByEquipment(_equipmentFilterId.value!!).collect {
+                        _uiState.value = ExercisesUiState.Data(it)
                     }
                 }
+                // none: all exercises
                 else -> {
-                    repo.allExercises().collect { list ->
-                        _uiState.value = ExercisesUiState.Data(list)
+                    exerciseRepo.allExercises().collect {
+                        _uiState.value = ExercisesUiState.Data(it)
                     }
                 }
             }
@@ -121,6 +175,23 @@ class ExercisesViewModel @Inject constructor(
         _equipmentFilterId.value = null
         loadExercisesBasedOnFilters()
     }
+
+    fun starredExercise() {
+        _starredFilter.value = !_starredFilter.value
+        loadExercisesBasedOnFilters()
+    }
+
+    /**
+     * Rimuove tutti i filtri: equipment, muscle e starred.
+     */
+    fun clearAllFilters() {
+        _equipmentFilterId.value = null
+        _muscleFilterId.value = null
+        // Reset starred filter explicitly
+        _starredFilter.value = false
+        loadExercisesBasedOnFilters()
+    }
+
 
     sealed interface ExercisesUiState {
         object Loading : ExercisesUiState

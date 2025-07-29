@@ -34,7 +34,7 @@
     <!-- Filtri con design moderno -->
     <HorizontalScrollView
         android:id="@+id/filtersContainer"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:scrollbars="none"
@@ -116,7 +116,23 @@
                     android:textColor="@color/ios_label"
                     android:textSize="15sp" />
             </com.google.android.material.card.MaterialCardView>
+
+            <ImageView
+                android:id="@+id/starButton"
+                android:layout_width="25dp"
+                android:layout_height="25dp"
+                android:layout_gravity="center_vertical"
+                android:src="@drawable/ic_star_outline"
+                android:contentDescription="@string/favorite_button_desc"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true"
+                android:elevation="20dp"
+                android:layout_marginStart="15dp"
+                app:tint="@color/ios_secondaryLabel" />
         </LinearLayout>
+
+
     </HorizontalScrollView>
 
     <!-- Lista esercizi con card container -->

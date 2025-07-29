@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:tools="http://schemas.android.com/tools"
+    android:paddingHorizontal="5dp"
     android:background="@color/ios_systemBackground">
 
     <!-- Immagine fissa in alto -->
@@ -11,11 +13,11 @@
         android:id="@+id/detailImage"
         android:layout_width="match_parent"
         android:layout_height="280dp"
-        tools:src="@tools:sample/avatars"
         android:layout_marginTop="?attr/actionBarSize"
-        android:scaleType="fitCenter"
         android:adjustViewBounds="true"
-        android:contentDescription="@string/exercise_image_desc" />
+        android:scaleType="fitCenter"
+        android:contentDescription="@string/exercise_image_desc"
+        tools:src="@tools:sample/avatars" />
 
     <!-- Toolbar trasparente -->
     <com.google.android.material.appbar.MaterialToolbar
@@ -23,35 +25,41 @@
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="@android:color/transparent"
-        android:elevation="4dp" />
+        android:elevation="4dp">
+    <ImageView
+        android:id="@+id/starButton"
+        android:layout_width="25dp"
+        android:layout_height="25dp"
+        android:layout_gravity="end|center_vertical"
+        android:layout_marginEnd="9dp"
+        android:src="@drawable/ic_star_outline"
+        android:contentDescription="@string/favorite_button_desc"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:clickable="true"
+        android:focusable="true"
+        android:elevation="20dp"
+        app:tint="@color/ios_secondaryLabel" />
+
+    </com.google.android.material.appbar.MaterialToolbar>
+
 
     <!-- Pulsante Indietro -->
-    <LinearLayout
+    <TextView
         android:id="@+id/backButton"
         android:layout_width="wrap_content"
         android:layout_height="?attr/actionBarSize"
-        android:orientation="horizontal"
+        android:clickable="true"
+        android:contentDescription="@string/backBtn"
+        android:drawablePadding="8dp"
+        android:elevation="20dp"
+        android:focusable="true"
         android:gravity="center_vertical"
         android:paddingHorizontal="16dp"
-        android:clickable="true"
-        android:focusable="true"
-        android:elevation="20dp">
-
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_ios_back"
-            android:contentDescription="back" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Back"
-            android:textColor="@color/ios_label"
-            android:textSize="16sp"
-            android:paddingStart="8dp"
-            android:textStyle="bold" />
-    </LinearLayout>
+        android:text="@string/backBtn"
+        android:textColor="@color/primary"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:drawableStartCompat="@drawable/ic_ios_back" />
 
     <!-- Contenuto scrollabile -->
     <androidx.core.widget.NestedScrollView
@@ -77,13 +85,13 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="24dp"
                 android:orientation="vertical"
-                >
+                android:padding="15dp">
 
                 <!-- Titolo esercizio -->
                 <TextView
                     android:id="@+id/detailName"
+                    android:text="@string/ex_name"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textColor="@color/ios_label"
@@ -149,12 +157,13 @@
 
                         <TextView
                             android:id="@+id/detailTips"
+                            android:text="@string/tips_label"
                             style="@style/TextAppearance.IOS.Body"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="8dp"
-                            android:textColor="@color/ios_secondaryLabel"
-                            android:lineSpacingExtra="4dp" />
+                            android:lineSpacingExtra="4dp"
+                            android:textColor="@color/ios_secondaryLabel" />
                     </LinearLayout>
                 </LinearLayout>
 
@@ -198,6 +207,7 @@
 
                             <TextView
                                 android:id="@+id/detailMuscles"
+                                android:text="@string/muscles_label"
                                 style="@style/TextAppearance.IOS.Body"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
@@ -248,6 +258,7 @@
                             <TextView
                                 android:id="@+id/detailEquipment"
                                 style="@style/TextAppearance.IOS.Body"
+                                android:text="@string/equipment_label"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="4dp"
@@ -255,7 +266,10 @@
                         </LinearLayout>
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
+
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
+
     </androidx.core.widget.NestedScrollView>
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

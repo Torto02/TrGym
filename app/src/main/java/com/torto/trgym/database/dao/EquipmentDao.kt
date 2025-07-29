@@ -3,7 +3,6 @@ package com.torto.trgym.database.dao
 import androidx.room.Dao
 import androidx.room.Query
 import com.torto.trgym.database.entities.EquipmentI18n
-import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface EquipmentDao {

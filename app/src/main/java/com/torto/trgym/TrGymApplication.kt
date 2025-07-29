@@ -1,15 +1,3 @@
-//package com.torto.trgym
-//
-//import android.app.Application
-//import dagger.hilt.android.HiltAndroidApp
-//
-//
-//@HiltAndroidApp
-//class TrGymApplication : Application() {
-//
-//}
-
-
 package com.torto.trgym
 
 import android.app.Application
@@ -31,4 +19,6 @@ class TrGymApplication : Application() {
         val updatedContext = LocaleManager.updateResources(base, lang)
         super.attachBaseContext(updatedContext)
     }
+
+
 }
