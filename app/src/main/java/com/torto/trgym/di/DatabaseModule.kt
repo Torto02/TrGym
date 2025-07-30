@@ -2,6 +2,8 @@ package com.torto.trgym.di
 
 import android.content.Context
 import androidx.room.Room
+import com.torto.trgym.data.repository.ExerciseRepository
+import com.torto.trgym.data.repository.WorkoutRepository
 import com.torto.trgym.database.AppDatabase
 import com.torto.trgym.database.dao.*
 import dagger.Module
@@ -73,5 +75,16 @@ object DatabaseModule {
     @Provides
     fun provideStarredExerciseDao(db: AppDatabase): StarredExerciseDao {
         return db.starredExerciseDao()
+    }
+
+    @Provides
+    fun provideWorkoutDao(database: AppDatabase): WorkoutDao {
+        return database.workoutDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideWorkoutRepository(workoutDao: WorkoutDao): WorkoutRepository {
+        return WorkoutRepository(workoutDao)
     }
 }

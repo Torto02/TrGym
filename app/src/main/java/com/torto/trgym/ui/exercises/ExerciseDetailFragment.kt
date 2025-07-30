@@ -1,5 +1,6 @@
 package com.torto.trgym.ui.exercises
 
+
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -97,5 +98,3 @@ class ExerciseDetailFragment : Fragment(R.layout.fragment_exercise_detail) {
         }
     }
 }
-
-

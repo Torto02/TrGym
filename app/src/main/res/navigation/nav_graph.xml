@@ -33,7 +33,50 @@
             android:id="@+id/action_home_to_profile"
             app:destination="@id/profileFragment"
             app:restoreState="true" />
+        <action
+            android:id="@+id/action_home_to_workoutDetail"
+            app:destination="@id/workoutDetailFragment" />
+
+        <action
+            android:id="@+id/action_home_to_freeWorkout"
+            app:destination="@id/freeWorkoutFragment" />
     </fragment>
+
+    <!-- Workout Detail Fragment -->
+    <fragment
+        android:id="@+id/workoutDetailFragment"
+        android:name="com.torto.trgym.ui.home.WorkoutDetailFragment"
+        tools:layout="@layout/fragment_workout_detail">
+
+        <argument
+            android:name="workoutCardId"
+            app:argType="string" />
+
+        <action
+            android:id="@+id/action_workoutDetail_to_exerciseDetail"
+            app:destination="@id/exerciseDetailFragment" />
+
+    </fragment>
+
+    <!-- Exercise Detail Fragment (existing) -->
+    <fragment
+        android:id="@+id/exerciseDetailFragment"
+        android:name="com.torto.trgym.ui.exercises.ExerciseDetailFragment"
+        tools:layout="@layout/fragment_exercise_detail">
+
+
+
+        <argument
+            android:name="exerciseId"
+            app:argType="integer" />
+        <action
+            android:id="@+id/action_exerciseDetailFragment_to_exercisesFragment"
+            app:destination="@id/exercisesFragment" />
+    </fragment>
+
+    <!-- Free Workout Fragment (placeholder) -->
+    <fragment
+        android:id="@+id/freeWorkoutFragment" />
 
 
     <fragment
@@ -67,17 +110,17 @@
             />
     </fragment>
 
-    <fragment
-        android:id="@+id/exerciseDetailFragment"
-        android:name="com.torto.trgym.ui.exercises.ExerciseDetailFragment"
-        tools:layout="@layout/fragment_exercise_detail">
-        <argument
-            android:name="exerciseId"
-            app:argType="integer" />
-        <action
-            android:id="@+id/action_exerciseDetailFragment_to_exercisesFragment"
-            app:destination="@id/exercisesFragment" />
-    </fragment>
+<!--    <fragment-->
+<!--        android:id="@+id/exerciseDetailFragment"-->
+<!--        android:name="com.torto.trgym.ui.exercises.ExerciseDetailFragment"-->
+<!--        tools:layout="@layout/fragment_exercise_detail">-->
+<!--        <argument-->
+<!--            android:name="exerciseId"-->
+<!--            app:argType="integer" />-->
+<!--        <action-->
+<!--            android:id="@+id/action_exerciseDetailFragment_to_exercisesFragment"-->
+<!--            app:destination="@id/exercisesFragment" />-->
+<!--    </fragment>-->
 
 
 </navigation>

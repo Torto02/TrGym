@@ -103,8 +103,7 @@ class MainActivity : AppCompatActivity() {
             authRepository.observeAuthStatus().collect { status ->
                 when (status) {
                     is SessionStatus.Authenticated -> {
-                        preloadExercises()
-                        // Sincronizza gli esercizi preferiti dopo l'autenticazione
+//                        preloadExercises()
                         syncStarredExercises()
                         navController.currentDestination?.id.let { current ->
                             if (current == R.id.loginFragment || current == R.id.registerFragment) {
@@ -141,13 +140,12 @@ class MainActivity : AppCompatActivity() {
         authRepository.handleDeeplinks(intent)
     }
 
+    //non penso sia necessario, ma lo lascio per sicurezza
     private fun preloadExercises() {
-        // Lancio in background: prende la prima emissione e poi si cancella da solo
         lifecycleScope.launch {
             exerciseRepo
                 .allExercises()          // Flow<List<ExerciseWithImage>>
                 .first()                 // sospende finché la prima lista non arriva
-            // a questo punto il DB è stato letto e la cache di Room è "calda"
         }
     }
 }
