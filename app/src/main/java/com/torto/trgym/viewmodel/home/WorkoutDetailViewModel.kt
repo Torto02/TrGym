@@ -36,6 +36,8 @@ class WorkoutDetailViewModel @Inject constructor(
     private fun loadWorkoutDetail() {
         viewModelScope.launch {
             try {
+                _uiState.value = UiState.Loading
+                
                 // Carica la scheda di allenamento
                 val card = workoutRepository.getWorkoutCard(workoutCardId)
                 _workoutCard.value = card
@@ -45,13 +47,14 @@ class WorkoutDetailViewModel @Inject constructor(
                     return@launch
                 }
 
-                // Carica gli esercizi
+                // Carica gli esercizi con i relativi set
                 workoutRepository.getExercisesForCard(workoutCardId)
                     .collect { exercises ->
-                        val exercisesWithSetsData = exercises.map { exercise ->
-                            val sets = workoutRepository.getSetsForExercise(exercise.id)
-                                .first() // Get current value
-                            WorkoutExerciseDetail(exercise, sets)
+                        val exercisesWithSetsData = mutableListOf<WorkoutExerciseDetail>()
+                        
+                        for (exercise in exercises) {
+                            val sets = workoutRepository.getSetsForExercise(exercise.id).first()
+                            exercisesWithSetsData.add(WorkoutExerciseDetail(exercise, sets))
                         }
 
                         _exercisesWithSets.value = exercisesWithSetsData
@@ -94,6 +97,30 @@ class WorkoutDetailViewModel @Inject constructor(
         }
     }
 
+    fun addMultipleExercises(exerciseNames: List<String>) {
+        viewModelScope.launch {
+            try {
+                val currentExercises = _exercisesWithSets.value
+                var nextOrderIndex = currentExercises.size
+
+                exerciseNames.forEach { exerciseName ->
+                    val newExercise = WorkoutExercise(
+                        workoutCardId = workoutCardId,
+                        name = exerciseName,
+                        orderIndex = nextOrderIndex++
+                    )
+
+                    workoutRepository.insertWorkoutExercise(newExercise)
+                }
+
+                // Ricarica i dati
+                loadWorkoutDetail()
+            } catch (e: Exception) {
+                _uiState.value = UiState.Error(e.message ?: "Errore nell'aggiunta degli esercizi")
+            }
+        }
+    }
+
     fun deleteExercise(exercise: WorkoutExercise) {
         viewModelScope.launch {
             try {
@@ -108,18 +135,54 @@ class WorkoutDetailViewModel @Inject constructor(
     fun addSetToExercise(exerciseId: String) {
         viewModelScope.launch {
             try {
+                // Ottiene i set correnti
                 val currentSets = workoutRepository.getSetsForExercise(exerciseId).first()
                 val nextSetNumber = (currentSets.maxOfOrNull { it.setNumber } ?: 0) + 1
 
                 val newSet = ExerciseSet(
                     exerciseId = exerciseId,
-                    setNumber = nextSetNumber
+                    setNumber = nextSetNumber,
+                    weightKg = null,
+                    reps = null
                 )
 
+                // Inserisce il nuovo set nel database
                 workoutRepository.insertExerciseSet(newSet)
-                loadWorkoutDetail()
+                
+                // Aggiorna solo l'esercizio specifico invece di ricaricare tutto
+                updateExerciseWithNewSet(exerciseId, newSet)
             } catch (e: Exception) {
                 _uiState.value = UiState.Error(e.message ?: "Errore nell'aggiunta del set")
+            }
+        }
+    }
+    
+    // Nuovo metodo per aggiornare solo l'esercizio specifico con il nuovo set
+    private fun updateExerciseWithNewSet(exerciseId: String, newSet: ExerciseSet) {
+        viewModelScope.launch {
+            try {
+                // Trova l'esercizio da aggiornare
+                val currentExercises = _exercisesWithSets.value
+                val exerciseIndex = currentExercises.indexOfFirst { it.exercise.id == exerciseId }
+                
+                if (exerciseIndex >= 0) {
+                    val exerciseToUpdate = currentExercises[exerciseIndex]
+                    
+                    // Crea una nuova lista di set aggiungendo il nuovo set
+                    val updatedSets = exerciseToUpdate.sets + newSet
+                    
+                    // Crea un nuovo oggetto WorkoutExerciseDetail con i set aggiornati
+                    val updatedExercise = exerciseToUpdate.copy(sets = updatedSets)
+                    
+                    // Aggiorna la lista completa degli esercizi
+                    val updatedExercises = currentExercises.toMutableList()
+                    updatedExercises[exerciseIndex] = updatedExercise
+                    
+                    // Aggiorna lo stato con la nuova lista
+                    _exercisesWithSets.value = updatedExercises
+                }
+            } catch (e: Exception) {
+                _uiState.value = UiState.Error(e.message ?: "Errore nell'aggiornamento dell'esercizio")
             }
         }
     }
@@ -127,7 +190,12 @@ class WorkoutDetailViewModel @Inject constructor(
     fun updateExerciseSet(set: ExerciseSet) {
         viewModelScope.launch {
             try {
+                // Aggiorna il set nel database
                 workoutRepository.updateExerciseSet(set)
+                
+                // Nota: Non ricarichiamo i dati qui per evitare di disturbare l'input dell'utente
+                // Il database è aggiornato, ma l'interfaccia utente rimane invariata
+                // per permettere all'utente di continuare a inserire dati senza interruzioni
             } catch (e: Exception) {
                 _uiState.value = UiState.Error(e.message ?: "Errore nell'aggiornamento del set")
             }

@@ -14,10 +14,11 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.google.android.material.textfield.TextInputEditText
 import com.torto.trgym.R
 import com.torto.trgym.adapters.WorkoutExercisesAdapter
 import com.torto.trgym.database.entities.WorkoutExercise
+import com.torto.trgym.database.entities.ExerciseSet
+import com.torto.trgym.ui.dialogs.SelectExercisesDialog
 import com.torto.trgym.viewmodel.home.WorkoutDetailViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -45,7 +46,7 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
         }
 
         addExerciseBtn.setOnClickListener {
-            showAddExerciseDialog()
+            showSelectExercisesDialog()
         }
     }
 
@@ -60,12 +61,17 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
             },
             onDeleteExercise = { exercise ->
                 showDeleteExerciseConfirmation(exercise)
+            },
+            onDeleteSet = { set ->
+                showDeleteSetConfirmation(set)
             }
         )
 
         recyclerView.apply {
             adapter = exercisesAdapter
             layoutManager = LinearLayoutManager(requireContext())
+            setHasFixedSize(false)
+            itemAnimator = null // Disabilita le animazioni per evitare problemi di ridimensionamento
         }
     }
 
@@ -110,23 +116,21 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
         }
     }
 
-    private fun showAddExerciseDialog() {
-        val dialogView = layoutInflater.inflate(R.layout.dialog_add_exercise, null)
-        val exerciseNameEditText = dialogView.findViewById<TextInputEditText>(R.id.exerciseNameEditText)
+    private fun showSelectExercisesDialog() {
+        val dialog = SelectExercisesDialog()
+        dialog.setOnExercisesSelectedListener { selectedExercises ->
+            // Aggiungi tutti gli esercizi selezionati utilizzando il metodo ottimizzato
+            val exerciseNames = selectedExercises.map { it.title }
+            viewModel.addMultipleExercises(exerciseNames)
 
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Aggiungi esercizio")
-            .setView(dialogView)
-            .setPositiveButton("Aggiungi") { _, _ ->
-                val exerciseName = exerciseNameEditText.text.toString().trim()
-                if (exerciseName.isNotEmpty()) {
-                    viewModel.addExercise(exerciseName)
-                } else {
-                    Toast.makeText(requireContext(), "Inserisci il nome dell'esercizio", Toast.LENGTH_SHORT).show()
-                }
+            val message = if (selectedExercises.size == 1) {
+                "Esercizio aggiunto"
+            } else {
+                "${selectedExercises.size} esercizi aggiunti"
             }
-            .setNegativeButton("Annulla", null)
-            .show()
+            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+        }
+        dialog.show(parentFragmentManager, "SelectExercisesDialog")
     }
 
     private fun showDeleteExerciseConfirmation(exercise: WorkoutExercise) {
@@ -135,6 +139,17 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
             .setMessage("Sei sicuro di voler eliminare \"${exercise.name}\"?")
             .setPositiveButton("Elimina") { _, _ ->
                 viewModel.deleteExercise(exercise)
+            }
+            .setNegativeButton("Annulla", null)
+            .show()
+    }
+
+    private fun showDeleteSetConfirmation(set: ExerciseSet) {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Elimina serie")
+            .setMessage("Sei sicuro di voler eliminare la serie ${set.setNumber}?")
+            .setPositiveButton("Elimina") { _, _ ->
+                viewModel.deleteExerciseSet(set)
             }
             .setNegativeButton("Annulla", null)
             .show()

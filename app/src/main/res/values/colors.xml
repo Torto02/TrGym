@@ -13,4 +13,14 @@
     <color name="ios_systemBlue_light">#E3F2FD</color>
     <color name="shimmer_placeholder">#DDDDDD</color>
 
+    <!-- Aggiungi questi colori al tuo file colors.xml -->
+
+    <!-- Colori per la selezione degli esercizi -->
+    <color name="selected_exercise_background">#E3F2FD</color>
+    <color name="selected_exercise_stroke">#2196F3</color>
+
+    <!-- Colori generali (se non li hai già) -->
+    <color name="primary_text">#212121</color>
+    <color name="secondary_text">#757575</color>
+    <color name="stroke_color">#E0E0E0</color>
 </resources>
