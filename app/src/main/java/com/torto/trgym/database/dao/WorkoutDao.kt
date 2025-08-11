@@ -25,6 +25,9 @@ interface WorkoutDao {
     @Delete
     suspend fun deleteWorkoutCard(workoutCard: WorkoutCard)
 
+    @Query("DELETE FROM workout_cards")
+    suspend fun deleteAllWorkoutCards()
+
     // WorkoutExercise queries
     @Query("SELECT * FROM workout_exercises WHERE workoutCardId = :cardId ORDER BY orderIndex ASC")
     fun getExercisesForCard(cardId: String): Flow<List<WorkoutExercise>>
@@ -74,4 +77,23 @@ interface WorkoutDao {
 
     @Query("SELECT COUNT(*) FROM workout_exercises WHERE workoutCardId = :cardId")
     suspend fun getExerciseCountForCard(cardId: String): Int
+
+    // Sync management methods
+    @Query("UPDATE workout_cards SET syncedWithServer = 1, pendingSync = 0 WHERE id = :cardId")
+    suspend fun markWorkoutCardAsSynced(cardId: String)
+
+    @Query("UPDATE workout_exercises SET syncedWithServer = 1, pendingSync = 0 WHERE id = :exerciseId")
+    suspend fun markWorkoutExerciseAsSynced(exerciseId: String)
+
+    @Query("UPDATE exercise_sets SET syncedWithServer = 1, pendingSync = 0 WHERE id = :setId")
+    suspend fun markExerciseSetAsSynced(setId: String)
+
+    @Query("SELECT * FROM workout_cards WHERE pendingSync = 1 OR syncedWithServer = 0")
+    suspend fun getUnsyncedWorkoutCards(): List<WorkoutCard>
+
+    @Query("SELECT * FROM workout_exercises WHERE pendingSync = 1 OR syncedWithServer = 0")
+    suspend fun getUnsyncedWorkoutExercises(): List<WorkoutExercise>
+
+    @Query("SELECT * FROM exercise_sets WHERE pendingSync = 1 OR syncedWithServer = 0")
+    suspend fun getUnsyncedExerciseSets(): List<ExerciseSet>
 }

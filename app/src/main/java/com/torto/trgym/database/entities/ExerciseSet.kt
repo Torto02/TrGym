@@ -26,5 +26,8 @@ data class ExerciseSet(
     val setNumber: Int,
     val weightKg: Double? = null,
     val reps: Int? = null,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    val updatedAt: Long = System.currentTimeMillis(),
+    val syncedWithServer: Boolean = false,
+    val pendingSync: Boolean = false
 )

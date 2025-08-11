@@ -48,4 +48,25 @@ interface StarredExerciseDao {
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertStarredExercises(exercises: List<StarredExercise>)
+
+    /**
+     * Marca un esercizio come sincronizzato con il server.
+     * @param exerciseId L'ID dell'esercizio da marcare come sincronizzato
+     */
+    @Query("UPDATE starred_exercises SET synced_with_server = 1 WHERE exercise_id = :exerciseId")
+    suspend fun markAsSynced(exerciseId: Int)
+
+    /**
+     * Ottiene tutti gli esercizi preferiti che non sono ancora sincronizzati con il server.
+     * @return Lista degli esercizi che necessitano sincronizzazione
+     */
+    @Query("SELECT * FROM starred_exercises WHERE synced_with_server = 0")
+    suspend fun getUnsyncedStarredExercises(): List<StarredExercise>
+
+    /**
+     * Ottiene tutti gli esercizi preferiti locali.
+     * @return Lista di tutti gli esercizi preferiti
+     */
+    @Query("SELECT * FROM starred_exercises")
+    suspend fun getAllLocalStarredExercises(): List<StarredExercise>
 }

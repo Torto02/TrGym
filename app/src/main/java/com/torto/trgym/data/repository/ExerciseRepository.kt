@@ -108,29 +108,65 @@ class ExerciseRepository @Inject constructor(
     }
 
     /**
-     * Sincronizza gli esercizi preferiti tra Room e Supabase
+     * Sincronizza gli esercizi preferiti tra Room e Supabase usando merge intelligente
      */
     suspend fun syncStarredExercises() = withContext(Dispatchers.IO) {
         try {
             val userId = supabaseClient.auth.currentUserOrNull()?.id ?: return@withContext
+            
+            // Step 1: Carica le modifiche locali non sincronizzate su Supabase
+            val unsyncedLocal = starredExerciseDao.getUnsyncedStarredExercises()
+            unsyncedLocal.forEach { localStarred ->
+                try {
+                    addToSupabaseStarred(localStarred.exerciseId)
+                    starredExerciseDao.markAsSynced(localStarred.exerciseId)
+                    Log.d("ExerciseRepository", "Synced local starred exercise ${localStarred.exerciseId} to Supabase")
+                } catch (e: Exception) {
+                    Log.w("ExerciseRepository", "Could not sync local starred exercise ${localStarred.exerciseId}", e)
+                }
+            }
+
+            // Step 2: Scarica i dati da Supabase
             val supabaseStarred = supabaseClient
                 .from("starred_exercises")
                 .select{ filter {
                     eq("user_id", userId)
-                }
-                }
+                }}
                 .decodeList<SupabaseStarredExercise>()
 
+            // Step 3: Ottieni i dati locali attuali
+            val localStarred = starredExerciseDao.getAllLocalStarredExercises()
+            val localIds = localStarred.map { it.exerciseId }.toSet()
+            val supabaseIds = supabaseStarred.map { it.exerciseId }.toSet()
 
-            // Cancella i dati locali e inserisce quelli da Supabase
-            starredExerciseDao.clearAllStarred()
-            val localStarred = supabaseStarred.map { StarredExercise(it.exerciseId) }
-            Log.d("ExerciseRepository", "Synchronized $localStarred starred exercises from Supabase")
-            starredExerciseDao.insertStarredExercises(localStarred)
+            // Step 4: Merge intelligente
+            // Aggiungi elementi da Supabase che non sono presenti localmente
+            val toAddLocally = supabaseIds - localIds
+            if (toAddLocally.isNotEmpty()) {
+                val newLocalStarred = toAddLocally.map { exerciseId ->
+                    StarredExercise(
+                        exerciseId = exerciseId,
+                        syncedWithServer = true
+                    )
+                }
+                starredExerciseDao.insertStarredExercises(newLocalStarred)
+                Log.d("ExerciseRepository", "Added ${toAddLocally.size} starred exercises from Supabase")
+            }
 
-            Log.d("ExerciseRepository", "Synchronized ${localStarred.count()} starred exercises from Supabase")
+            // Step 5: Rimuovi elementi locali che non sono più su Supabase (solo se erano sincronizzati)
+            val toRemoveLocally = localIds - supabaseIds
+            toRemoveLocally.forEach { exerciseId ->
+                val localExercise = localStarred.find { it.exerciseId == exerciseId }
+                // Rimuovi solo se era già sincronizzato (evita di cancellare modifiche offline pendenti)
+                if (localExercise?.syncedWithServer == true) {
+                    starredExerciseDao.removeFromStarred(exerciseId)
+                    Log.d("ExerciseRepository", "Removed synced starred exercise $exerciseId that was deleted on server")
+                }
+            }
+
+            Log.d("ExerciseRepository", "Smart sync completed: ${supabaseStarred.size} on server, ${localStarred.size} local")
         } catch (e: Exception) {
-            Log.e("ExerciseRepository", "Error syncing starred exercises", e)
+            Log.e("ExerciseRepository", "Error during smart sync of starred exercises", e)
         }
     }
 
@@ -141,14 +177,30 @@ class ExerciseRepository @Inject constructor(
                     // Rimuovi dall'locale
                     starredExerciseDao.removeFromStarred(exerciseId)
 
-                    // Rimuovi da Supabase
-                    removeFromSupabaseStarred(exerciseId)
+                    // Prova a rimuovere da Supabase (se online)
+                    try {
+                        removeFromSupabaseStarred(exerciseId)
+                    } catch (e: Exception) {
+                        Log.w("ExerciseRepository", "Could not remove from Supabase (offline?), will sync later", e)
+                        // L'operazione locale è già stata fatta, sync avverrà quando tornerà online
+                    }
                 } else {
-                    // Aggiungi al locale
-                    starredExerciseDao.addToStarred(StarredExercise(exerciseId))
+                    // Aggiungi al locale con flag pendingSync se fallisce l'upload
+                    val starredExercise = StarredExercise(
+                        exerciseId = exerciseId,
+                        syncedWithServer = false
+                    )
+                    starredExerciseDao.addToStarred(starredExercise)
 
-                    // Aggiungi a Supabase
-                    addToSupabaseStarred(exerciseId)
+                    // Prova ad aggiungere a Supabase (se online)
+                    try {
+                        addToSupabaseStarred(exerciseId)
+                        // Se riuscito, aggiorna il flag sync
+                        starredExerciseDao.markAsSynced(exerciseId)
+                    } catch (e: Exception) {
+                        Log.w("ExerciseRepository", "Could not add to Supabase (offline?), will sync later", e)
+                        // Mantieni syncedWithServer = false per sincronizzare in seguito
+                    }
                 }
             } catch (e: Exception) {
                 Log.e("ExerciseRepository", "Error toggling starred exercise", e)

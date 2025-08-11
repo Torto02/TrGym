@@ -1,0 +1,29 @@
+TABLE public.exercise_sets (
+  exercise_id uuid,
+  set_number integer NOT NULL,
+  weight_kg numeric,
+  reps integer,
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT exercise_sets_pkey PRIMARY KEY (id),
+  CONSTRAINT exercise_sets_exercise_id_fkey FOREIGN KEY (exercise_id) REFERENCES public.exercises(id)
+);
+TABLE public.exercises (
+  workout_card_id uuid,
+  name character varying NOT NULL,
+  order_index integer NOT NULL,
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT exercises_pkey PRIMARY KEY (id),
+  CONSTRAINT exercises_workout_card_id_fkey FOREIGN KEY (workout_card_id) REFERENCES public.workout_cards(id)
+);
+TABLE public.workout_cards (
+  user_id uuid,
+  name character varying NOT NULL,
+  description text,
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT workout_cards_pkey PRIMARY KEY (id),
+  CONSTRAINT workout_cards_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);

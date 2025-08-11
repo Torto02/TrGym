@@ -37,6 +37,14 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
         observeViewModel()
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        // Cleanup adapter to prevent memory leaks
+        if (::exercisesAdapter.isInitialized) {
+            exercisesAdapter.cleanup()
+        }
+    }
+
     private fun setupViews(view: View) {
         val backButton = view.findViewById<TextView>(R.id.backButton)
         val addExerciseBtn = view.findViewById<FloatingActionButton>(R.id.addExerciseBtn)

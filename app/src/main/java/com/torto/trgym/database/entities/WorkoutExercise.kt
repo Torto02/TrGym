@@ -24,5 +24,7 @@ data class WorkoutExercise(
     val workoutCardId: String,
     val name: String,
     val orderIndex: Int,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    val syncedWithServer: Boolean = false,
+    val pendingSync: Boolean = false
 )

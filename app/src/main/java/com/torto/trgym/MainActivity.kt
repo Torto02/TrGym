@@ -15,6 +15,7 @@ import androidx.navigation.fragment.NavHostFragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.torto.trgym.data.repository.AuthRepository
 import com.torto.trgym.data.repository.ExerciseRepository
+import com.torto.trgym.data.repository.WorkoutRepository
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.jan.supabase.auth.status.SessionStatus
 import kotlinx.coroutines.flow.first
@@ -29,6 +30,7 @@ class MainActivity : AppCompatActivity() {
     // Inietto AuthRepository tramite Hilt
     @Inject lateinit var authRepository: AuthRepository
     @Inject lateinit var exerciseRepo: ExerciseRepository
+    @Inject lateinit var workoutRepo: WorkoutRepository
 
     private val exercisesViewModel: ExercisesViewModel by viewModels()
 
@@ -56,7 +58,7 @@ class MainActivity : AppCompatActivity() {
         observeAuthenticationStatus()
     }
 
-
+    // Nella setupNavigation() di MainActivity.kt, modifica la configurazione della bottom navigation:
 
     private fun setupNavigation() {
         val navHostFragment = supportFragmentManager
@@ -70,13 +72,15 @@ class MainActivity : AppCompatActivity() {
         bottomNavigationView.setOnItemSelectedListener { item ->
             val builder = NavOptions.Builder()
                 .setLaunchSingleTop(true)
-                .setRestoreState(true)
+                // MODIFICATO: Non ripristinare lo stato per workoutDetailFragment
+                .setRestoreState(item.itemId != R.id.workoutDetailFragment)
 
             if (item.order and Menu.CATEGORY_SECONDARY == 0) {
                 builder.setPopUpTo(
                     navController.graph.findStartDestination().id,
                     inclusive = false,
-                    saveState = true
+                    // MODIFICATO: Non salvare lo stato per workoutDetailFragment
+                    saveState = item.itemId != R.id.workoutDetailFragment
                 )
             }
 
@@ -98,6 +102,47 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+
+//    private fun setupNavigation() {
+//        val navHostFragment = supportFragmentManager
+//            .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+//        navController = navHostFragment.navController
+//        navController.setGraph(R.navigation.nav_graph)
+//
+//        bottomNavigationView = findViewById(R.id.bottom_nav)
+//        bottomNavigationView.visibility = View.GONE
+//
+//        bottomNavigationView.setOnItemSelectedListener { item ->
+//            val builder = NavOptions.Builder()
+//                .setLaunchSingleTop(true)
+//                .setRestoreState(true)
+//
+//            if (item.order and Menu.CATEGORY_SECONDARY == 0) {
+//                builder.setPopUpTo(
+//                    navController.graph.findStartDestination().id,
+//                    inclusive = false,
+//                    saveState = true
+//                )
+//            }
+//
+//            val options = builder.build()
+//            try {
+//                navController.navigate(item.itemId, null, options)
+//                true
+//            } catch (e: IllegalArgumentException) {
+//                false
+//            }
+//        }
+//
+//        navController.addOnDestinationChangedListener { _, destination, _ ->
+//            bottomNavigationView.visibility = when (destination.id) {
+//                R.id.loginFragment, R.id.registerFragment -> View.GONE
+//                else -> View.VISIBLE
+//            }
+//            bottomNavigationView.menu.findItem(destination.id)?.isChecked = true
+//        }
+//    }
+
     private fun observeAuthenticationStatus() {
         lifecycleScope.launch {
             authRepository.observeAuthStatus().collect { status ->
@@ -105,6 +150,7 @@ class MainActivity : AppCompatActivity() {
                     is SessionStatus.Authenticated -> {
 //                        preloadExercises()
                         syncStarredExercises()
+                        syncWorkoutCards()
                         navController.currentDestination?.id.let { current ->
                             if (current == R.id.loginFragment || current == R.id.registerFragment) {
                                 navController.navigate(R.id.homeFragment)
@@ -131,6 +177,16 @@ class MainActivity : AppCompatActivity() {
                 exerciseRepo.syncStarredExercises()
             } catch (e: Exception) {
                 Log.e("MainActivity", "Error syncing starred exercises", e)
+            }
+        }
+    }
+
+    private fun syncWorkoutCards() {
+        lifecycleScope.launch {
+            try {
+                workoutRepo.syncWorkoutCards()
+            } catch (e: Exception) {
+                Log.e("MainActivity", "Error syncing workout cards", e)
             }
         }
     }

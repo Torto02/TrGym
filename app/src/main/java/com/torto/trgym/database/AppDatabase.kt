@@ -13,7 +13,7 @@ import com.torto.trgym.database.entities.*
         WorkoutCard::class,
         WorkoutExercise::class,
         ExerciseSet::class],
-    version = 2, // Incrementata per la nuova tabella ,
+    version = 3, // Incrementata per la nuova tabella ,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

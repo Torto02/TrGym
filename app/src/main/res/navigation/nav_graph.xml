@@ -52,9 +52,6 @@
             android:name="workoutCardId"
             app:argType="string" />
 
-        <action
-            android:id="@+id/action_workoutDetail_to_exerciseDetail"
-            app:destination="@id/exerciseDetailFragment" />
 
     </fragment>
 

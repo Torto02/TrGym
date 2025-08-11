@@ -82,9 +82,9 @@ object DatabaseModule {
         return database.workoutDao()
     }
 
-    @Provides
-    @Singleton
-    fun provideWorkoutRepository(workoutDao: WorkoutDao): WorkoutRepository {
-        return WorkoutRepository(workoutDao)
-    }
+//    @Provides
+//    @Singleton
+//    fun provideWorkoutRepository(workoutDao: WorkoutDao): WorkoutRepository {
+//        return workoutDao.workoutRepository()
+//    }
 }

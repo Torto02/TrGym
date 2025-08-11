@@ -12,5 +12,7 @@ data class WorkoutCard(
     val name: String,
     val description: String? = null,
     val createdAt: Long = System.currentTimeMillis(),
-    val updatedAt: Long = System.currentTimeMillis()
+    val updatedAt: Long = System.currentTimeMillis(),
+    val syncedWithServer: Boolean = false,
+    val pendingSync: Boolean = false  // true when local changes need to be synced
 )
