@@ -1,5 +1,3 @@
-
-
 package com.torto.trgym.ui.home
 
 import android.os.Bundle
@@ -19,25 +17,15 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
 import com.torto.trgym.R
 import com.torto.trgym.adapters.WorkoutCardsAdapter
-import com.torto.trgym.data.repository.WorkoutRepository
-import com.torto.trgym.data.repository.WorkoutSessionRepository
-import com.torto.trgym.database.entities.WorkoutCard
 import com.torto.trgym.viewmodel.home.HomeViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class HomeFragment : Fragment(R.layout.fragment_home) {
 
     private val viewModel: HomeViewModel by viewModels()
     private lateinit var workoutCardsAdapter: WorkoutCardsAdapter
-
-    @Inject
-    lateinit var workoutRepository: WorkoutRepository
-
-    @Inject
-    lateinit var workoutSessionRepository: WorkoutSessionRepository
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -70,10 +58,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             },
             onMenuClick = { workoutCard ->
                 showWorkoutCardMenu(workoutCard)
-            },
-            workoutRepository = workoutRepository,
-            workoutSessionRepository = workoutSessionRepository,
-            lifecycleOwner = viewLifecycleOwner
+            }
         )
 
         recyclerView.apply {
@@ -151,21 +136,16 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             .show()
     }
 
-    private fun showWorkoutCardMenu(workoutCard: WorkoutCard) {
+    private fun showWorkoutCardMenu(workoutCard: com.torto.trgym.database.entities.WorkoutCard) {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(workoutCard.name)
-            .setItems(arrayOf("Modifica", "Duplica", "Elimina")) { _, which ->
+            .setItems(arrayOf("Modifica", "Elimina")) { _, which ->
                 when (which) {
                     0 -> {
                         // Modifica scheda
-                        showEditWorkoutCardDialog(workoutCard)
+                        // TODO: Implementare modifica
                     }
                     1 -> {
-                        // Duplica scheda
-                        viewModel.duplicateWorkoutCard(workoutCard)
-                        Toast.makeText(requireContext(), "Scheda duplicata", Toast.LENGTH_SHORT).show()
-                    }
-                    2 -> {
                         // Elimina scheda
                         showDeleteConfirmationDialog(workoutCard)
                     }
@@ -174,38 +154,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             .show()
     }
 
-    private fun showEditWorkoutCardDialog(workoutCard: WorkoutCard) {
-        val dialogView = layoutInflater.inflate(R.layout.dialog_create_workout_card, null)
-        val nameEditText = dialogView.findViewById<TextInputEditText>(R.id.workoutNameEditText)
-        val descriptionEditText = dialogView.findViewById<TextInputEditText>(R.id.workoutDescriptionEditText)
-
-        // Precompila con i dati esistenti
-        nameEditText.setText(workoutCard.name)
-        descriptionEditText.setText(workoutCard.description ?: "")
-
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Modifica scheda")
-            .setView(dialogView)
-            .setPositiveButton("Salva") { _, _ ->
-                val name = nameEditText.text.toString().trim()
-                val description = descriptionEditText.text.toString().trim().ifEmpty { null }
-
-                if (name.isNotEmpty()) {
-                    val updatedCard = workoutCard.copy(
-                        name = name,
-                        description = description,
-                        updatedAt = System.currentTimeMillis()
-                    )
-                    viewModel.updateWorkoutCard(updatedCard)
-                } else {
-                    Toast.makeText(requireContext(), "Inserisci un nome per la scheda", Toast.LENGTH_SHORT).show()
-                }
-            }
-            .setNegativeButton("Annulla", null)
-            .show()
-    }
-
-    private fun showDeleteConfirmationDialog(workoutCard: WorkoutCard) {
+    private fun showDeleteConfirmationDialog(workoutCard: com.torto.trgym.database.entities.WorkoutCard) {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Elimina scheda")
             .setMessage("Sei sicuro di voler eliminare \"${workoutCard.name}\"? Questa azione non può essere annullata.")

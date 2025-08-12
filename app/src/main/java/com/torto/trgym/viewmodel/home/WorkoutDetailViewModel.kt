@@ -1,4 +1,3 @@
-
 package com.torto.trgym.viewmodel.home
 
 import androidx.lifecycle.SavedStateHandle
@@ -10,6 +9,7 @@ import com.torto.trgym.database.entities.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.lang.System
 import javax.inject.Inject
 
 @HiltViewModel
@@ -125,6 +125,7 @@ class WorkoutDetailViewModel @Inject constructor(
                         name = exerciseName,
                         orderIndex = nextOrderIndex++,
                         updatedAt = System.currentTimeMillis()
+
                     )
 
                     workoutRepository.insertWorkoutExercise(newExercise)
@@ -162,11 +163,10 @@ class WorkoutDetailViewModel @Inject constructor(
                     reps = null
                 )
 
-                // Inserisce il nuovo set nel database - using coroutine dispatcher for immediate execution
+                // Inserisce il nuovo set nel database
                 workoutRepository.insertExerciseSet(newSet)
 
-                // Force immediate flow update by explicitly triggering a refresh
-                // This ensures the UI updates immediately rather than waiting for the next flow emission
+                // Non serve aggiornare manualmente, il flow si aggiorna automaticamente
             } catch (e: Exception) {
                 _uiState.value = UiState.Error(e.message ?: "Errore nell'aggiunta del set")
             }

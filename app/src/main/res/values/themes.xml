@@ -5,6 +5,8 @@
         <item name="android:navigationBarColor">@android:color/white</item> <!-- o il tuo colore -->
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:windowSoftInputMode">adjustPan</item>
+
         <!-- Customize your light theme here. -->
     </style>
 

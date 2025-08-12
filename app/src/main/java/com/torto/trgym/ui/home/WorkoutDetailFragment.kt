@@ -1,11 +1,9 @@
 package com.torto.trgym.ui.home
 
-
 import android.os.Bundle
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
-import android.util.Log
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -21,13 +19,8 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.torto.trgym.R
 import com.torto.trgym.adapters.WorkoutExercisesAdapter
-import android.widget.ImageView
-import com.torto.trgym.database.dto.WorkoutSessionExerciseDetail
 import com.torto.trgym.database.entities.WorkoutExercise
 import com.torto.trgym.database.entities.ExerciseSet
-import com.torto.trgym.database.entities.WorkoutSessionExercise
-import com.torto.trgym.database.entities.WorkoutSessionSet
-import com.torto.trgym.database.entities.WorkoutCard
 import com.torto.trgym.ui.dialogs.SelectExercisesDialog
 import com.torto.trgym.viewmodel.home.WorkoutDetailViewModel
 import com.torto.trgym.viewmodel.home.ActiveWorkoutViewModel
@@ -40,8 +33,6 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
     private val workoutDetailViewModel: WorkoutDetailViewModel by viewModels()
     private val activeWorkoutViewModel: ActiveWorkoutViewModel by viewModels()
     private lateinit var exercisesAdapter: WorkoutExercisesAdapter
-    
-    private var hasShownActiveWorkoutWarning = false
 
     // Views
     private lateinit var backButton: TextView
@@ -80,14 +71,8 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
     private fun setupRecyclerView() {
         exercisesAdapter = WorkoutExercisesAdapter(
             onExerciseClick = { exercise ->
-                // Naviga ai dettagli dell'esercizio  
-                // Note: ExerciseDetailFragment expects exerciseId as Int, but we have String
-                // This navigation might need to be adjusted based on actual ExerciseDetailFragment implementation
-                try {
-                    findNavController().navigate(R.id.action_workoutDetailFragment_to_exerciseDetailFragment)
-                } catch (e: Exception) {
-                    Log.w("WorkoutDetailFragment", "Navigation to exercise detail failed", e)
-                }
+                // Naviga ai dettagli dell'esercizio
+                // TODO: Implementare navigazione a ExerciseDetailFragment
             },
             onAddSetClick = { exerciseId ->
                 if (activeWorkoutViewModel.isWorkoutActive.value) {
@@ -98,8 +83,8 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
             },
             onSetChanged = { set ->
                 if (activeWorkoutViewModel.isWorkoutActive.value) {
-                    // Durante allenamento, aggiorna il WorkoutSessionSet corrispondente
-                    updateSessionSetFromExerciseSet(set)
+                    // Durante allenamento, aggiorna WorkoutSessionSet
+                    // TODO: Convertire ExerciseSet a WorkoutSessionSet
                 } else {
                     workoutDetailViewModel.updateExerciseSet(set)
                 }
@@ -107,12 +92,6 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
             onSetCompleted = { setId ->
                 if (activeWorkoutViewModel.isWorkoutActive.value) {
                     activeWorkoutViewModel.completeSet(setId)
-                    //! Non voglio che parta in automatico il timer per il set
-                    //! Per ora, non avvio il timer automatico per il set completato
-                    val exerciseId = getCurrentExerciseIdForSet(setId)
-                    exerciseId?.let {
-                        activeWorkoutViewModel.startRestTimerForSet(it)
-                    }
                 }
             },
             onDeleteExercise = { exercise ->
@@ -120,6 +99,12 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
             },
             onDeleteSet = { set ->
                 showDeleteSetConfirmation(set)
+            },
+            onSaveChanges = {
+                // Callback chiamato quando si esce dalla modalità edit
+                // Qui puoi aggiungere logica aggiuntiva se necessario
+                // Ad esempio, mostrare un toast di conferma
+                Toast.makeText(requireContext(), "Modifiche salvate", Toast.LENGTH_SHORT).show()
             }
         )
 
@@ -162,11 +147,11 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
     private fun setupClickListeners() {
         backButton.setOnClickListener {
             // Se c'è un allenamento in corso, chiedi conferma
-//            if (activeWorkoutViewModel.isWorkoutActive.value) {
-//                showExitWorkoutConfirmation()
-//            } else {
+            if (activeWorkoutViewModel.isWorkoutActive.value) {
+                showExitWorkoutConfirmation()
+            } else {
                 findNavController().popBackStack()
-//            }
+            }
         }
 
         editButton.setOnClickListener {
@@ -174,33 +159,15 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
         }
 
         pauseResumeButton.setOnClickListener {
-            if (activeWorkoutViewModel.isWorkoutActive.value) {
-                val timer = activeWorkoutViewModel.workoutTimer.value
-                if (timer.isPaused()) {
-                    activeWorkoutViewModel.resumeWorkout()
-                    pauseResumeButton.findViewById<ImageView>(R.id.pauseResumeButton)
-                        ?.setImageResource(R.drawable.ic_pause)
-                } else {
-                    activeWorkoutViewModel.pauseWorkout()
-                    pauseResumeButton.findViewById<ImageView>(R.id.pauseResumeButton)
-                        ?.setImageResource(R.drawable.ic_play)
-                }
-            }
+            // TODO: Implementare pausa/riprendi
         }
 
         startWorkoutButton.setOnClickListener {
             val workoutCard = workoutDetailViewModel.workoutCard.value
-            val currentSession = activeWorkoutViewModel.currentSession.value
-            val isActiveWorkout = activeWorkoutViewModel.isWorkoutActive.value && 
-                                  currentSession?.workoutCardId == workoutCard?.id
-            
             if (workoutCard != null) {
-                if (isActiveWorkout) {
+                if (activeWorkoutViewModel.isWorkoutActive.value) {
                     // Concludi allenamento
                     showCompleteWorkoutConfirmation()
-                } else if (activeWorkoutViewModel.isWorkoutActive.value) {
-                    // There's a different active workout
-                    showStartWorkoutWithActiveWarning(workoutCard, currentSession?.name ?: "")
                 } else {
                     // Inizia allenamento
                     activeWorkoutViewModel.startWorkout(workoutCard)
@@ -228,12 +195,12 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 workoutDetailViewModel.exercisesWithSets.collect { exercises ->
-//                    if (!activeWorkoutViewModel.isWorkoutActive.value) {
+                    if (!activeWorkoutViewModel.isWorkoutActive.value) {
                         // Mostra gli esercizi della scheda solo se non c'è allenamento attivo
                         exercisesAdapter.submitList(exercises)
                         updateEmptyState(exercises.isEmpty())
                     }
-//                }
+                }
             }
         }
 
@@ -250,24 +217,8 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
             viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 activeWorkoutViewModel.exercisesWithSets.collect { sessionExercises ->
                     if (activeWorkoutViewModel.isWorkoutActive.value) {
-                        // Check if the active workout matches the current card
-                        val currentSession = activeWorkoutViewModel.currentSession.value
-                        val requestedCardId = workoutDetailViewModel.workoutCard.value?.id
-                        
-                        if (currentSession?.workoutCardId == requestedCardId) {
-                            // Show active workout data
-                            val convertedExercises = convertSessionExercisesToDisplayFormat(sessionExercises)
-                            exercisesAdapter.submitList(convertedExercises)
-                            exercisesAdapter.setWorkoutActive(true)
-                            updateEmptyState(sessionExercises.isEmpty())
-                        } else {
-                            // User is viewing a different card while workout is active
-                            // Show warning once and keep regular card data visible
-                            if (!hasShownActiveWorkoutWarning) {
-                                hasShownActiveWorkoutWarning = true
-                                showActiveWorkoutWarning(currentSession?.name ?: "")
-                            }
-                        }
+                        // Durante allenamento, mostra gli esercizi della sessione
+                        // TODO: Convertire WorkoutSessionExerciseDetail a formato adapter
                     }
                 }
             }
@@ -316,7 +267,7 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
             // Modalità allenamento attivo
             timerCard.visibility = View.VISIBLE
             startWorkoutButton.text = "Concludi Allenamento"
-            startWorkoutButton.setBackgroundColor(resources.getColor(R.color.primary, null))
+            startWorkoutButton.setBackgroundColor(resources.getColor(R.color.gray, null))
             editButton.visibility = View.VISIBLE
         } else {
             // Modalità preparazione
@@ -355,13 +306,7 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
             val exerciseNames = selectedExercises.map { it.title }
 
             if (activeWorkoutViewModel.isWorkoutActive.value) {
-                // Aggiungi esercizi alla sessione attiva
-                val sessionId = activeWorkoutViewModel.currentSession.value?.id
-                if (sessionId != null) {
-                    exerciseNames.forEach { exerciseName ->
-                        activeWorkoutViewModel.addExerciseToSession(exerciseName)
-                    }
-                }
+                // TODO: Aggiungi esercizi alla sessione attiva
             } else {
                 workoutDetailViewModel.addMultipleExercises(exerciseNames)
             }
@@ -382,11 +327,7 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
             .setMessage("Sei sicuro di voler eliminare \"${exercise.name}\"?")
             .setPositiveButton("Elimina") { _, _ ->
                 if (activeWorkoutViewModel.isWorkoutActive.value) {
-                    // Trova l'esercizio della sessione corrispondente
-                    val sessionExercise = findSessionExerciseByOriginalId(exercise.id)
-                    sessionExercise?.let {
-                        activeWorkoutViewModel.deleteSessionExercise(it)
-                    }
+                    // TODO: Elimina dalla sessione attiva
                 } else {
                     workoutDetailViewModel.deleteExercise(exercise)
                 }
@@ -444,159 +385,10 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
             .show()
     }
 
-    // ========== HELPER METHODS ==========
-
-    private fun updateSessionSetFromExerciseSet(exerciseSet: ExerciseSet) {
-        viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                // Find the corresponding WorkoutSessionSet
-                val sessionExercises = activeWorkoutViewModel.exercisesWithSets.value
-                val sessionSet = sessionExercises
-                    .flatMap { it.sets }
-                    .find { it.id == exerciseSet.id }
-                
-                sessionSet?.let { originalSessionSet ->
-                    val updatedSessionSet = originalSessionSet.copy(
-                        actualWeightKg = exerciseSet.weightKg,
-                        actualReps = exerciseSet.reps,
-                        updatedAt = System.currentTimeMillis()
-                    )
-                    activeWorkoutViewModel.updateSet(updatedSessionSet)
-                }
-            } catch (e: Exception) {
-                Log.e("WorkoutDetailFragment", "Error updating session set", e)
-            }
+    override fun onDestroyView() {
+        super.onDestroyView()
+        if (::exercisesAdapter.isInitialized) {
+            exercisesAdapter.cleanup()
         }
-    }
-
-    override fun onPause() {
-        super.onPause()
-        // Forza il salvataggio di tutti i campi che potrebbero avere il focus
-        // quando l'utente lascia il fragment
-        view?.clearFocus()
-    }
-
-    override fun onStop() {
-        super.onStop()
-        // Forza il salvataggio anche quando il fragment viene fermato
-        view?.clearFocus()
-        exercisesAdapter.flushAllPendingUpdates()
-    }
-
-    private fun getCurrentExerciseIdForSet(setId: String): String? {
-        // Cerca nei dati attuali degli esercizi per trovare l'exerciseId di questo set
-        val sessionExercises = activeWorkoutViewModel.exercisesWithSets.value
-        return sessionExercises.find { exerciseDetail ->
-            exerciseDetail.sets.any { it.id == setId }
-        }?.exercise?.id
-    }
-
-    private fun convertSessionExercisesToDisplayFormat(
-        sessionExercises: List<WorkoutSessionExerciseDetail>
-    ): List<com.torto.trgym.database.dto.WorkoutExerciseDetail> {
-        return sessionExercises.map { sessionExerciseDetail ->
-            val workoutExercise = com.torto.trgym.database.entities.WorkoutExercise(
-                id = sessionExerciseDetail.exercise.id,
-                workoutCardId = "", // Non utilizzato per display
-                name = sessionExerciseDetail.exercise.name,
-                orderIndex = sessionExerciseDetail.exercise.orderIndex,
-                updatedAt = sessionExerciseDetail.exercise.updatedAt
-            )
-
-            val exerciseSets = sessionExerciseDetail.sets.map { sessionSet ->
-                com.torto.trgym.database.entities.ExerciseSet(
-                    id = sessionSet.id,
-                    exerciseId = sessionSet.exerciseId,
-                    setNumber = sessionSet.setNumber,
-                    weightKg = sessionSet.actualWeightKg ?: sessionSet.targetWeightKg,
-                    reps = sessionSet.actualReps ?: sessionSet.targetReps,
-                    createdAt = sessionSet.createdAt,
-                    updatedAt = sessionSet.updatedAt
-                )
-            }
-
-            // Update adapter with completion status for each set
-            sessionExerciseDetail.sets.forEach { sessionSet ->
-//                exercisesAdapter.updateSessionSetCompletion(
-//                    sessionExerciseDetail.exercise.id,
-//                    sessionSet.id,
-//                    sessionSet.isCompleted
-//                )
-            }
-
-            com.torto.trgym.database.dto.WorkoutExerciseDetail(
-                exercise = workoutExercise,
-                sets = exerciseSets
-            )
-        }
-    }
-
-    private fun findSessionExerciseByOriginalId(originalId: String): WorkoutSessionExercise? {
-        return activeWorkoutViewModel.exercisesWithSets.value
-            .find { it.exercise.originalExerciseId == originalId }?.exercise
-    }
-
-    private fun findSessionSetByOriginalId(originalId: String): WorkoutSessionSet? {
-        return activeWorkoutViewModel.exercisesWithSets.value
-            .flatMap { it.sets }
-            .find { it.id == originalId } // Per i set, l'ID rimane lo stesso
-    }
-
-    private fun showWorkoutPreview() {
-        val exercises = workoutDetailViewModel.exercisesWithSets.value
-        val totalExercises = exercises.size
-        val totalSets = exercises.sumOf { it.sets.size }
-        val estimatedTime = totalSets * 3 // 3 minuti per set (stima)
-
-        val message = buildString {
-            append("Riepilogo allenamento:\n\n")
-            append("• $totalExercises esercizi\n")
-            append("• $totalSets serie totali\n")
-            append("• Tempo stimato: ${estimatedTime} minuti\n\n")
-
-            exercises.forEach { exerciseDetail ->
-                append("${exerciseDetail.exercise.name}: ${exerciseDetail.sets.size} serie\n")
-            }
-        }
-
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Anteprima Allenamento")
-            .setMessage(message)
-            .setPositiveButton("Inizia") { _, _ ->
-                val workoutCard = workoutDetailViewModel.workoutCard.value
-                workoutCard?.let { activeWorkoutViewModel.startWorkout(it) }
-            }
-            .setNegativeButton("Chiudi", null)
-            .show()
-    }
-
-    private fun showActiveWorkoutWarning(activeWorkoutName: String) {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Allenamento in corso")
-            .setMessage("Hai un allenamento attivo: \"$activeWorkoutName\". Vuoi continuare l'allenamento attivo o visualizzare questa scheda?")
-            .setPositiveButton("Continua allenamento") { _, _ ->
-                // Navigate back and then to the active workout
-                val currentSession = activeWorkoutViewModel.currentSession.value
-                currentSession?.let { session ->
-                    findNavController().popBackStack()
-                    val action = HomeFragmentDirections.actionHomeToWorkoutDetail(session.workoutCardId)
-                    findNavController().navigate(action)
-                }
-            }
-            .setNegativeButton("Visualizza scheda", null)
-            .show()
-    }
-
-    private fun showStartWorkoutWithActiveWarning(workoutCard: WorkoutCard, activeWorkoutName: String) {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Allenamento in corso")
-            .setMessage("Hai già un allenamento attivo: \"$activeWorkoutName\". Vuoi terminarlo e iniziare \"${workoutCard.name}\"?")
-            .setPositiveButton("Termina e inizia nuovo") { _, _ ->
-                // Complete current workout and start new one
-                activeWorkoutViewModel.completeWorkout()
-                activeWorkoutViewModel.startWorkout(workoutCard)
-            }
-            .setNegativeButton("Annulla", null)
-            .show()
     }
 }

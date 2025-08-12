@@ -60,8 +60,11 @@ class ActiveWorkoutViewModel @Inject constructor(
                     _currentSession.value = activeSession
                     _isWorkoutActive.value = true
 
-                    // Riprendi il timer dal tempo salvato della sessione
-                    _workoutTimer.value.startFromTime(activeSession.startTime)
+                    // Riprendi il timer dal tempo salvato
+                    _workoutTimer.value.apply {
+                        // TODO: Calcola il tempo trascorso dalla startTime della sessione
+                        // e imposta il timer di conseguenza
+                    }
 
                     loadSessionExercises(activeSession.id)
                     startTimer()
@@ -189,11 +192,7 @@ class ActiveWorkoutViewModel @Inject constructor(
     fun addSetToExercise(exerciseId: String) {
         viewModelScope.launch {
             try {
-                // Perform database operation on IO dispatcher then return to Main
-                val setId = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                    workoutSessionRepository.addSetToSessionExercise(exerciseId)
-                }
-                // Explicit flow update trigger if needed
+                workoutSessionRepository.addSetToSessionExercise(exerciseId)
             } catch (e: Exception) {
                 _uiState.value = UiState.Error(e.message ?: "Errore nell'aggiunta della serie")
             }
@@ -210,28 +209,7 @@ class ActiveWorkoutViewModel @Inject constructor(
         }
     }
 
-    fun addExerciseToSession(exerciseName: String) {
-        viewModelScope.launch {
-            try {
-                val sessionId = _currentSession.value?.id
-                if (sessionId != null) {
-                    workoutSessionRepository.addExerciseToSession(sessionId, exerciseName)
-                }
-            } catch (e: Exception) {
-                _uiState.value = UiState.Error(e.message ?: "Errore nell'aggiunta dell'esercizio")
-            }
-        }
-    }
-
-    fun deleteSessionExercise(exercise: WorkoutSessionExercise) {
-        viewModelScope.launch {
-            try {
-                workoutSessionRepository.deleteWorkoutSessionExercise(exercise)
-            } catch (e: Exception) {
-                _uiState.value = UiState.Error(e.message ?: "Errore nell'eliminazione dell'esercizio")
-            }
-        }
-    }
+    // ========== EXERCISE REORDERING ==========
 
     fun toggleEditMode() {
         _isEditMode.value = !_isEditMode.value
@@ -273,19 +251,6 @@ class ActiveWorkoutViewModel @Inject constructor(
     fun skipRestTimer() {
         restTimerJob?.cancel()
         _currentRestTimer.value = null
-    }
-
-    fun startRestTimerForSet(exerciseId: String) {
-        viewModelScope.launch {
-            try {
-                val exercise = workoutSessionRepository.workoutSessionDao.getWorkoutSessionExercise(exerciseId)
-                exercise?.let {
-                    startRestTimer(it.restTimeBetweenSets)
-                }
-            } catch (e: Exception) {
-                _uiState.value = UiState.Error(e.message ?: "Errore nell'avvio del timer di riposo")
-            }
-        }
     }
 
     // ========== UI STATE ==========
