@@ -301,7 +301,8 @@ class WorkoutRepository @Inject constructor(
             val exercise = WorkoutExercise(
                 workoutCardId = workoutCard.id,
                 name = exerciseName,
-                orderIndex = index
+                orderIndex = index,
+                updatedAt = System.currentTimeMillis()
             )
             insertWorkoutExercise(exercise)
 
@@ -471,7 +472,8 @@ class WorkoutRepository @Inject constructor(
                         id = id,
                         workoutCardId = supabaseExercise.workoutCardId,
                         name = supabaseExercise.name,
-                        orderIndex = supabaseExercise.orderIndex
+                        orderIndex = supabaseExercise.orderIndex,
+                        updatedAt = System.currentTimeMillis()
                     )
                 }
             }

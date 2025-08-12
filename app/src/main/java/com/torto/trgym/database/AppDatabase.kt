@@ -9,10 +9,7 @@ import com.torto.trgym.database.entities.*
         ExerciseI18n::class, ExerciseMedia::class, ExerciseMuscle::class, ExerciseTip::class,
         Language::class, Muscle::class, MuscleGroup::class, MuscleGroupI18n::class,
         MuscleI18n::class, ExerciseStep::class, StarredExercise::class,
-        // Nuove entità per le schede di allenamento
-        WorkoutCard::class,
-        WorkoutExercise::class,
-        ExerciseSet::class],
+        WorkoutCard::class, WorkoutExercise::class, ExerciseSet::class, WorkoutSession::class, WorkoutSessionExercise::class, WorkoutSessionSet::class],
     version = 3, // Incrementata per la nuova tabella ,
     exportSchema = false
 )
@@ -22,7 +19,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun muscleDao(): MuscleDao
     abstract fun equipmentDao(): EquipmentDao
     abstract fun starredExerciseDao(): StarredExerciseDao
-
     abstract fun workoutDao(): WorkoutDao // Nuovo DAO
+    abstract fun workoutSessionDao(): WorkoutSessionDao // Nuovo DAO
 
 }

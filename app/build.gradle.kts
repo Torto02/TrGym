@@ -98,4 +98,14 @@ dependencies {
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0") // Or other formats if needed
 
+//    // Wear OS
+//    implementation("androidx.wear:wear:1.3.0")
+//    implementation("com.google.android.gms:play-services-wearable:18.0.0")
+//    // Health Connect
+//    implementation("androidx.health.connect:connect-client:1.1.0-alpha07")
+//    // Google Fit
+//    implementation("com.google.android.gms:play-services-fitness:21.1.0")
+//    implementation("com.google.android.gms:play-services-auth:20.7.0")
+//    // Bluetooth per connessioni dirette
+//    implementation("androidx.bluetooth:bluetooth-le:1.0.0-alpha02")
 }

@@ -33,14 +33,31 @@
 
         <TextView
             android:id="@+id/workoutTitle"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:text="Giorno 1"
             android:textColor="@color/ios_label"
             android:textSize="20sp"
             android:textStyle="bold"
+            android:gravity="center"
             android:layout_gravity="center"
             tools:text="Giorno 1" />
+
+        <!-- Pulsante Edit/Done per riordinare esercizi -->
+        <TextView
+            android:id="@+id/editButton"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="16dp"
+            android:text="Modifica"
+            android:textColor="@color/primary"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:visibility="visible" />
 
     </com.google.android.material.appbar.MaterialToolbar>
 
@@ -50,7 +67,7 @@
         android:layout_height="match_parent"
         android:paddingTop="?attr/actionBarSize"
         android:paddingHorizontal="10dp"
-        android:paddingBottom="100dp"
+        android:paddingBottom="140dp"
         android:clipToPadding="false">
 
         <LinearLayout
@@ -58,6 +75,73 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:paddingTop="16dp">
+
+            <!-- Timer durante allenamento (visibile solo durante workout) -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/timerCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:visibility="gone"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="@color/primary"
+                tools:visibility="visible">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="20dp"
+                    android:gravity="center_vertical">
+
+                    <ImageView
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_marginEnd="16dp"
+                        android:src="@drawable/ic_timer"
+                        app:tint="@color/white" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Tempo allenamento"
+                            android:textColor="@color/white"
+                            android:textSize="14sp"
+                            android:alpha="0.8" />
+
+                        <TextView
+                            android:id="@+id/timerText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="00:00:00"
+                            android:textColor="@color/white"
+                            android:textSize="24sp"
+                            android:textStyle="bold"
+                            tools:text="01:23:45" />
+
+                    </LinearLayout>
+
+                    <!-- Pulsante Pausa/Resume -->
+                    <ImageView
+                        android:id="@+id/pauseResumeButton"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:padding="8dp"
+                        android:src="@drawable/ic_pause"
+                        app:tint="@color/white" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
             <!-- Lista esercizi -->
             <androidx.recyclerview.widget.RecyclerView
@@ -67,18 +151,85 @@
                 android:nestedScrollingEnabled="false"
                 tools:listitem="@layout/item_workout_exercise" />
 
+            <!-- Messaggio quando non ci sono esercizi -->
+            <LinearLayout
+                android:id="@+id/emptyStateLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:paddingVertical="48dp"
+                android:visibility="gone">
+
+                <ImageView
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:layout_marginBottom="16dp"
+                    android:src="@drawable/ic_fitness_center"
+                    app:tint="@color/ios_secondaryLabel" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Nessun esercizio"
+                    android:textColor="@color/ios_secondaryLabel"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Aggiungi esercizi per iniziare ad allenarti"
+                    android:textColor="@color/ios_secondaryLabel"
+                    android:textSize="14sp"
+                    android:gravity="center" />
+
+            </LinearLayout>
+
         </LinearLayout>
 
     </androidx.core.widget.NestedScrollView>
 
-    <!-- Pulsante Aggiungi Esercizio -->
+    <!-- Bottom Action Buttons -->
+    <LinearLayout
+        android:id="@+id/bottomActionLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:background="@color/ios_systemBackground"
+        android:elevation="8dp">
+
+        <!-- Pulsante Inizia/Concludi Allenamento -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/startWorkoutButton"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginBottom="8dp"
+            android:text="Inizia Allenamento"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:backgroundTint="@color/primary"
+            app:cornerRadius="16dp"
+            style="@style/Widget.Material3.Button" />
+
+        <!-- Pulsante Secondario (Anteprima/Salva) -->
+
+
+    </LinearLayout>
+
+    <!-- FAB Aggiungi Esercizio (visibile solo in modalità modifica) -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/addExerciseBtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
-        android:layout_margin="16dp"
-        android:src="@drawable/ic_description"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="160dp"
+        android:src="@drawable/ic_add"
         android:contentDescription="Aggiungi esercizio"
         app:backgroundTint="@color/primary"
         app:tint="@color/white" />

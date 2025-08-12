@@ -3,11 +3,12 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/exerciseCard"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="12dp"
     app:cardCornerRadius="16dp"
-    app:cardElevation="1dp"
+    app:cardElevation="2dp"
     app:cardBackgroundColor="@color/white"
     app:strokeWidth="1dp"
     app:strokeColor="@color/lightGray">
@@ -18,7 +19,7 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- Header esercizio -->
+        <!-- Header dell'esercizio -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -26,112 +27,209 @@
             android:gravity="center_vertical"
             android:layout_marginBottom="12dp">
 
-            <TextView
-                android:id="@+id/exerciseName"
+            <!-- Drag Handle (visibile solo in modalità edit) -->
+            <ImageView
+                android:id="@+id/dragHandle"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="12dp"
+                android:src="@drawable/ic_description"
+                android:visibility="gone"
+                app:tint="@color/ios_secondaryLabel"
+                tools:visibility="visible" />
+
+            <!-- Status Icon (completato/in corso) -->
+            <ImageView
+                android:id="@+id/exerciseStatusIcon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="12dp"
+                android:src="@drawable/ic_fitness_center"
+                android:visibility="gone"
+                app:tint="@color/ios_secondaryLabel"
+                tools:visibility="visible" />
+
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Esercizio 1"
-                android:textColor="@color/primary"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                tools:text="Panca piana" />
+                android:orientation="vertical">
 
+                <!-- Nome esercizio -->
+                <TextView
+                    android:id="@+id/exerciseName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Panca piana"
+                    android:textColor="@color/ios_label"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="?attr/selectableItemBackground"
+                    android:padding="4dp"
+                    tools:text="Panca piana" />
+
+                <!-- Informazioni esercizio -->
+                <TextView
+                    android:id="@+id/exerciseInfo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="3 serie • Petto, Tricipiti"
+                    android:textColor="@color/ios_secondaryLabel"
+                    android:textSize="14sp"
+                    android:layout_marginTop="2dp"
+                    tools:text="3 serie • Petto, Tricipiti" />
+
+            </LinearLayout>
+
+            <!-- Menu esercizio -->
             <ImageView
-                android:id="@+id/expandCollapseIcon"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/ic_ios_back"
-                android:contentDescription="Espandi/Comprimi"
+                android:id="@+id/exerciseMenu"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:clickable="true"
                 android:focusable="true"
+                android:padding="4dp"
+                android:src="@drawable/ic_lock"
                 app:tint="@color/ios_secondaryLabel" />
 
         </LinearLayout>
 
-        <!-- Container per i set (inizialmente collassato) -->
+        <!-- Header serie (visibile solo quando ci sono serie) -->
         <LinearLayout
-            android:id="@+id/setsContainer"
+            android:id="@+id/setsHeaderLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:visibility="gone">
+            android:orientation="horizontal"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="8dp"
+            android:layout_marginBottom="4dp"
+            android:background="@color/ios_systemGray6"
+            app:layout_constraintTop_toBottomOf="@id/exerciseInfo">
 
-            <!-- Header tabella -->
+            <TextView
+                android:layout_width="40dp"
+                android:layout_height="wrap_content"
+                android:text="Serie"
+                android:textColor="@color/ios_secondaryLabel"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:gravity="center" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Peso (kg)"
+                android:textColor="@color/ios_secondaryLabel"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:gravity="center" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Reps"
+                android:textColor="@color/ios_secondaryLabel"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:gravity="center" />
+
+            <TextView
+                android:layout_width="48dp"
+                android:layout_height="wrap_content"
+                android:text="✓"
+                android:textColor="@color/ios_secondaryLabel"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:gravity="center" />
+
+        </LinearLayout>
+
+        <!-- Lista serie -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/setsRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:nestedScrollingEnabled="true"
+            tools:listitem="@layout/item_exercise_set" />
+
+        <!-- Pulsante Aggiungi Serie -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/addSetButton"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_marginTop="8dp"
+            android:text="+ Aggiungi Serie"
+            android:textColor="@color/primary"
+            android:textSize="14sp"
+            app:backgroundTint="@android:color/transparent"
+            app:strokeColor="@color/primary"
+            app:strokeWidth="1dp"
+            app:cornerRadius="12dp"
+            style="@style/Widget.Material3.Button.OutlinedButton" />
+
+        <!-- Rest Timer (visibile durante allenamento tra le serie) -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/restTimerCard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:visibility="gone"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="1dp"
+            app:cardBackgroundColor="@color/primary"
+            tools:visibility="visible">
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:paddingVertical="8dp"
-                android:layout_marginBottom="8dp">
+                android:padding="12dp"
+                android:gravity="center_vertical">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_marginEnd="8dp"
+                    android:src="@drawable/ic_timer"
+                    app:tint="@color/white" />
 
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Serie"
-                    android:textColor="@color/ios_label"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:gravity="center" />
+                    android:text="Riposo"
+                    android:textColor="@color/white"
+                    android:textSize="14sp" />
 
                 <TextView
-                    android:layout_width="0dp"
+                    android:id="@+id/restTimerText"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Kg"
-                    android:textColor="@color/ios_label"
-                    android:textSize="14sp"
+                    android:text="01:30"
+                    android:textColor="@color/white"
+                    android:textSize="16sp"
                     android:textStyle="bold"
-                    android:gravity="center" />
+                    tools:text="01:30" />
 
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Reps"
-                    android:textColor="@color/ios_label"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:gravity="center" />
-
-            </LinearLayout>
-
-            <!-- Container per i set dinamici -->
-            <LinearLayout
-                android:id="@+id/dynamicSetsContainer"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
-
-                <!-- I set verranno aggiunti dinamicamente qui -->
-
-            </LinearLayout>
-
-            <!-- Pulsante Aggiungi Serie -->
-            <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp">
-                
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/addSetBtn"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Aggiungi Serie"
-                    android:textColor="@color/primary"
-                    android:textSize="14sp"
-                    style="@style/Widget.Material3.Button.OutlinedButton"
-                    app:icon="@drawable/ic_fitness_center"
-                    app:iconTint="@color/primary"
-                    app:strokeColor="@color/primary"
+                <ImageView
+                    android:id="@+id/skipRestButton"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_marginStart="8dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
                     android:clickable="true"
                     android:focusable="true"
-                    app:strokeWidth="1dp" />
-            </FrameLayout>
+                    android:padding="4dp"
+                    android:src="@drawable/ic_lock"
+                    app:tint="@color/white" />
 
-        </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
     </LinearLayout>
 
