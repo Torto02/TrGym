@@ -517,11 +517,11 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
 
             // Update adapter with completion status for each set
             sessionExerciseDetail.sets.forEach { sessionSet ->
-                exercisesAdapter.updateSessionSetCompletion(
-                    sessionExerciseDetail.exercise.id,
-                    sessionSet.id,
-                    sessionSet.isCompleted
-                )
+//                exercisesAdapter.updateSessionSetCompletion(
+//                    sessionExerciseDetail.exercise.id,
+//                    sessionSet.id,
+//                    sessionSet.isCompleted
+//                )
             }
 
             com.torto.trgym.database.dto.WorkoutExerciseDetail(
