@@ -133,18 +133,6 @@ class WorkoutDetailViewModel @Inject constructor(
 
                 workoutRepository.insertWorkoutExercise(newExercise)
 
-                // Aggiungi 3 set vuoti di default
-                val defaultSets = (1..3).map { setNumber ->
-                    ExerciseSet(
-                        exerciseId = newExercise.id,
-                        setNumber = setNumber,
-                        weightKg = null,
-                        reps = null,
-                        updatedAt = System.currentTimeMillis()
-                    )
-                }
-                workoutRepository.insertExerciseSets(defaultSets)
-
             } catch (e: Exception) {
                 _uiState.value = UiState.Error(e.message ?: "Errore nell'aggiunta dell'esercizio")
             }
@@ -167,18 +155,6 @@ class WorkoutDetailViewModel @Inject constructor(
                         updatedAt = System.currentTimeMillis()
                     )
                     workoutRepository.insertWorkoutExercise(newExercise)
-
-                    // Aggiungi 3 set vuoti di default per ogni esercizio
-                    val defaultSets = (1..3).map { setNumber ->
-                        ExerciseSet(
-                            exerciseId = newExercise.id,
-                            setNumber = setNumber,
-                            weightKg = null,
-                            reps = null,
-                            updatedAt = System.currentTimeMillis()
-                        )
-                    }
-                    workoutRepository.insertExerciseSets(defaultSets)
                 }
             } catch (e: Exception) {
                 _uiState.value = UiState.Error(e.message ?: "Errore nell'aggiunta degli esercizi")
@@ -266,28 +242,12 @@ class WorkoutDetailViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                workoutRepository.deleteExerciseSet(set)
-                // Remove from pending changes if it was there
+                workoutRepository.deleteExerciseSetAndReorder(set)
                 pendingSetChanges.remove(set.id)
-                // Riordina i set rimanenti
-                reorderSetsAfterDeletion(set.exerciseId, set.setNumber)
             } catch (e: Exception) {
                 _uiState.value = UiState.Error(e.message ?: "Errore nell'eliminazione del set")
             }
         }
-    }
-
-    private suspend fun reorderSetsAfterDeletion(exerciseId: String, deletedSetNumber: Int) {
-        val currentSets = workoutRepository.getSetsForExercise(exerciseId).first()
-        currentSets
-            .filter { it.setNumber > deletedSetNumber }
-            .forEach { set ->
-                val updatedSet = set.copy(
-                    setNumber = set.setNumber - 1,
-                    updatedAt = System.currentTimeMillis()
-                )
-                workoutRepository.updateExerciseSet(updatedSet)
-            }
     }
 
     fun updateWorkoutCard(name: String, description: String?) {

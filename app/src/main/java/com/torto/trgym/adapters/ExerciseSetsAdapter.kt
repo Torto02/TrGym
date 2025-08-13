@@ -23,6 +23,12 @@ class ExerciseSetsAdapter(
     private val onDeleteSet: (ExerciseSet) -> Unit
 ) : ListAdapter<ExerciseSet, ExerciseSetsAdapter.SetViewHolder>(SetDiffCallback()) {
 
+    init {
+        setHasStableIds(true)
+    }
+
+    override fun getItemId(position: Int): Long = getItem(position).id.hashCode().toLong()
+
     private var isEditMode = false
 
     fun setEditMode(editMode: Boolean) {

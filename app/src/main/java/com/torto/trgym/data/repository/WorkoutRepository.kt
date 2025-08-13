@@ -661,4 +661,22 @@ class WorkoutRepository @Inject constructor(
             Log.e("WorkoutRepository", "Error updating workout card with sync", e)
         }
     }
+
+
+    suspend fun deleteExerciseSetAndReorder(set: ExerciseSet) = withContext(Dispatchers.IO) {
+        // Local transactional delete + reorder
+        workoutDao.deleteSetAndReorder(set)
+        // Remote delete only for the removed set (no need to sync reordered numbers immediately)
+        try {
+            val userId = supabaseClient.auth.currentUserOrNull()?.id
+            if (userId != null) {
+                supabaseClient.from("exercise_sets").delete {
+                    filter { eq("id", set.id) }
+                }
+                Log.d("WorkoutRepository", "Deleted exercise set (with reorder) from Supabase: ${set.id}")
+            }
+        } catch (e: Exception) {
+            Log.e("WorkoutRepository", "Error deleting exercise set from Supabase", e)
+        }
+    }
 }

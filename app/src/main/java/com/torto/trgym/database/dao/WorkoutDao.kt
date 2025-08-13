@@ -97,6 +97,25 @@ interface WorkoutDao {
     @Query("UPDATE exercise_sets SET synced_with_server = 1, pending_sync = 0 WHERE id = :setId")
     suspend fun markExerciseSetAsSynced(setId: String)
 
+    @Query("UPDATE exercise_sets SET setNumber = setNumber - 1 WHERE exerciseId = :exerciseId AND setNumber > :deletedSetNumber")
+    suspend fun decrementSetNumbersAfterDeletion(exerciseId: String, deletedSetNumber: Int)
 
+    @Transaction
+    suspend fun deleteSetAndReorder(set: ExerciseSet) {
+        deleteExerciseSet(set)
+        decrementSetNumbersAfterDeletion(set.exerciseId, set.setNumber)
+    }
+
+    @Transaction
+    suspend fun deleteExerciseAndReorder(exercise: WorkoutExercise) {
+        deleteWorkoutExercise(exercise)
+        updateExercisesOrderAfterDeletion(exercise.workoutCardId, exercise.orderIndex)
+    }
+
+    @Query("UPDATE workout_exercises SET orderIndex = orderIndex - 1, updatedAt = :timestamp WHERE workoutCardId = :cardId AND orderIndex > :deletedOrderIndex")
+    suspend fun updateExercisesOrderAfterDeletion(cardId: String, deletedOrderIndex: Int, timestamp: Long = System.currentTimeMillis())
+
+    @Query("SELECT * FROM workout_exercises WHERE workoutCardId = :cardId AND orderIndex > :orderIndex ORDER BY orderIndex ASC")
+    suspend fun getExercisesWithHigherOrderIndex(cardId: String, orderIndex: Int): List<WorkoutExercise>
 
 }

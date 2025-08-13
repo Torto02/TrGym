@@ -54,7 +54,8 @@ class WorkoutExercisesAdapter(
         private val setsHeaderLayout: View = itemView.findViewById(R.id.setsHeaderLayout)
         private val setsRecyclerView: RecyclerView = itemView.findViewById(R.id.setsRecyclerView)
         private val addSetButton: MaterialButton = itemView.findViewById(R.id.addSetButton)
-//        private val setsHeaderText: TextView = itemView.findViewById(R.id.completionStatusHeader)
+
+        //        private val setsHeaderText: TextView = itemView.findViewById(R.id.completionStatusHeader)
         private val exerciseInfoLayout: View = itemView.findViewById(R.id.exerciseInfoLayout)
 
         private var setsAdapter: ExerciseSetsAdapter? = null
@@ -123,7 +124,7 @@ class WorkoutExercisesAdapter(
             }
 
             exerciseInfoLayout.setOnClickListener {
-                currentExercise?.let{ exercise ->
+                currentExercise?.let { exercise ->
 //                    onExerciseClick(exercise.id)
                 }
             }
@@ -143,7 +144,9 @@ class WorkoutExercisesAdapter(
             newItem: WorkoutExerciseDetail
         ): Boolean {
             return oldItem.exercise == newItem.exercise &&
-                    oldItem.sets == newItem.sets
+                    oldItem.sets.size == newItem.sets.size &&
+                    oldItem.sets.zip(newItem.sets)
+                        .all { (old, new) -> old.id == new.id && old == new }
         }
     }
 }

@@ -230,18 +230,6 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
 
     }
 
-//    private fun showExerciseDetailDialog(exercise: WorkoutExercise) {
-//        MaterialAlertDialogBuilder(requireContext())
-//            .setTitle(exercise.name)
-//            .setMessage("Visualizza dettagli dell'esercizio, statistiche e cronologia.")
-//            .setPositiveButton("Chiudi", null)
-//            .setNeutralButton("Modifica") { _, _ ->
-//                if (!workoutDetailViewModel.isEditMode.value) {
-//                    workoutDetailViewModel.toggleEditMode()
-//                }
-//            }
-//            .show()
-//    }
 
     private fun showEditWorkoutCardDialog() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_edit_workout_card, null)
@@ -270,25 +258,6 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
             .show()
     }
 
-    private fun showQuickAddExerciseDialog() {
-        val dialogView = layoutInflater.inflate(R.layout.dialog_quick_add_exercise, null)
-        val exerciseNameInput = dialogView.findViewById<TextInputEditText>(R.id.exerciseNameInput)
-
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Aggiungi esercizio")
-            .setView(dialogView)
-            .setPositiveButton("Aggiungi") { _, _ ->
-                val exerciseName = exerciseNameInput.text.toString().trim()
-                if (exerciseName.isNotEmpty()) {
-                    workoutDetailViewModel.addExercise(exerciseName)
-                    Toast.makeText(requireContext(), "Esercizio aggiunto", Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(requireContext(), "Inserisci il nome dell'esercizio", Toast.LENGTH_SHORT).show()
-                }
-            }
-            .setNegativeButton("Annulla", null)
-            .show()
-    }
 
     override fun onDestroyView() {
         super.onDestroyView()
