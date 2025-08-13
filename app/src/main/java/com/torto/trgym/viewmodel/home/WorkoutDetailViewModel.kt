@@ -9,7 +9,6 @@ import com.torto.trgym.database.entities.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import java.lang.System
 import javax.inject.Inject
 
 @HiltViewModel
@@ -21,10 +20,16 @@ class WorkoutDetailViewModel @Inject constructor(
     private val workoutCardId: String = checkNotNull(savedStateHandle["workoutCardId"])
 
     private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
-    val uiState: StateFlow<UiState> = _uiState
+    val uiState: StateFlow<UiState> = _uiState.asStateFlow()
 
     private val _workoutCard = MutableStateFlow<WorkoutCard?>(null)
     val workoutCard: StateFlow<WorkoutCard?> = _workoutCard.asStateFlow()
+
+    private val _isEditMode = MutableStateFlow(false)
+    val isEditMode: StateFlow<Boolean> = _isEditMode.asStateFlow()
+
+    // Temporary changes map for batch saving
+    private val pendingSetChanges = mutableMapOf<String, ExerciseSet>()
 
     // Lista degli esercizi con i relativi set - sempre aggiornata dal database
     val exercisesWithSets = workoutRepository.getExercisesForCard(workoutCardId)
@@ -35,10 +40,16 @@ class WorkoutDetailViewModel @Inject constructor(
                 combine(
                     exercises.map { exercise ->
                         workoutRepository.getSetsForExercise(exercise.id)
-                            .map { sets -> WorkoutExerciseDetail(exercise, sets) }
+                            .map { sets ->
+                                // Apply pending changes to display
+                                val updatedSets = sets.map { set ->
+                                    pendingSetChanges[set.id] ?: set
+                                }
+                                WorkoutExerciseDetail(exercise, updatedSets)
+                            }
                     }
                 ) { exerciseDetails ->
-                    exerciseDetails.toList()
+                    exerciseDetails.toList().sortedBy { it.exercise.orderIndex }
                 }
             }
         }
@@ -73,8 +84,6 @@ class WorkoutDetailViewModel @Inject constructor(
     private fun observeExercises() {
         viewModelScope.launch {
             exercisesWithSets.collect {
-                // Gli esercizi sono sempre aggiornati automaticamente dal flow
-                // Non serve fare nulla qui, ma possiamo aggiornare lo stato se necessario
                 if (_uiState.value is UiState.Loading) {
                     _uiState.value = UiState.Success
                 }
@@ -82,7 +91,34 @@ class WorkoutDetailViewModel @Inject constructor(
         }
     }
 
+    fun toggleEditMode() {
+        viewModelScope.launch {
+            if (_isEditMode.value) {
+                // Saving mode - persist all pending changes
+                savePendingChanges()
+                _isEditMode.value = false
+            } else {
+                // Entering edit mode
+                pendingSetChanges.clear()
+                _isEditMode.value = true
+            }
+        }
+    }
+
+    private suspend fun savePendingChanges() {
+        try {
+            pendingSetChanges.values.forEach { set ->
+                workoutRepository.updateExerciseSet(set)
+            }
+            pendingSetChanges.clear()
+        } catch (e: Exception) {
+            _uiState.value = UiState.Error(e.message ?: "Errore nel salvataggio delle modifiche")
+        }
+    }
+
     fun addExercise(exerciseName: String) {
+        if (!_isEditMode.value) return
+
         viewModelScope.launch {
             try {
                 val currentExercises = exercisesWithSets.value
@@ -90,7 +126,7 @@ class WorkoutDetailViewModel @Inject constructor(
 
                 val newExercise = WorkoutExercise(
                     workoutCardId = workoutCardId,
-                    name = exerciseName,
+                    name = exerciseName.trim(),
                     orderIndex = nextOrderIndex,
                     updatedAt = System.currentTimeMillis()
                 )
@@ -101,12 +137,14 @@ class WorkoutDetailViewModel @Inject constructor(
                 val defaultSets = (1..3).map { setNumber ->
                     ExerciseSet(
                         exerciseId = newExercise.id,
-                        setNumber = setNumber
+                        setNumber = setNumber,
+                        weightKg = null,
+                        reps = null,
+                        updatedAt = System.currentTimeMillis()
                     )
                 }
                 workoutRepository.insertExerciseSets(defaultSets)
 
-                // Non serve ricaricare, il flow si aggiorna automaticamente
             } catch (e: Exception) {
                 _uiState.value = UiState.Error(e.message ?: "Errore nell'aggiunta dell'esercizio")
             }
@@ -114,6 +152,8 @@ class WorkoutDetailViewModel @Inject constructor(
     }
 
     fun addMultipleExercises(exerciseNames: List<String>) {
+        if (!_isEditMode.value) return
+
         viewModelScope.launch {
             try {
                 val currentExercises = exercisesWithSets.value
@@ -122,16 +162,24 @@ class WorkoutDetailViewModel @Inject constructor(
                 exerciseNames.forEach { exerciseName ->
                     val newExercise = WorkoutExercise(
                         workoutCardId = workoutCardId,
-                        name = exerciseName,
+                        name = exerciseName.trim(),
                         orderIndex = nextOrderIndex++,
                         updatedAt = System.currentTimeMillis()
-
                     )
-
                     workoutRepository.insertWorkoutExercise(newExercise)
-                }
 
-                // Non serve ricaricare, il flow si aggiorna automaticamente
+                    // Aggiungi 3 set vuoti di default per ogni esercizio
+                    val defaultSets = (1..3).map { setNumber ->
+                        ExerciseSet(
+                            exerciseId = newExercise.id,
+                            setNumber = setNumber,
+                            weightKg = null,
+                            reps = null,
+                            updatedAt = System.currentTimeMillis()
+                        )
+                    }
+                    workoutRepository.insertExerciseSets(defaultSets)
+                }
             } catch (e: Exception) {
                 _uiState.value = UiState.Error(e.message ?: "Errore nell'aggiunta degli esercizi")
             }
@@ -139,20 +187,43 @@ class WorkoutDetailViewModel @Inject constructor(
     }
 
     fun deleteExercise(exercise: WorkoutExercise) {
+        if (!_isEditMode.value) return
+
         viewModelScope.launch {
             try {
                 workoutRepository.deleteWorkoutExercise(exercise)
-                // Non serve ricaricare, il flow si aggiorna automaticamente
+                // Remove any pending changes for sets of this exercise
+                pendingSetChanges.keys.removeAll { setId ->
+                    exercisesWithSets.value.any { detail ->
+                        detail.exercise.id == exercise.id && detail.sets.any { it.id == setId }
+                    }
+                }
+                // Riordina gli esercizi rimanenti
+                reorderExercisesAfterDeletion(exercise.orderIndex)
             } catch (e: Exception) {
                 _uiState.value = UiState.Error(e.message ?: "Errore nell'eliminazione dell'esercizio")
             }
         }
     }
 
+    private suspend fun reorderExercisesAfterDeletion(deletedOrderIndex: Int) {
+        val currentExercises = exercisesWithSets.value
+        currentExercises
+            .filter { it.exercise.orderIndex > deletedOrderIndex }
+            .forEach { exerciseDetail ->
+                val updatedExercise = exerciseDetail.exercise.copy(
+                    orderIndex = exerciseDetail.exercise.orderIndex - 1,
+                    updatedAt = System.currentTimeMillis()
+                )
+                workoutRepository.updateWorkoutExercise(updatedExercise)
+            }
+    }
+
     fun addSetToExercise(exerciseId: String) {
+        if (!_isEditMode.value) return
+
         viewModelScope.launch {
             try {
-                // Ottiene i set correnti
                 val currentSets = workoutRepository.getSetsForExercise(exerciseId).first()
                 val nextSetNumber = (currentSets.maxOfOrNull { it.setNumber } ?: 0) + 1
 
@@ -160,13 +231,11 @@ class WorkoutDetailViewModel @Inject constructor(
                     exerciseId = exerciseId,
                     setNumber = nextSetNumber,
                     weightKg = null,
-                    reps = null
+                    reps = null,
+                    updatedAt = System.currentTimeMillis()
                 )
 
-                // Inserisce il nuovo set nel database
                 workoutRepository.insertExerciseSet(newSet)
-
-                // Non serve aggiornare manualmente, il flow si aggiorna automaticamente
             } catch (e: Exception) {
                 _uiState.value = UiState.Error(e.message ?: "Errore nell'aggiunta del set")
             }
@@ -174,25 +243,91 @@ class WorkoutDetailViewModel @Inject constructor(
     }
 
     fun updateExerciseSet(set: ExerciseSet) {
+        if (!_isEditMode.value) return
+
+        // Store changes temporarily - merge with existing pending changes to preserve both weight and reps
+        val existingPendingSet = pendingSetChanges[set.id]
+        val mergedSet = if (existingPendingSet != null) {
+            // Merge changes: keep non-null values from both sets
+            set.copy(
+                weightKg = set.weightKg ?: existingPendingSet.weightKg,
+                reps = set.reps ?: existingPendingSet.reps,
+                updatedAt = System.currentTimeMillis()
+            )
+        } else {
+            set.copy(updatedAt = System.currentTimeMillis())
+        }
+
+        pendingSetChanges[set.id] = mergedSet
+    }
+
+    fun deleteExerciseSet(set: ExerciseSet) {
+        if (!_isEditMode.value) return
+
         viewModelScope.launch {
             try {
-                // Aggiorna il set nel database
-                workoutRepository.updateExerciseSet(set)
-
-                // Non serve ricaricare, il flow si aggiorna automaticamente
+                workoutRepository.deleteExerciseSet(set)
+                // Remove from pending changes if it was there
+                pendingSetChanges.remove(set.id)
+                // Riordina i set rimanenti
+                reorderSetsAfterDeletion(set.exerciseId, set.setNumber)
             } catch (e: Exception) {
-                _uiState.value = UiState.Error(e.message ?: "Errore nell'aggiornamento del set")
+                _uiState.value = UiState.Error(e.message ?: "Errore nell'eliminazione del set")
             }
         }
     }
 
-    fun deleteExerciseSet(set: ExerciseSet) {
+    private suspend fun reorderSetsAfterDeletion(exerciseId: String, deletedSetNumber: Int) {
+        val currentSets = workoutRepository.getSetsForExercise(exerciseId).first()
+        currentSets
+            .filter { it.setNumber > deletedSetNumber }
+            .forEach { set ->
+                val updatedSet = set.copy(
+                    setNumber = set.setNumber - 1,
+                    updatedAt = System.currentTimeMillis()
+                )
+                workoutRepository.updateExerciseSet(updatedSet)
+            }
+    }
+
+    fun updateWorkoutCard(name: String, description: String?) {
+        if (!_isEditMode.value) return
+
         viewModelScope.launch {
             try {
-                workoutRepository.deleteExerciseSet(set)
-                // Non serve ricaricare, il flow si aggiorna automaticamente
+                val currentCard = _workoutCard.value ?: return@launch
+                val updatedCard = currentCard.copy(
+                    name = name.trim(),
+                    description = description?.trim(),
+                    updatedAt = System.currentTimeMillis()
+                )
+                workoutRepository.updateWorkoutCard(updatedCard)
+                _workoutCard.value = updatedCard
             } catch (e: Exception) {
-                _uiState.value = UiState.Error(e.message ?: "Errore nell'eliminazione del set")
+                _uiState.value = UiState.Error(e.message ?: "Errore nell'aggiornamento della scheda")
+            }
+        }
+    }
+
+    fun moveExercise(fromPosition: Int, toPosition: Int) {
+        viewModelScope.launch {
+            try {
+                val exercises = exercisesWithSets.value.toMutableList()
+                if (fromPosition in exercises.indices && toPosition in exercises.indices) {
+                    val movedExercise = exercises.removeAt(fromPosition)
+                    exercises.add(toPosition, movedExercise)
+
+                    // Aggiorna gli orderIndex
+                    exercises.forEachIndexed { index, exerciseDetail ->
+                        val updatedExercise = exerciseDetail.exercise.copy(
+                            orderIndex = index,
+                            updatedAt = System.currentTimeMillis()
+                        )
+                        workoutRepository.updateWorkoutExercise(updatedExercise)
+                    }
+                }
+            } catch (e: Exception) {
+                _uiState.value = UiState.Error(e.message ?: "Errore nel riordino degli esercizi")
             }
         }
     }

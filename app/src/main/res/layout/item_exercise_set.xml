@@ -7,9 +7,9 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:paddingHorizontal="8dp"
-    android:paddingVertical="6dp"
+    android:paddingVertical="8dp"
     android:gravity="center_vertical"
->
+    android:background="@drawable/selector_set_row">
 
     <!-- Numero Serie -->
     <TextView
@@ -35,8 +35,10 @@
         android:gravity="center"
         android:textSize="16sp"
         android:textColor="@color/ios_label"
-
+        android:background="@drawable/bg_input_field"
         android:paddingHorizontal="12dp"
+        android:paddingVertical="8dp"
+        android:maxLength="6"
         tools:text="80.0" />
 
     <!-- Input Reps -->
@@ -51,8 +53,10 @@
         android:gravity="center"
         android:textSize="16sp"
         android:textColor="@color/ios_label"
-
+        android:background="@drawable/bg_input_field"
         android:paddingHorizontal="12dp"
+        android:paddingVertical="8dp"
+        android:maxLength="3"
         tools:text="12" />
 
     <!-- Checkbox Completamento -->
@@ -62,12 +66,12 @@
         android:layout_height="48dp"
         android:layout_marginStart="8dp"
         android:gravity="center"
-        android:scaleX="1.2"
-        android:scaleY="1.2"
+        android:scaleX="1.1"
+        android:scaleY="1.1"
         app:buttonTint="@color/primary"
         tools:checked="false" />
 
-    <!-- Menu Set (elimina, duplica, etc.) -->
+    <!-- Menu Set (elimina) -->
     <ImageView
         android:id="@+id/setMenu"
         android:layout_width="32dp"
@@ -79,7 +83,7 @@
         android:padding="4dp"
         android:src="@drawable/ic_close"
         android:visibility="gone"
-        app:tint="@color/primary"
+        app:tint="@color/error"
         tools:visibility="visible" />
 
 </LinearLayout>

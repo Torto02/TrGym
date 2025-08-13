@@ -63,9 +63,6 @@
         android:id="@+id/exerciseDetailFragment"
         android:name="com.torto.trgym.ui.exercises.ExerciseDetailFragment"
         tools:layout="@layout/fragment_exercise_detail">
-
-
-
         <argument
             android:name="exerciseId"
             app:argType="integer" />

@@ -23,4 +23,22 @@
     <color name="primary_text">#212121</color>
     <color name="secondary_text">#757575</color>
     <color name="stroke_color">#E0E0E0</color>
+
+
+    <color name="ios_systemGray">#8E8E93</color>
+    <color name="ios_systemGray2">#AEAEB2</color>
+    <color name="ios_systemGray3">#C7C7CC</color>
+    <color name="ios_systemGray4">#D1D1D6</color>
+    <color name="ios_systemGray5">#E5E5EA</color>
+
+    <color name="primary_dark">#0056CC</color>
+    <color name="secondary">#5856D6</color>
+
+    <!-- Status Colors -->
+    <color name="success">#34C759</color>
+    <color name="warning">#FF9500</color>
+    <color name="error">#FF3B30</color>
+
+    <!-- Basic Colors -->
+    <color name="darkGray">#424242</color>
 </resources>

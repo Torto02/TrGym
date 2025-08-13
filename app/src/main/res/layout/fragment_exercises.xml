@@ -38,6 +38,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:scrollbars="none"
+        android:elevation="10dp"
         android:overScrollMode="never"
         app:layout_constraintTop_toBottomOf="@id/headerSection"
         app:layout_constraintStart_toStartOf="parent"
@@ -145,10 +146,10 @@
         android:layout_marginBottom="10dp"
         app:cardBackgroundColor="@color/white"
         app:cardCornerRadius="30dp"
-        app:strokeWidth="1dp"
-        app:cardElevation="1dp"
-        app:strokeColor="@color/lightGray"
-        app:layout_constraintTop_toBottomOf="@id/filtersContainer"
+        app:strokeWidth="0dp"
+        app:cardElevation="0dp"
+        app:strokeColor="@color/white"
+        app:layout_constraintTop_toBottomOf="@id/headerSection"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
@@ -161,7 +162,7 @@
             android:clipToPadding="false"
             android:overScrollMode="never"
             android:scrollbars="none"
-            android:paddingTop="4dp"
+            android:paddingTop="60dp"
             android:paddingBottom="10dp" />
     </com.google.android.material.card.MaterialCardView>
 
