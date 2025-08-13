@@ -16,12 +16,16 @@ import java.util.*
             onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = [Index(value = ["workoutCardId"])]
+    indices = [
+        Index(value = ["workoutCardId"]),
+        Index(value = ["exerciseId"])  // Nuovo indice per performance
+    ]
 )
 data class WorkoutExercise(
     @PrimaryKey
     val id: String = UUID.randomUUID().toString(),
     val workoutCardId: String,
+    val exerciseId: Int? = null,  // Nuovo campo - riferimento all'Exercise originale
     val name: String,
     val orderIndex: Int,
     val createdAt: Long = System.currentTimeMillis(),

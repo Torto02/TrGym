@@ -1,18 +1,16 @@
 package com.torto.trgym.adapters
 
-import android.animation.ValueAnimator
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.animation.DecelerateInterpolator
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.core.animation.doOnEnd
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.checkbox.MaterialCheckBox
 import com.google.android.material.textfield.TextInputEditText
 import com.torto.trgym.R
 import com.torto.trgym.database.entities.ExerciseSet
@@ -53,6 +51,7 @@ class ExerciseSetsAdapter(
         private val weightInput: TextInputEditText = itemView.findViewById(R.id.weightInput)
         private val repsInput: TextInputEditText = itemView.findViewById(R.id.repsInput)
         private val setMenu: ImageView = itemView.findViewById(R.id.setMenu)
+        private val setCompletedCheckbox: MaterialCheckBox = itemView.findViewById(R.id.setCompletedCheckbox)
 
         private var currentSet: ExerciseSet? = null
         private var isBindingData = false
@@ -64,6 +63,8 @@ class ExerciseSetsAdapter(
         // Cache locale per le modifiche pending
         private var pendingWeight: Double? = null
         private var pendingReps: Int? = null
+
+
 
         fun bind(set: ExerciseSet) {
             isBindingData = true
@@ -81,6 +82,7 @@ class ExerciseSetsAdapter(
             weightInput.isEnabled = isEditMode
             repsInput.isEnabled = isEditMode
             setMenu.visibility = if (isEditMode) View.VISIBLE else View.GONE
+            setCompletedCheckbox.visibility = View.GONE
 
             // Set background alpha based on edit mode
             val alpha = if (isEditMode) 1.0f else 0.6f

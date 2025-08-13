@@ -1,6 +1,7 @@
 package com.torto.trgym.ui.home
 
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
@@ -21,7 +22,6 @@ import com.torto.trgym.adapters.WorkoutExercisesAdapter
 import com.torto.trgym.database.entities.WorkoutExercise
 import com.torto.trgym.database.entities.ExerciseSet
 import com.torto.trgym.ui.dialogs.SelectExercisesDialog
-import com.torto.trgym.ui.exercises.ExercisesFragmentDirections
 import com.torto.trgym.viewmodel.home.WorkoutDetailViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -186,9 +186,7 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
     private fun showSelectExercisesDialog() {
         val dialog = SelectExercisesDialog()
         dialog.setOnExercisesSelectedListener { selectedExercises ->
-            val exerciseNames = selectedExercises.map { it.title }
-            workoutDetailViewModel.addMultipleExercises(exerciseNames)
-
+            workoutDetailViewModel.addMultipleExercises(selectedExercises)
             val message = if (selectedExercises.size == 1) {
                 "Esercizio aggiunto"
             } else {
@@ -223,11 +221,15 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
             .show()
     }
 
-    private fun showExerciseDetail(exercise: Int) {
-        val action = ExercisesFragmentDirections
-            .actionExercisesFragmentToExerciseDetailFragment(exercise)
-        findNavController().navigate(action)
-
+    private fun showExerciseDetail(workoutExercise: WorkoutExercise) {
+        val exerciseId = workoutExercise.exerciseId
+        if (exerciseId != null) {
+            val action = WorkoutDetailFragmentDirections
+                .actionWorkoutDetailFragmentToExerciseDetailFragment(exerciseId)
+            findNavController().navigate(action)
+        } else {
+            Toast.makeText(requireContext(), "Dettagli non disponibili per esercizi personalizzati", Toast.LENGTH_SHORT).show()
+        }
     }
 
 

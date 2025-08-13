@@ -1,5 +1,6 @@
 package com.torto.trgym.adapters
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,7 +17,7 @@ import com.torto.trgym.database.entities.ExerciseSet
 import com.torto.trgym.database.entities.WorkoutExercise
 
 class WorkoutExercisesAdapter(
-    private val onExerciseClick: (Int) -> Unit,
+    private val onExerciseClick: (WorkoutExercise) -> Unit,
     private val onAddSetClick: (String) -> Unit,
     private val onSetChanged: (ExerciseSet) -> Unit,
     private val onDeleteExercise: (WorkoutExercise) -> Unit,
@@ -66,6 +67,8 @@ class WorkoutExercisesAdapter(
             setupClickListeners()
         }
 
+
+
         fun bind(exerciseDetail: WorkoutExerciseDetail) {
             currentExercise = exerciseDetail.exercise
             val exercise = exerciseDetail.exercise
@@ -110,6 +113,13 @@ class WorkoutExercisesAdapter(
 
         private fun setupClickListeners() {
 
+            exerciseName.setOnClickListener {
+                    currentExercise?.let { exercise ->
+                        Log.d("ExerciseViewHolder", "Exercise clicked: $exercise")
+                        onExerciseClick(exercise)  // Passa l'intero oggetto
+                    }
+                }
+
 
             exerciseMenu.setOnClickListener {
                 currentExercise?.let { exercise ->
@@ -117,17 +127,15 @@ class WorkoutExercisesAdapter(
                 }
             }
 
+
+
             addSetButton.setOnClickListener {
                 currentExercise?.let { exercise ->
                     onAddSetClick(exercise.id)
                 }
             }
 
-            exerciseInfoLayout.setOnClickListener {
-                currentExercise?.let { exercise ->
-//                    onExerciseClick(exercise.id)
-                }
-            }
+
         }
     }
 

@@ -24,7 +24,6 @@ class WorkoutRepository @Inject constructor(
     private val supabaseClient: SupabaseClient
 ) {
 
-    // WorkoutCard operations
     fun getAllWorkoutCards(): Flow<List<WorkoutCard>> = workoutDao.getAllWorkoutCards()
 
     suspend fun getWorkoutCard(cardId: String): WorkoutCard? = workoutDao.getWorkoutCard(cardId)
@@ -567,12 +566,13 @@ class WorkoutRepository @Inject constructor(
         }
     }
 
+
     private suspend fun uploadWorkoutExerciseToSupabase(exercise: WorkoutExercise) {
         try {
-            // Upload exercise
             val supabaseExercise = SupabaseWorkoutExercise(
                 id = exercise.id,
                 workoutCardId = exercise.workoutCardId,
+                exerciseId = exercise.exerciseId,  // Includi exerciseId
                 name = exercise.name,
                 orderIndex = exercise.orderIndex
             )

@@ -33,6 +33,7 @@ class MainActivity : AppCompatActivity() {
     @Inject lateinit var workoutRepo: WorkoutRepository
 
     private val exercisesViewModel: ExercisesViewModel by viewModels()
+    
 
     private lateinit var navController: NavController
     private lateinit var bottomNavigationView: BottomNavigationView
@@ -58,7 +59,6 @@ class MainActivity : AppCompatActivity() {
         observeAuthenticationStatus()
     }
 
-    // Nella setupNavigation() di MainActivity.kt, modifica la configurazione della bottom navigation:
 
     private fun setupNavigation() {
         val navHostFragment = supportFragmentManager
@@ -79,7 +79,6 @@ class MainActivity : AppCompatActivity() {
                 builder.setPopUpTo(
                     navController.graph.findStartDestination().id,
                     inclusive = false,
-                    // MODIFICATO: Non salvare lo stato per workoutDetailFragment
                     saveState = item.itemId != R.id.workoutDetailFragment
                 )
             }
@@ -102,53 +101,11 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
-//    private fun setupNavigation() {
-//        val navHostFragment = supportFragmentManager
-//            .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
-//        navController = navHostFragment.navController
-//        navController.setGraph(R.navigation.nav_graph)
-//
-//        bottomNavigationView = findViewById(R.id.bottom_nav)
-//        bottomNavigationView.visibility = View.GONE
-//
-//        bottomNavigationView.setOnItemSelectedListener { item ->
-//            val builder = NavOptions.Builder()
-//                .setLaunchSingleTop(true)
-//                .setRestoreState(true)
-//
-//            if (item.order and Menu.CATEGORY_SECONDARY == 0) {
-//                builder.setPopUpTo(
-//                    navController.graph.findStartDestination().id,
-//                    inclusive = false,
-//                    saveState = true
-//                )
-//            }
-//
-//            val options = builder.build()
-//            try {
-//                navController.navigate(item.itemId, null, options)
-//                true
-//            } catch (e: IllegalArgumentException) {
-//                false
-//            }
-//        }
-//
-//        navController.addOnDestinationChangedListener { _, destination, _ ->
-//            bottomNavigationView.visibility = when (destination.id) {
-//                R.id.loginFragment, R.id.registerFragment -> View.GONE
-//                else -> View.VISIBLE
-//            }
-//            bottomNavigationView.menu.findItem(destination.id)?.isChecked = true
-//        }
-//    }
-
     private fun observeAuthenticationStatus() {
         lifecycleScope.launch {
             authRepository.observeAuthStatus().collect { status ->
                 when (status) {
                     is SessionStatus.Authenticated -> {
-//                        preloadExercises()
                         syncStarredExercises()
                         syncWorkoutCards()
                         navController.currentDestination?.id.let { current ->
@@ -156,7 +113,6 @@ class MainActivity : AppCompatActivity() {
                                 navController.navigate(R.id.homeFragment)
                             }
                         }
-//                        exercisesViewModel.preloadIfNeeded()
                         isAuthenticationResolved = true
                     }
                     is SessionStatus.NotAuthenticated -> {
@@ -164,7 +120,6 @@ class MainActivity : AppCompatActivity() {
                         isAuthenticationResolved = true
                     }
                     else -> {
-                        // altri stati (Restored, etc.)
                     }
                 }
             }

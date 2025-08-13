@@ -3,7 +3,10 @@ package com.torto.trgym.viewmodel.home
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.torto.trgym.data.repository.ExerciseRepository
 import com.torto.trgym.data.repository.WorkoutRepository
+import com.torto.trgym.database.dto.ExerciseDetail
+import com.torto.trgym.database.dto.ExerciseWithImage
 import com.torto.trgym.database.dto.WorkoutExerciseDetail
 import com.torto.trgym.database.entities.*
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -14,6 +17,7 @@ import javax.inject.Inject
 @HiltViewModel
 class WorkoutDetailViewModel @Inject constructor(
     private val workoutRepository: WorkoutRepository,
+    private val exerciseRepository: ExerciseRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -139,7 +143,7 @@ class WorkoutDetailViewModel @Inject constructor(
         }
     }
 
-    fun addMultipleExercises(exerciseNames: List<String>) {
+    fun addMultipleExercises(selectedExercises: List<ExerciseWithImage>) {
         if (!_isEditMode.value) return
 
         viewModelScope.launch {
@@ -147,10 +151,11 @@ class WorkoutDetailViewModel @Inject constructor(
                 val currentExercises = exercisesWithSets.value
                 var nextOrderIndex = currentExercises.size
 
-                exerciseNames.forEach { exerciseName ->
+                selectedExercises.forEach { exercise ->
                     val newExercise = WorkoutExercise(
                         workoutCardId = workoutCardId,
-                        name = exerciseName.trim(),
+                        exerciseId = exercise.id,  // Mantieni il riferimento all'ID originale
+                        name = exercise.title.trim(),
                         orderIndex = nextOrderIndex++,
                         updatedAt = System.currentTimeMillis()
                     )
@@ -159,6 +164,15 @@ class WorkoutDetailViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiState.value = UiState.Error(e.message ?: "Errore nell'aggiunta degli esercizi")
             }
+        }
+    }
+
+    // Aggiungi un nuovo metodo per ottenere i dettagli dell'esercizio originale
+    fun getOriginalExerciseDetails(workoutExercise: WorkoutExercise): Flow<ExerciseDetail?> {
+        return if (workoutExercise.exerciseId != null) {
+            exerciseRepository.getExerciseDetail(workoutExercise.exerciseId)
+        } else {
+            flowOf(null)
         }
     }
 
