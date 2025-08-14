@@ -5,10 +5,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.torto.trgym.data.repository.WorkoutRepository
 import com.torto.trgym.database.dto.WorkoutExerciseDetail
+import com.torto.trgym.database.dto.WorkoutSessionExerciseDetail
 import com.torto.trgym.database.entities.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import java.util.UUID
 import javax.inject.Inject
 
@@ -37,6 +39,10 @@ class ActiveWorkoutViewModel @Inject constructor(
     private val _elapsedTime = MutableStateFlow(0L)
     val elapsedTime: StateFlow<Long> = _elapsedTime.asStateFlow()
 
+    // Edit mode state
+    private val _isEditMode = MutableStateFlow(false)
+    val isEditMode: StateFlow<Boolean> = _isEditMode.asStateFlow()
+
     // Track exercise completion state
     private val _completedSets = MutableStateFlow<Map<String, Boolean>>(emptyMap())
     val completedSets: StateFlow<Map<String, Boolean>> = _completedSets.asStateFlow()
@@ -45,14 +51,19 @@ class ActiveWorkoutViewModel @Inject constructor(
     private val _sessionExercises = MutableStateFlow<List<WorkoutSessionExercise>>(emptyList())
     private val _sessionSets = MutableStateFlow<Map<String, List<WorkoutSessionSet>>>(emptyMap())
 
-    // Exercises with sets - similar to WorkoutDetailViewModel
-    val exercisesWithSets = workoutRepository.getExercisesForCard(workoutCardId)
-        .flatMapLatest { exercises ->
-            if (exercises.isEmpty()) {
-                flowOf(emptyList())
+    // Exercises with sets - switches between original card data and session data
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val exercisesWithSets = combine(_activeSession, workoutRepository.getExercisesForCard(workoutCardId)) { activeSession, originalExercises ->
+        if (activeSession != null) {
+            // Use session data when workout is active
+            workoutRepository.getSessionExercisesWithSets(activeSession.id)
+        } else {
+            // Use original card data when no active session
+            if (originalExercises.isEmpty()) {
+                flowOf(emptyList<WorkoutExerciseDetail>())
             } else {
                 combine(
-                    exercises.map { exercise ->
+                    originalExercises.map { exercise ->
                         workoutRepository.getSetsForExercise(exercise.id)
                             .map { sets ->
                                 WorkoutExerciseDetail(exercise, sets)
@@ -63,11 +74,54 @@ class ActiveWorkoutViewModel @Inject constructor(
                 }
             }
         }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList()
-        )
+    }.flatMapLatest { flow ->
+        when (flow) {
+            is Flow<*> -> {
+                if (_activeSession.value != null) {
+                    // Convert session data to WorkoutExerciseDetail format
+                    @Suppress("UNCHECKED_CAST")
+                    (flow as Flow<List<WorkoutSessionExerciseDetail>>).map { sessionExercises ->
+                        sessionExercises.map { sessionExerciseDetail ->
+                            // Convert WorkoutSessionExercise to WorkoutExercise format
+                            val workoutExercise = WorkoutExercise(
+                                id = sessionExerciseDetail.exercise.id,
+                                workoutCardId = workoutCardId,
+                                exerciseId = sessionExerciseDetail.exercise.originalExerciseId.toIntOrNull() ?: 0,
+                                name = sessionExerciseDetail.exercise.name,
+                                orderIndex = sessionExerciseDetail.exercise.orderIndex,
+                                updatedAt = System.currentTimeMillis()
+                            )
+                            
+                            // Convert WorkoutSessionSet to ExerciseSet format
+                            val exerciseSets = sessionExerciseDetail.sets.map { sessionSet ->
+                                ExerciseSet(
+                                    id = sessionSet.id,
+                                    exerciseId = sessionExerciseDetail.exercise.id,
+                                    setNumber = sessionSet.setNumber,
+                                    weightKg = sessionSet.actualWeightKg ?: sessionSet.targetWeightKg,
+                                    reps = sessionSet.actualReps ?: sessionSet.targetReps,
+                                    createdAt = System.currentTimeMillis(),
+                                    updatedAt = System.currentTimeMillis(),
+                                    pendingSync = false,
+                                    syncedWithServer = false
+                                )
+                            }
+                            
+                            WorkoutExerciseDetail(workoutExercise, exerciseSets)
+                        }
+                    }
+                } else {
+                    @Suppress("UNCHECKED_CAST")
+                    flow as Flow<List<WorkoutExerciseDetail>>
+                }
+            }
+            else -> flowOf(emptyList())
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
 
     init {
         loadWorkoutCard()
@@ -292,8 +346,68 @@ class ActiveWorkoutViewModel @Inject constructor(
 
                 _activeSession.value = null
                 _uiState.value = UiState.WorkoutCancelled
+
             } catch (e: Exception) {
                 _uiState.value = UiState.Error(e.message ?: "Errore nell'annullamento dell'allenamento")
+            }
+        }
+    }
+
+    // Toggle edit mode function
+    fun toggleEditMode() {
+        _isEditMode.value = !_isEditMode.value
+    }
+
+    // Aggiungi esercizi selezionati alla sessione di allenamento attiva
+    fun addExercisesToSession(selectedExercises: List<com.torto.trgym.database.dto.ExerciseWithImage>) {
+        viewModelScope.launch {
+            try {
+                val activeSession = _activeSession.value ?: return@launch
+                val currentExercises = _sessionExercises.value
+                var nextOrderIndex = currentExercises.size
+
+                // Crea una lista di nuovi esercizi per la sessione
+                val newSessionExercises = selectedExercises.map { exercise ->
+                    WorkoutSessionExercise(
+                        workoutSessionId = activeSession.id,
+                        originalExerciseId = exercise.id.toString(), // Convertito a String
+                        name = exercise.title.trim(),
+                        orderIndex = nextOrderIndex++,
+                        startTime = System.currentTimeMillis()
+                    )
+                }
+
+                // Inserisci gli esercizi nel database
+                workoutRepository.insertSessionExercises(newSessionExercises)
+
+                // Aggiorna la lista di esercizi della sessione
+                val updatedExercises = currentExercises + newSessionExercises
+                _sessionExercises.value = updatedExercises
+
+                // Crea set predefiniti per ogni nuovo esercizio
+                val sessionSetsMap = _sessionSets.value.toMutableMap()
+                val completedSetsMap = _completedSets.value.toMutableMap()
+
+                newSessionExercises.forEach { sessionExercise ->
+                    // Crea un set predefinito per l'esercizio (puoi personalizzare questa logica)
+                    val sessionSet = WorkoutSessionSet(
+                        exerciseId = sessionExercise.id,
+                        setNumber = 1,
+                        targetReps = 10,
+                        isCompleted = false
+                    )
+
+                    completedSetsMap[sessionSet.id] = false
+                    val setsList = listOf(sessionSet)
+                    sessionSetsMap[sessionExercise.id] = setsList
+                    workoutRepository.insertSessionSets(setsList)
+                }
+
+                _sessionSets.value = sessionSetsMap
+                _completedSets.value = completedSetsMap
+
+            } catch (e: Exception) {
+                _uiState.value = UiState.Error(e.message ?: "Errore nell'aggiunta degli esercizi")
             }
         }
     }

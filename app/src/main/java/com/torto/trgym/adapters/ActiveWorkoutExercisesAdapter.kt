@@ -28,6 +28,9 @@ class ActiveWorkoutExercisesAdapter(
 
     // Map to associate original ExerciseSet IDs with WorkoutSessionSet IDs
     private val setIdMapping = mutableMapOf<String, String>()
+    
+    // Flag per la modalità di modifica
+    private var isEditMode = false
 
     fun updateCompletedSets(setCompletionMap: Map<String, Boolean>) {
         completedSets.clear()
@@ -38,6 +41,14 @@ class ActiveWorkoutExercisesAdapter(
     fun updateSetIdMapping(mapping: Map<String, String>) {
         setIdMapping.clear()
         setIdMapping.putAll(mapping)
+    }
+    
+    // Metodo per impostare la modalità di modifica
+    fun setEditMode(editMode: Boolean) {
+        if (isEditMode != editMode) {
+            isEditMode = editMode
+            notifyDataSetChanged()
+        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ExerciseViewHolder {
@@ -58,6 +69,7 @@ class ActiveWorkoutExercisesAdapter(
         private val setsRecyclerView: RecyclerView = itemView.findViewById(R.id.setsRecyclerView)
         private val addSetButton: MaterialButton = itemView.findViewById(R.id.addSetButton)
         private val exerciseStatusIcon: ImageView = itemView.findViewById(R.id.exerciseStatusIcon)
+        private val dragHandle: ImageView = itemView.findViewById(R.id.dragHandle)
 
         private var setsAdapter: ActiveWorkoutSetsAdapter? = null
 
@@ -77,10 +89,11 @@ class ActiveWorkoutExercisesAdapter(
             val exercise = exerciseDetail.exercise
             val sets = exerciseDetail.sets
 
-            // Configure UI for workout mode
-            exerciseMenu.visibility = View.GONE
-            addSetButton.visibility = View.GONE
-            exerciseStatusIcon.visibility = View.VISIBLE
+            // Aggiorno la visibilità in base alla modalità di modifica
+            exerciseMenu.visibility = if (isEditMode) View.VISIBLE else View.GONE
+            addSetButton.visibility = if (isEditMode) View.VISIBLE else View.GONE
+            dragHandle.visibility = if (isEditMode) View.VISIBLE else View.GONE
+            exerciseStatusIcon.visibility = if (isEditMode) View.GONE else View.VISIBLE
 
             exerciseName.text = exercise.name
 
@@ -140,6 +153,7 @@ class ActiveWorkoutExercisesAdapter(
             }
 
             setsAdapter?.updateCompletedSets(completedSets, setIdMapping)
+            setsAdapter?.setEditMode(isEditMode)
             setsAdapter?.submitList(sets)
         }
     }
@@ -171,6 +185,7 @@ class ActiveWorkoutSetsAdapter(
 
     private val completedSets = mutableMapOf<String, Boolean>()
     private val setIdMapping = mutableMapOf<String, String>()
+    private var isEditMode = false
 
     fun updateCompletedSets(setCompletionMap: Map<String, Boolean>, mapping: Map<String, String>) {
         completedSets.clear()
@@ -180,6 +195,14 @@ class ActiveWorkoutSetsAdapter(
         setIdMapping.putAll(mapping)
 
         notifyDataSetChanged()
+    }
+    
+    // Metodo per impostare la modalità di modifica
+    fun setEditMode(editMode: Boolean) {
+        if (isEditMode != editMode) {
+            isEditMode = editMode
+            notifyDataSetChanged()
+        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SetViewHolder {
@@ -243,14 +266,18 @@ class ActiveWorkoutSetsAdapter(
             weightInput.setText(set.weightKg?.toString() ?: "")
             repsInput.setText(set.reps?.toString() ?: "")
 
-            // Configure UI for workout mode
-            setMenu.visibility = View.GONE
-            setCompletedCheckbox.visibility = View.VISIBLE
+            // Aggiorno la visibilità in base alla modalità di modifica
+            setMenu.visibility = if (isEditMode) View.VISIBLE else View.GONE
+            setCompletedCheckbox.visibility = if (isEditMode) View.GONE else View.VISIBLE
 
             // Get session set completion state
             val sessionSetId = setIdMapping[set.id]
             val isCompleted = sessionSetId?.let { completedSets[it] } ?: false
             setCompletedCheckbox.isChecked = isCompleted
+
+            // Abilita/disabilita gli input in base alla modalità
+            weightInput.isEnabled = true // Sempre abilitati, anche in modalità non-edit
+            repsInput.isEnabled = true
 
             isBindingData = false
         }

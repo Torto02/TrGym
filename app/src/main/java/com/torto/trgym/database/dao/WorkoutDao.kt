@@ -3,6 +3,7 @@ package com.torto.trgym.database.dao
 import androidx.room.*
 import com.torto.trgym.database.dto.WorkoutCardDetail
 import com.torto.trgym.database.dto.WorkoutExerciseDetail
+import com.torto.trgym.database.dto.WorkoutSessionExerciseDetail
 import com.torto.trgym.database.entities.*
 import kotlinx.coroutines.flow.Flow
 
@@ -119,6 +120,14 @@ interface WorkoutDao {
     @Transaction
     @Query("SELECT * FROM workout_exercises WHERE id = :exerciseId")
     suspend fun getExerciseWithSets(exerciseId: String): WorkoutExerciseDetail?
+
+    @Transaction
+    @Query("SELECT * FROM workout_session_exercises WHERE workoutSessionId = :sessionId ORDER BY orderIndex ASC")
+    suspend fun getSessionExercisesWithSets(sessionId: String): List<WorkoutSessionExerciseDetail>
+
+    @Transaction
+    @Query("SELECT * FROM workout_session_exercises WHERE workoutSessionId = :sessionId ORDER BY orderIndex ASC")
+    fun getSessionExercisesWithSetsFlow(sessionId: String): Flow<List<WorkoutSessionExerciseDetail>>
 
     @Query("SELECT COUNT(*) FROM workout_exercises WHERE workoutCardId = :cardId")
     suspend fun getExerciseCountForCard(cardId: String): Int

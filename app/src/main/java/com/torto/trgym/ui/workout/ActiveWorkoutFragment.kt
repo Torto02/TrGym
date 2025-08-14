@@ -26,9 +26,11 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.torto.trgym.R
 import com.torto.trgym.adapters.ActiveWorkoutExercisesAdapter
 import com.torto.trgym.services.WorkoutTimerService
+import com.torto.trgym.ui.dialogs.SelectExercisesDialog
 import com.torto.trgym.viewmodel.workout.ActiveWorkoutViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -50,6 +52,8 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
     private lateinit var timerCard: MaterialCardView
     private lateinit var timerText: TextView
     private lateinit var pauseResumeButton: ImageView
+    private lateinit var editButton: TextView
+    private lateinit var addExerciseBtn: FloatingActionButton // Aggiungo il FAB
 
     // Timer service
     private var timerService: WorkoutTimerService? = null
@@ -112,6 +116,8 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
         timerCard = view.findViewById(R.id.timerCard)
         timerText = view.findViewById(R.id.timerText)
         pauseResumeButton = view.findViewById(R.id.pauseResumeButton)
+        editButton = view.findViewById(R.id.editButton)
+        addExerciseBtn = view.findViewById(R.id.addExerciseBtn) // Inizializzo il FAB
     }
 
     private fun setupRecyclerView() {
@@ -147,6 +153,31 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
         pauseResumeButton.setOnClickListener {
             toggleTimerState()
         }
+
+        // Aggiungo il listener per il pulsante di modifica
+        editButton.setOnClickListener {
+            viewModel.toggleEditMode()
+        }
+
+        // Listener per il pulsante FAB di aggiunta esercizi
+        addExerciseBtn.setOnClickListener {
+            showSelectExercisesDialog()
+        }
+    }
+
+    // Metodo per mostrare il dialog di selezione esercizi
+    private fun showSelectExercisesDialog() {
+        val dialog = SelectExercisesDialog()
+        dialog.setOnExercisesSelectedListener { selectedExercises ->
+            viewModel.addExercisesToSession(selectedExercises)
+            val message = if (selectedExercises.size == 1) {
+                "Esercizio aggiunto all'allenamento"
+            } else {
+                "${selectedExercises.size} esercizi aggiunti all'allenamento"
+            }
+            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+        }
+        dialog.show(parentFragmentManager, "SelectExercisesDialog")
     }
 
     private fun observeViewModel() {
@@ -156,6 +187,15 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
                     workoutCard?.let {
                         workoutTitle.text = it.name
                     }
+                }
+            }
+        }
+
+        // Osservo lo stato di edit mode
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.isEditMode.collect { isEditMode ->
+                    updateEditModeUI(isEditMode)
                 }
             }
         }
@@ -182,12 +222,12 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
                         is ActiveWorkoutViewModel.UiState.WorkoutCompleted -> {
                             Toast.makeText(requireContext(), "Allenamento completato!", Toast.LENGTH_SHORT).show()
                             stopTimerService()
-                            findNavController().popBackStack()
+                            findNavController().navigate(ActiveWorkoutFragmentDirections.actionActiveWorkoutFragmentToHomeFragment())
                         }
                         is ActiveWorkoutViewModel.UiState.WorkoutCancelled -> {
                             Toast.makeText(requireContext(), "Allenamento annullato", Toast.LENGTH_SHORT).show()
                             stopTimerService()
-                            findNavController().popBackStack()
+                            findNavController().navigate(ActiveWorkoutFragmentDirections.actionActiveWorkoutFragmentToHomeFragment())
                         }
                         else -> { /* Handle other states if needed */ }
                     }
@@ -210,6 +250,21 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
                 }
             }
         }
+    }
+
+    // Aggiungo il metodo per aggiornare l'UI in base allo stato di edit mode
+    private fun updateEditModeUI(isEditMode: Boolean) {
+        editButton.text = if (isEditMode) "Fine" else "Modifica"
+        
+        // Gestisco la visibilità del FAB
+        addExerciseBtn.visibility = if (isEditMode) View.VISIBLE else View.GONE
+        
+        // Passo lo stato di edit mode all'adapter
+        exercisesAdapter.setEditMode(isEditMode)
+        
+        // Nascondi/mostra i pulsanti di azione inferiori durante la modifica
+        completeWorkoutButton.visibility = if (isEditMode) View.GONE else View.VISIBLE
+        cancelWorkoutButton.visibility = if (isEditMode) View.GONE else View.VISIBLE
     }
 
     private fun updateEmptyState(isEmpty: Boolean) {
@@ -322,7 +377,7 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
             .setTitle("Uscire dall'allenamento?")
             .setMessage("L'allenamento rimarrà attivo. Per completarlo o annullarlo torna a questa schermata.")
             .setPositiveButton("Esci") { _, _ ->
-                findNavController().popBackStack()
+                findNavController().navigate(ActiveWorkoutFragmentDirections.actionActiveWorkoutFragmentToHomeFragment())
             }
             .setNegativeButton("Resta", null)
             .show()

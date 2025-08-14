@@ -4,6 +4,7 @@ import android.util.Log
 import com.torto.trgym.database.dao.WorkoutDao
 import com.torto.trgym.database.dto.WorkoutExerciseDetail
 import com.torto.trgym.database.dto.WorkoutCardDetail
+import com.torto.trgym.database.dto.WorkoutSessionExerciseDetail
 import com.torto.trgym.database.dto.SupabaseWorkoutCard
 import com.torto.trgym.database.dto.SupabaseWorkoutExercise
 import com.torto.trgym.database.dto.SupabaseExerciseSet
@@ -107,6 +108,9 @@ class WorkoutRepository @Inject constructor(
     // WorkoutExercise operations
     fun getExercisesForCard(cardId: String): Flow<List<WorkoutExercise>> =
         workoutDao.getExercisesForCard(cardId)
+
+    fun getSessionExercisesWithSets(sessionId: String): Flow<List<WorkoutSessionExerciseDetail>> =
+        workoutDao.getSessionExercisesWithSetsFlow(sessionId)
 
     suspend fun getWorkoutExercise(exerciseId: String): WorkoutExercise? =
         workoutDao.getWorkoutExercise(exerciseId)
