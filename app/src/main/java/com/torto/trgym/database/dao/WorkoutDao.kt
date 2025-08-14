@@ -175,6 +175,15 @@ interface WorkoutDao {
     @Query("UPDATE exercise_sets SET synced_with_server = 1, pending_sync = 0 WHERE id = :setId")
     suspend fun markExerciseSetAsSynced(setId: String)
 
+    @Query("UPDATE workout_sessions SET syncedWithServer = 1, pendingSync = 0 WHERE id = :sessionId")
+    suspend fun markWorkoutSessionAsSynced(sessionId: String)
+
+    @Query("UPDATE workout_session_exercises SET syncedWithServer = 1, pendingSync = 0 WHERE id = :exerciseId")
+    suspend fun markSessionExerciseAsSynced(exerciseId: String)
+
+    @Query("UPDATE workout_session_sets SET syncedWithServer = 1, pendingSync = 0 WHERE id = :setId")
+    suspend fun markSessionSetAsSynced(setId: String)
+
     @Query("UPDATE exercise_sets SET setNumber = setNumber - 1 WHERE exerciseId = :exerciseId AND setNumber > :deletedSetNumber")
     suspend fun decrementSetNumbersAfterDeletion(exerciseId: String, deletedSetNumber: Int)
 

@@ -8,6 +8,9 @@ import com.torto.trgym.database.dto.WorkoutSessionExerciseDetail
 import com.torto.trgym.database.dto.SupabaseWorkoutCard
 import com.torto.trgym.database.dto.SupabaseWorkoutExercise
 import com.torto.trgym.database.dto.SupabaseExerciseSet
+import com.torto.trgym.database.dto.SupabaseWorkoutSession
+import com.torto.trgym.database.dto.SupabaseWorkoutSessionExercise
+import com.torto.trgym.database.dto.SupabaseWorkoutSessionSet
 import com.torto.trgym.database.entities.*
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
@@ -690,15 +693,83 @@ class WorkoutRepository @Inject constructor(
     }
 
     suspend fun insertWorkoutSession(session: WorkoutSession) = withContext(Dispatchers.IO) {
-        workoutDao.insertWorkoutSession(session)
+        // Insert locally first with pendingSync flag
+        val sessionToInsert = session.copy(pendingSync = true, syncedWithServer = false)
+        workoutDao.insertWorkoutSession(sessionToInsert)
+
+        // Upload to Supabase if user is authenticated
+        try {
+            val userId = supabaseClient.auth.currentUserOrNull()?.id
+            if (userId != null) {
+                val supabaseSession = SupabaseWorkoutSession(
+                    id = session.id,
+                    userId = userId,
+                    workoutCardId = session.workoutCardId,
+                    name = session.name,
+                    startTime = java.time.Instant.ofEpochMilli(session.startTime).toString(),
+                    endTime = session.endTime?.let { java.time.Instant.ofEpochMilli(it).toString() },
+                    isCompleted = session.isCompleted,
+                    totalDurationMs = session.totalDurationMs,
+                    notes = session.notes
+                )
+                supabaseClient.from("workout_sessions").upsert(supabaseSession)
+                // Mark as synced if successful
+                workoutDao.markWorkoutSessionAsSynced(session.id)
+                Log.d("WorkoutRepository", "Uploaded new workout session to Supabase: ${session.id}")
+            }
+        } catch (e: Exception) {
+            Log.w("WorkoutRepository", "Could not upload workout session to Supabase (offline?), will sync later", e)
+            // Keep pendingSync = true for later synchronization
+        }
     }
 
     suspend fun updateWorkoutSession(session: WorkoutSession) = withContext(Dispatchers.IO) {
+        // Update locally first
         workoutDao.updateWorkoutSession(session)
+
+        // Upload to Supabase if user is authenticated
+        try {
+            val userId = supabaseClient.auth.currentUserOrNull()?.id
+            if (userId != null) {
+                val supabaseSession = SupabaseWorkoutSession(
+                    id = session.id,
+                    userId = userId,
+                    workoutCardId = session.workoutCardId,
+                    name = session.name,
+                    startTime = java.time.Instant.ofEpochMilli(session.startTime).toString(),
+                    endTime = session.endTime?.let { java.time.Instant.ofEpochMilli(it).toString() },
+                    isCompleted = session.isCompleted,
+                    totalDurationMs = session.totalDurationMs,
+                    notes = session.notes
+                )
+                supabaseClient.from("workout_sessions").upsert(supabaseSession)
+                Log.d("WorkoutRepository", "Updated workout session on Supabase: ${session.id}")
+            }
+        } catch (e: Exception) {
+            Log.e("WorkoutRepository", "Error updating workout session on Supabase", e)
+            // Don't fail the local operation if Supabase upload fails
+        }
     }
 
     suspend fun deleteWorkoutSession(session: WorkoutSession) = withContext(Dispatchers.IO) {
+        // Delete locally first
         workoutDao.deleteWorkoutSession(session)
+
+        // Delete from Supabase if user is authenticated
+        try {
+            val userId = supabaseClient.auth.currentUserOrNull()?.id
+            if (userId != null) {
+                supabaseClient.from("workout_sessions").delete {
+                    filter {
+                        eq("id", session.id)
+                    }
+                }
+                Log.d("WorkoutRepository", "Deleted workout session from Supabase: ${session.id}")
+            }
+        } catch (e: Exception) {
+            Log.e("WorkoutRepository", "Error deleting workout session from Supabase", e)
+            // Don't fail the local operation if Supabase delete fails
+        }
     }
 
     suspend fun getSessionExercises(sessionId: String): List<WorkoutSessionExercise> = withContext(Dispatchers.IO) {
@@ -706,11 +777,66 @@ class WorkoutRepository @Inject constructor(
     }
 
     suspend fun insertSessionExercises(exercises: List<WorkoutSessionExercise>) = withContext(Dispatchers.IO) {
-        workoutDao.insertSessionExercises(exercises)
+        // Insert locally first with pendingSync flag
+        val exercisesToInsert = exercises.map { it.copy(pendingSync = true, syncedWithServer = false) }
+        workoutDao.insertSessionExercises(exercisesToInsert)
+
+        // Upload to Supabase if user is authenticated
+        try {
+            val userId = supabaseClient.auth.currentUserOrNull()?.id
+            if (userId != null) {
+                val supabaseExercises = exercises.map { exercise ->
+                    SupabaseWorkoutSessionExercise(
+                        id = exercise.id,
+                        workoutSessionId = exercise.workoutSessionId,
+                        originalExerciseId = exercise.originalExerciseId,
+                        name = exercise.name,
+                        orderIndex = exercise.orderIndex,
+                        isCompleted = exercise.isCompleted,
+                        startTime = exercise.startTime?.let { java.time.Instant.ofEpochMilli(it).toString() },
+                        endTime = exercise.endTime?.let { java.time.Instant.ofEpochMilli(it).toString() },
+                        restTimeBetweenSets = exercise.restTimeBetweenSets,
+                        notes = exercise.notes
+                    )
+                }
+                supabaseClient.from("workout_session_exercises").upsert(supabaseExercises)
+                // Mark all as synced if successful
+                exercises.forEach { workoutDao.markSessionExerciseAsSynced(it.id) }
+                Log.d("WorkoutRepository", "Uploaded ${exercises.size} session exercises to Supabase")
+            }
+        } catch (e: Exception) {
+            Log.w("WorkoutRepository", "Could not upload session exercises to Supabase (offline?), will sync later", e)
+            // Keep pendingSync = true for later synchronization
+        }
     }
 
     suspend fun updateSessionExercise(exercise: WorkoutSessionExercise) = withContext(Dispatchers.IO) {
+        // Update locally first
         workoutDao.updateSessionExercise(exercise)
+
+        // Upload to Supabase if user is authenticated
+        try {
+            val userId = supabaseClient.auth.currentUserOrNull()?.id
+            if (userId != null) {
+                val supabaseExercise = SupabaseWorkoutSessionExercise(
+                    id = exercise.id,
+                    workoutSessionId = exercise.workoutSessionId,
+                    originalExerciseId = exercise.originalExerciseId,
+                    name = exercise.name,
+                    orderIndex = exercise.orderIndex,
+                    isCompleted = exercise.isCompleted,
+                    startTime = exercise.startTime?.let { java.time.Instant.ofEpochMilli(it).toString() },
+                    endTime = exercise.endTime?.let { java.time.Instant.ofEpochMilli(it).toString() },
+                    restTimeBetweenSets = exercise.restTimeBetweenSets,
+                    notes = exercise.notes
+                )
+                supabaseClient.from("workout_session_exercises").upsert(supabaseExercise)
+                Log.d("WorkoutRepository", "Updated session exercise on Supabase: ${exercise.id}")
+            }
+        } catch (e: Exception) {
+            Log.e("WorkoutRepository", "Error updating session exercise on Supabase", e)
+            // Don't fail the local operation if Supabase upload fails
+        }
     }
 
     suspend fun getSessionSets(exerciseId: String): List<WorkoutSessionSet> = withContext(Dispatchers.IO) {
@@ -718,15 +844,95 @@ class WorkoutRepository @Inject constructor(
     }
 
     suspend fun insertSessionSets(sets: List<WorkoutSessionSet>) = withContext(Dispatchers.IO) {
-        workoutDao.insertSessionSets(sets)
+        // Insert locally first with pendingSync flag
+        val setsToInsert = sets.map { it.copy(pendingSync = true, syncedWithServer = false) }
+        workoutDao.insertSessionSets(setsToInsert)
+
+        // Upload to Supabase if user is authenticated
+        try {
+            val userId = supabaseClient.auth.currentUserOrNull()?.id
+            if (userId != null) {
+                val supabaseSets = sets.map { set ->
+                    SupabaseWorkoutSessionSet(
+                        id = set.id,
+                        exerciseId = set.exerciseId,
+                        setNumber = set.setNumber,
+                        targetWeightKg = set.targetWeightKg,
+                        actualWeightKg = set.actualWeightKg,
+                        targetReps = set.targetReps,
+                        actualReps = set.actualReps,
+                        isCompleted = set.isCompleted,
+                        completedAt = set.completedAt?.let { java.time.Instant.ofEpochMilli(it).toString() },
+                        restTimeMs = set.restTimeMs,
+                        rpe = set.rpe,
+                        notes = set.notes
+                    )
+                }
+                supabaseClient.from("workout_session_sets").upsert(supabaseSets)
+                // Mark all as synced if successful
+                sets.forEach { workoutDao.markSessionSetAsSynced(it.id) }
+                Log.d("WorkoutRepository", "Uploaded ${sets.size} session sets to Supabase")
+            }
+        } catch (e: Exception) {
+            Log.w("WorkoutRepository", "Could not upload session sets to Supabase (offline?), will sync later", e)
+            // Keep pendingSync = true for later synchronization
+        }
     }
 
     suspend fun updateSessionSet(set: WorkoutSessionSet) = withContext(Dispatchers.IO) {
+        // Update locally first
         workoutDao.updateSessionSet(set)
+
+        // Upload to Supabase if user is authenticated
+        try {
+            val userId = supabaseClient.auth.currentUserOrNull()?.id
+            if (userId != null) {
+                val supabaseSet = SupabaseWorkoutSessionSet(
+                    id = set.id,
+                    exerciseId = set.exerciseId,
+                    setNumber = set.setNumber,
+                    targetWeightKg = set.targetWeightKg,
+                    actualWeightKg = set.actualWeightKg,
+                    targetReps = set.targetReps,
+                    actualReps = set.actualReps,
+                    isCompleted = set.isCompleted,
+                    completedAt = set.completedAt?.let { java.time.Instant.ofEpochMilli(it).toString() },
+                    restTimeMs = set.restTimeMs,
+                    rpe = set.rpe,
+                    notes = set.notes
+                )
+                supabaseClient.from("workout_session_sets").upsert(supabaseSet)
+                Log.d("WorkoutRepository", "Updated session set on Supabase: ${set.id}")
+            }
+        } catch (e: Exception) {
+            Log.e("WorkoutRepository", "Error updating session set on Supabase", e)
+            // Don't fail the local operation if Supabase upload fails
+        }
     }
 
     suspend fun updateSessionSetCompletion(setId: String, isCompleted: Boolean) = withContext(Dispatchers.IO) {
-        workoutDao.updateSessionSetCompletion(setId, isCompleted, System.currentTimeMillis())
+        val completedAt = if (isCompleted) System.currentTimeMillis() else null
+        workoutDao.updateSessionSetCompletion(setId, isCompleted, completedAt)
+
+        // Upload to Supabase if user is authenticated
+        try {
+            val userId = supabaseClient.auth.currentUserOrNull()?.id
+            if (userId != null) {
+                supabaseClient.from("workout_session_sets")
+                    .update(mapOf(
+                        "is_completed" to isCompleted,
+                        "completed_at" to (completedAt?.let { java.time.Instant.ofEpochMilli(it).toString() })
+                    )) {
+                        filter {
+                            eq("id", setId)
+                        }
+                    }
+                Log.d("WorkoutRepository", "Updated session set completion on Supabase: $setId")
+            }
+        } catch (e: Exception) {
+            Log.e("WorkoutRepository", "Error updating session set completion on Supabase", e)
+            // Don't fail the local operation if Supabase upload fails
+        }
     }
 
     suspend fun getLatestWorkoutSessions(limit: Int = 10): List<WorkoutSession> = withContext(Dispatchers.IO) {
@@ -735,15 +941,78 @@ class WorkoutRepository @Inject constructor(
 
 
     suspend fun insertSessionSet(set: WorkoutSessionSet) = withContext(Dispatchers.IO) {
-        workoutDao.insertSessionSet(set)
+        // Insert locally first with pendingSync flag
+        val setToInsert = set.copy(pendingSync = true, syncedWithServer = false)
+        workoutDao.insertSessionSet(setToInsert)
+
+        // Upload to Supabase if user is authenticated
+        try {
+            val userId = supabaseClient.auth.currentUserOrNull()?.id
+            if (userId != null) {
+                val supabaseSet = SupabaseWorkoutSessionSet(
+                    id = set.id,
+                    exerciseId = set.exerciseId,
+                    setNumber = set.setNumber,
+                    targetWeightKg = set.targetWeightKg,
+                    actualWeightKg = set.actualWeightKg,
+                    targetReps = set.targetReps,
+                    actualReps = set.actualReps,
+                    isCompleted = set.isCompleted,
+                    completedAt = set.completedAt?.let { java.time.Instant.ofEpochMilli(it).toString() },
+                    restTimeMs = set.restTimeMs,
+                    rpe = set.rpe,
+                    notes = set.notes
+                )
+                supabaseClient.from("workout_session_sets").upsert(supabaseSet)
+                workoutDao.markSessionSetAsSynced(set.id)
+                Log.d("WorkoutRepository", "Uploaded session set to Supabase: ${set.id}")
+            }
+        } catch (e: Exception) {
+            Log.w("WorkoutRepository", "Could not upload session set to Supabase (offline?), will sync later", e)
+            // Keep pendingSync = true for later synchronization
+        }
     }
 
     suspend fun deleteSessionExercise(exercise: WorkoutSessionExercise) = withContext(Dispatchers.IO) {
+        // Delete locally first
         workoutDao.deleteSessionExerciseAndReorder(exercise)
+
+        // Delete from Supabase if user is authenticated
+        try {
+            val userId = supabaseClient.auth.currentUserOrNull()?.id
+            if (userId != null) {
+                supabaseClient.from("workout_session_exercises").delete {
+                    filter {
+                        eq("id", exercise.id)
+                    }
+                }
+                Log.d("WorkoutRepository", "Deleted session exercise from Supabase: ${exercise.id}")
+            }
+        } catch (e: Exception) {
+            Log.e("WorkoutRepository", "Error deleting session exercise from Supabase", e)
+            // Don't fail the local operation if Supabase delete fails
+        }
     }
 
     suspend fun deleteSessionSet(set: WorkoutSessionSet) = withContext(Dispatchers.IO) {
+        // Delete locally first
         workoutDao.deleteSessionSetAndReorder(set)
+
+        // Delete from Supabase if user is authenticated
+        try {
+            val userId = supabaseClient.auth.currentUserOrNull()?.id
+            if (userId != null) {
+                supabaseClient.from("workout_session_sets").delete {
+                    filter {
+                        eq("id", set.id)
+                    }
+                }
+                Log.d("WorkoutRepository", "Deleted session set from Supabase: ${set.id}")
+            }
+        } catch (e: Exception) {
+            Log.e("WorkoutRepository", "Error deleting session set from Supabase", e)
+            // Don't fail the local operation if Supabase delete fails
+        }
     }
 
 
