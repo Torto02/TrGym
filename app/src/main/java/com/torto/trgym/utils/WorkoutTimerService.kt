@@ -26,7 +26,6 @@ import javax.inject.Inject
 class WorkoutTimerService : Service() {
 
 
-
     private val binder = WorkoutTimerBinder()
     private val serviceScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 

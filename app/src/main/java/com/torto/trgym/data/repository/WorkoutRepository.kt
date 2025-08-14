@@ -32,7 +32,7 @@ class WorkoutRepository @Inject constructor(
         // Insert locally first with pendingSync flag
         val cardToInsert = workoutCard.copy(pendingSync = true, syncedWithServer = false)
         workoutDao.insertWorkoutCard(cardToInsert)
-        
+
         // Upload to Supabase if user is authenticated
         try {
             val userId = supabaseClient.auth.currentUserOrNull()?.id
@@ -57,7 +57,7 @@ class WorkoutRepository @Inject constructor(
     suspend fun updateWorkoutCard(workoutCard: WorkoutCard) = withContext(Dispatchers.IO) {
         // Update locally first
         workoutDao.updateWorkoutCard(workoutCard)
-        
+
         // Upload to Supabase if user is authenticated
         try {
             val userId = supabaseClient.auth.currentUserOrNull()?.id
@@ -80,7 +80,7 @@ class WorkoutRepository @Inject constructor(
     suspend fun deleteWorkoutCard(workoutCard: WorkoutCard) = withContext(Dispatchers.IO) {
         // Delete locally first
         workoutDao.deleteWorkoutCard(workoutCard)
-        
+
         // Delete from Supabase if user is authenticated
         try {
             val userId = supabaseClient.auth.currentUserOrNull()?.id
@@ -115,7 +115,7 @@ class WorkoutRepository @Inject constructor(
         // Insert locally first with pendingSync flag
         val exerciseToInsert = exercise.copy(pendingSync = true, syncedWithServer = false)
         workoutDao.insertWorkoutExercise(exerciseToInsert)
-        
+
         // Upload to Supabase if user is authenticated
         try {
             val userId = supabaseClient.auth.currentUserOrNull()?.id
@@ -138,7 +138,7 @@ class WorkoutRepository @Inject constructor(
     suspend fun updateWorkoutExercise(exercise: WorkoutExercise) = withContext(Dispatchers.IO) {
         // Update locally first
         workoutDao.updateWorkoutExercise(exercise)
-        
+
         // Upload to Supabase if user is authenticated
         try {
             val userId = supabaseClient.auth.currentUserOrNull()?.id
@@ -160,7 +160,7 @@ class WorkoutRepository @Inject constructor(
     suspend fun deleteWorkoutExercise(exercise: WorkoutExercise) = withContext(Dispatchers.IO) {
         // Delete locally first
         workoutDao.deleteWorkoutExercise(exercise)
-        
+
         // Delete from Supabase if user is authenticated
         try {
             val userId = supabaseClient.auth.currentUserOrNull()?.id
@@ -187,7 +187,7 @@ class WorkoutRepository @Inject constructor(
     suspend fun insertExerciseSet(set: ExerciseSet) = withContext(Dispatchers.IO) {
         // Insert locally first
         workoutDao.insertExerciseSet(set)
-        
+
         // Upload to Supabase if user is authenticated
         try {
             val userId = supabaseClient.auth.currentUserOrNull()?.id
@@ -210,7 +210,7 @@ class WorkoutRepository @Inject constructor(
     suspend fun insertExerciseSets(sets: List<ExerciseSet>) = withContext(Dispatchers.IO) {
         // Insert locally first
         workoutDao.insertExerciseSets(sets)
-        
+
         // Upload to Supabase if user is authenticated
         try {
             val userId = supabaseClient.auth.currentUserOrNull()?.id
@@ -240,7 +240,7 @@ class WorkoutRepository @Inject constructor(
             syncedWithServer = false
         )
         workoutDao.updateExerciseSet(setToUpdate)
-        
+
         // Upload to Supabase if user is authenticated
         try {
             val userId = supabaseClient.auth.currentUserOrNull()?.id
@@ -264,7 +264,7 @@ class WorkoutRepository @Inject constructor(
     suspend fun deleteExerciseSet(set: ExerciseSet) = withContext(Dispatchers.IO) {
         // Delete locally first
         workoutDao.deleteExerciseSet(set)
-        
+
         // Delete from Supabase if user is authenticated
         try {
             val userId = supabaseClient.auth.currentUserOrNull()?.id
@@ -728,4 +728,11 @@ class WorkoutRepository @Inject constructor(
     suspend fun getLatestWorkoutSessions(limit: Int = 10): List<WorkoutSession> = withContext(Dispatchers.IO) {
         workoutDao.getLatestWorkoutSessions(limit)
     }
+
+
+    suspend fun insertSessionSet(set: WorkoutSessionSet) = withContext(Dispatchers.IO) {
+        workoutDao.insertSessionSet(set)
+    }
+
+
 }

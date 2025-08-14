@@ -304,12 +304,4 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
             .setNegativeButton("Annulla", null)
             .show()
     }
-
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        if (::exercisesAdapter.isInitialized) {
-            exercisesAdapter.cleanup()
-        }
-    }
 }

@@ -198,7 +198,7 @@
         android:layout_gravity="bottom"
         android:orientation="vertical"
         android:padding="16dp"
-        android:background="@color/ios_systemBackground"
+
         android:elevation="8dp">
 
         <!-- Pulsante Inizia/Concludi Allenamento -->

@@ -33,10 +33,6 @@ class WorkoutExercisesAdapter(
         }
     }
 
-    fun cleanup() {
-        // Clean up any resources if needed
-    }
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ExerciseViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_workout_exercise, parent, false)
@@ -55,8 +51,6 @@ class WorkoutExercisesAdapter(
         private val setsHeaderLayout: View = itemView.findViewById(R.id.setsHeaderLayout)
         private val setsRecyclerView: RecyclerView = itemView.findViewById(R.id.setsRecyclerView)
         private val addSetButton: MaterialButton = itemView.findViewById(R.id.addSetButton)
-
-        //        private val setsHeaderText: TextView = itemView.findViewById(R.id.completionStatusHeader)
         private val exerciseInfoLayout: View = itemView.findViewById(R.id.exerciseInfoLayout)
 
         private var setsAdapter: ExerciseSetsAdapter? = null

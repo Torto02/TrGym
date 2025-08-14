@@ -25,31 +25,31 @@ class ActiveWorkoutExercisesAdapter(
 
     // Map to track the completion status of sets
     private val completedSets = mutableMapOf<String, Boolean>()
-    
+
     // Map to associate original ExerciseSet IDs with WorkoutSessionSet IDs
     private val setIdMapping = mutableMapOf<String, String>()
-    
+
     fun updateCompletedSets(setCompletionMap: Map<String, Boolean>) {
         completedSets.clear()
         completedSets.putAll(setCompletionMap)
         notifyDataSetChanged()
     }
-    
+
     fun updateSetIdMapping(mapping: Map<String, String>) {
         setIdMapping.clear()
         setIdMapping.putAll(mapping)
     }
-    
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ExerciseViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_workout_exercise, parent, false)
         return ExerciseViewHolder(view)
     }
-    
+
     override fun onBindViewHolder(holder: ExerciseViewHolder, position: Int) {
         holder.bind(getItem(position))
     }
-    
+
     inner class ExerciseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val exerciseName: TextView = itemView.findViewById(R.id.exerciseName)
         private val exerciseInfo: TextView = itemView.findViewById(R.id.exerciseInfo)
@@ -58,13 +58,13 @@ class ActiveWorkoutExercisesAdapter(
         private val setsRecyclerView: RecyclerView = itemView.findViewById(R.id.setsRecyclerView)
         private val addSetButton: MaterialButton = itemView.findViewById(R.id.addSetButton)
         private val exerciseStatusIcon: ImageView = itemView.findViewById(R.id.exerciseStatusIcon)
-        
+
         private var setsAdapter: ActiveWorkoutSetsAdapter? = null
-        
+
         init {
             setupRecyclerView()
         }
-        
+
         private fun setupRecyclerView() {
             setsRecyclerView.apply {
                 layoutManager = LinearLayoutManager(context)
@@ -72,28 +72,28 @@ class ActiveWorkoutExercisesAdapter(
                 isNestedScrollingEnabled = false
             }
         }
-        
+
         fun bind(exerciseDetail: WorkoutExerciseDetail) {
             val exercise = exerciseDetail.exercise
             val sets = exerciseDetail.sets
-            
+
             // Configure UI for workout mode
             exerciseMenu.visibility = View.GONE
             addSetButton.visibility = View.GONE
             exerciseStatusIcon.visibility = View.VISIBLE
-            
+
             exerciseName.text = exercise.name
-            
+
             // Calculate exercise completion status
             val totalSets = sets.size
-            val completedSetsCount = sets.count { set -> 
+            val completedSetsCount = sets.count { set ->
                 val sessionSetId = setIdMapping[set.id]
                 sessionSetId != null && completedSets[sessionSetId] == true
             }
-            
+
             // Update exercise info text
             exerciseInfo.text = "$completedSetsCount/$totalSets serie"
-            
+
             // Update status icon based on completion
             val isExerciseCompleted = totalSets > 0 && completedSetsCount == totalSets
             exerciseStatusIcon.setImageResource(
@@ -103,10 +103,10 @@ class ActiveWorkoutExercisesAdapter(
                     else -> R.drawable.ic_play
                 }
             )
-            
+
             // Show/hide sets header based on whether we have sets
             setsHeaderLayout.visibility = if (sets.isNotEmpty()) View.VISIBLE else View.GONE
-            
+
             // Update sets adapter
             if (setsAdapter == null) {
                 setsAdapter = ActiveWorkoutSetsAdapter(
@@ -138,12 +138,12 @@ class ActiveWorkoutExercisesAdapter(
                 )
                 setsRecyclerView.adapter = setsAdapter
             }
-            
+
             setsAdapter?.updateCompletedSets(completedSets, setIdMapping)
             setsAdapter?.submitList(sets)
         }
     }
-    
+
     class ExerciseDiffCallback : DiffUtil.ItemCallback<WorkoutExerciseDetail>() {
         override fun areItemsTheSame(
             oldItem: WorkoutExerciseDetail,
@@ -151,7 +151,7 @@ class ActiveWorkoutExercisesAdapter(
         ): Boolean {
             return oldItem.exercise.id == newItem.exercise.id
         }
-        
+
         override fun areContentsTheSame(
             oldItem: WorkoutExerciseDetail,
             newItem: WorkoutExerciseDetail
@@ -168,43 +168,43 @@ class ActiveWorkoutSetsAdapter(
     private val onSetCompletionChanged: (String, Boolean) -> Unit,
     private val onSetValueChanged: (String, Double?, Int?) -> Unit
 ) : ListAdapter<ExerciseSet, ActiveWorkoutSetsAdapter.SetViewHolder>(SetDiffCallback()) {
-    
+
     private val completedSets = mutableMapOf<String, Boolean>()
     private val setIdMapping = mutableMapOf<String, String>()
-    
+
     fun updateCompletedSets(setCompletionMap: Map<String, Boolean>, mapping: Map<String, String>) {
         completedSets.clear()
         completedSets.putAll(setCompletionMap)
-        
+
         setIdMapping.clear()
         setIdMapping.putAll(mapping)
-        
+
         notifyDataSetChanged()
     }
-    
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SetViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_exercise_set, parent, false)
         return SetViewHolder(view)
     }
-    
+
     override fun onBindViewHolder(holder: SetViewHolder, position: Int) {
         holder.bind(getItem(position))
     }
-    
+
     inner class SetViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val setNumber: TextView = itemView.findViewById(R.id.setNumber)
-        private val weightInput: com.google.android.material.textfield.TextInputEditText = 
+        private val weightInput: com.google.android.material.textfield.TextInputEditText =
             itemView.findViewById(R.id.weightInput)
-        private val repsInput: com.google.android.material.textfield.TextInputEditText = 
+        private val repsInput: com.google.android.material.textfield.TextInputEditText =
             itemView.findViewById(R.id.repsInput)
-        private val setCompletedCheckbox: MaterialCheckBox = 
+        private val setCompletedCheckbox: MaterialCheckBox =
             itemView.findViewById(R.id.setCompletedCheckbox)
         private val setMenu: ImageView = itemView.findViewById(R.id.setMenu)
-        
+
         private var currentSet: ExerciseSet? = null
         private var isBindingData = false
-        
+
         init {
             setCompletedCheckbox.setOnCheckedChangeListener { _, isChecked ->
                 if (!isBindingData) {
@@ -213,7 +213,7 @@ class ActiveWorkoutSetsAdapter(
                     }
                 }
             }
-            
+
             weightInput.addTextChangedListener(object : TextWatcher {
                 override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
@@ -223,7 +223,7 @@ class ActiveWorkoutSetsAdapter(
                     }
                 }
             })
-            
+
             repsInput.addTextChangedListener(object : TextWatcher {
                 override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
@@ -234,27 +234,27 @@ class ActiveWorkoutSetsAdapter(
                 }
             })
         }
-        
+
         fun bind(set: ExerciseSet) {
             isBindingData = true
             currentSet = set
-            
+
             setNumber.text = set.setNumber.toString()
             weightInput.setText(set.weightKg?.toString() ?: "")
             repsInput.setText(set.reps?.toString() ?: "")
-            
+
             // Configure UI for workout mode
             setMenu.visibility = View.GONE
             setCompletedCheckbox.visibility = View.VISIBLE
-            
+
             // Get session set completion state
             val sessionSetId = setIdMapping[set.id]
             val isCompleted = sessionSetId?.let { completedSets[it] } ?: false
             setCompletedCheckbox.isChecked = isCompleted
-            
+
             isBindingData = false
         }
-        
+
         private fun updateSetValues() {
             currentSet?.let {
                 val weight = weightInput.text.toString().toDoubleOrNull()
@@ -263,12 +263,12 @@ class ActiveWorkoutSetsAdapter(
             }
         }
     }
-    
+
     class SetDiffCallback : DiffUtil.ItemCallback<ExerciseSet>() {
         override fun areItemsTheSame(oldItem: ExerciseSet, newItem: ExerciseSet): Boolean {
             return oldItem.id == newItem.id
         }
-        
+
         override fun areContentsTheSame(oldItem: ExerciseSet, newItem: ExerciseSet): Boolean {
             return oldItem == newItem
         }

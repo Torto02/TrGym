@@ -39,7 +39,7 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
 
     private val viewModel: ActiveWorkoutViewModel by viewModels()
     private lateinit var exercisesAdapter: ActiveWorkoutExercisesAdapter
-    
+
     // Views
     private lateinit var backButton: TextView
     private lateinit var workoutTitle: TextView
@@ -50,66 +50,58 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
     private lateinit var timerCard: MaterialCardView
     private lateinit var timerText: TextView
     private lateinit var pauseResumeButton: ImageView
-    
+
     // Timer service
     private var timerService: WorkoutTimerService? = null
     private var isBound = false
-    
+
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             val binder = service as WorkoutTimerService.LocalBinder
             timerService = binder.getService()
             isBound = true
-            
+
             // Update initial state
             updateTimerDisplay(timerService?.getElapsedTime() ?: 0L)
             updatePauseResumeButton(timerService?.isTimerRunning() ?: false)
         }
-        
+
         override fun onServiceDisconnected(name: ComponentName?) {
             timerService = null
             isBound = false
         }
     }
-    
+
     private val timerUpdateReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action == WorkoutTimerService.ACTION_TIME_UPDATE) {
                 val elapsedTime = intent.getLongExtra(WorkoutTimerService.EXTRA_ELAPSED_TIME, 0L)
                 val isRunning = intent.getBooleanExtra(WorkoutTimerService.EXTRA_IS_RUNNING, false)
-                
+
                 viewModel.updateElapsedTime(elapsedTime)
                 updateTimerDisplay(elapsedTime)
                 updatePauseResumeButton(isRunning)
             }
         }
     }
-    
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        
+
         initViews(view)
         setupRecyclerView()
         setupClickListeners()
         observeViewModel()
         setupBackPressHandler()
-        
+
         // Register timer updates receiver with the NOT_EXPORTED flag for Android 13+
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            requireActivity().registerReceiver(
-                timerUpdateReceiver,
-                IntentFilter(WorkoutTimerService.ACTION_TIME_UPDATE),
-                Context.RECEIVER_NOT_EXPORTED
-            )
-        } else {
-            // For older Android versions, use the previous method
-            requireActivity().registerReceiver(
-                timerUpdateReceiver,
-                IntentFilter(WorkoutTimerService.ACTION_TIME_UPDATE)
-            )
-        }
+        requireActivity().registerReceiver(
+            timerUpdateReceiver,
+            IntentFilter(WorkoutTimerService.ACTION_TIME_UPDATE),
+            Context.RECEIVER_NOT_EXPORTED
+        )
     }
-    
+
     private fun initViews(view: View) {
         backButton = view.findViewById(R.id.backButton)
         workoutTitle = view.findViewById(R.id.workoutTitle)
@@ -121,7 +113,7 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
         timerText = view.findViewById(R.id.timerText)
         pauseResumeButton = view.findViewById(R.id.pauseResumeButton)
     }
-    
+
     private fun setupRecyclerView() {
         exercisesAdapter = ActiveWorkoutExercisesAdapter(
             onSetCompletionChanged = { setId, isCompleted ->
@@ -131,32 +123,32 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
                 viewModel.updateSessionSet(set)
             }
         )
-        
+
         exercisesRecyclerView.apply {
             adapter = exercisesAdapter
             layoutManager = LinearLayoutManager(requireContext())
             setHasFixedSize(false)
         }
     }
-    
+
     private fun setupClickListeners() {
         backButton.setOnClickListener {
             showExitConfirmationDialog()
         }
-        
+
         completeWorkoutButton.setOnClickListener {
             showCompleteWorkoutConfirmation()
         }
-        
+
         cancelWorkoutButton.setOnClickListener {
             showCancelWorkoutConfirmation()
         }
-        
+
         pauseResumeButton.setOnClickListener {
             toggleTimerState()
         }
     }
-    
+
     private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -167,7 +159,7 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
                 }
             }
         }
-        
+
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.exercisesWithSets.collect { exercises ->
@@ -176,7 +168,7 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
                 }
             }
         }
-        
+
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect { state ->
@@ -202,7 +194,7 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
                 }
             }
         }
-        
+
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.timerRunning.collect { isRunning ->
@@ -210,7 +202,7 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
                 }
             }
         }
-        
+
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.completedSets.collect { completedSets ->
@@ -219,7 +211,7 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
             }
         }
     }
-    
+
     private fun updateEmptyState(isEmpty: Boolean) {
         if (isEmpty) {
             emptyStateLayout.visibility = View.VISIBLE
@@ -229,19 +221,19 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
             exercisesRecyclerView.visibility = View.VISIBLE
         }
     }
-    
+
     private fun startWorkout() {
         viewModel.startWorkout()
         startTimerService()
         timerCard.visibility = View.VISIBLE
     }
-    
+
     private fun startTimerService() {
         val serviceIntent = Intent(requireContext(), WorkoutTimerService::class.java).apply {
             action = WorkoutTimerService.ACTION_START
             putExtra("sessionId", viewModel.activeSession.value?.id)
         }
-        
+
         requireContext().startService(serviceIntent)
         requireContext().bindService(
             Intent(requireContext(), WorkoutTimerService::class.java),
@@ -249,20 +241,20 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
             Context.BIND_AUTO_CREATE
         )
     }
-    
+
     private fun stopTimerService() {
         if (isBound) {
             requireContext().unbindService(connection)
             isBound = false
         }
-        
+
         requireContext().startService(
             Intent(requireContext(), WorkoutTimerService::class.java).apply {
                 action = WorkoutTimerService.ACTION_STOP
             }
         )
     }
-    
+
     private fun toggleTimerState() {
         if (timerService?.isTimerRunning() == true) {
             pauseTimer()
@@ -270,7 +262,7 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
             resumeTimer()
         }
     }
-    
+
     private fun pauseTimer() {
         requireContext().startService(
             Intent(requireContext(), WorkoutTimerService::class.java).apply {
@@ -279,7 +271,7 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
         )
         viewModel.pauseTimer()
     }
-    
+
     private fun resumeTimer() {
         requireContext().startService(
             Intent(requireContext(), WorkoutTimerService::class.java).apply {
@@ -288,21 +280,21 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
         )
         viewModel.resumeTimer()
     }
-    
+
     private fun updateTimerDisplay(elapsedMillis: Long) {
         val hours = TimeUnit.MILLISECONDS.toHours(elapsedMillis)
         val minutes = TimeUnit.MILLISECONDS.toMinutes(elapsedMillis) % 60
         val seconds = TimeUnit.MILLISECONDS.toSeconds(elapsedMillis) % 60
-        
+
         timerText.text = String.format("%02d:%02d:%02d", hours, minutes, seconds)
     }
-    
+
     private fun updatePauseResumeButton(isRunning: Boolean) {
         pauseResumeButton.setImageResource(
             if (isRunning) R.drawable.ic_pause else R.drawable.ic_play
         )
     }
-    
+
     private fun showCompleteWorkoutConfirmation() {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Completa allenamento")
@@ -313,7 +305,7 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
             .setNegativeButton("Annulla", null)
             .show()
     }
-    
+
     private fun showCancelWorkoutConfirmation() {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Annulla allenamento")
@@ -324,7 +316,7 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
             .setNegativeButton("Continua allenamento", null)
             .show()
     }
-    
+
     private fun showExitConfirmationDialog() {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Uscire dall'allenamento?")
@@ -335,7 +327,7 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
             .setNegativeButton("Resta", null)
             .show()
     }
-    
+
     private fun setupBackPressHandler() {
         requireActivity().onBackPressedDispatcher.addCallback(
             viewLifecycleOwner,
@@ -346,7 +338,7 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
             }
         )
     }
-    
+
     override fun onDestroyView() {
         super.onDestroyView()
         try {
@@ -355,7 +347,7 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
             // Ignore if receiver wasn't registered
         }
     }
-    
+
     override fun onDestroy() {
         super.onDestroy()
         if (isBound) {

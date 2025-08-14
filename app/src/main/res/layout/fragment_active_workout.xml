@@ -43,16 +43,20 @@
             android:layout_gravity="center"
             tools:text="Giorno 1" />
 
+        <!-- Pulsante Edit/Done per modificare durante l'allenamento -->
         <TextView
-            android:id="@+id/statusText"
+            android:id="@+id/editButton"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
+            android:clickable="true"
+            android:focusable="true"
             android:gravity="center_vertical"
             android:paddingHorizontal="16dp"
-            android:text="In corso"
+            android:text="Modifica"
             android:textColor="@color/primary"
             android:textSize="16sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:visibility="visible" />
 
     </com.google.android.material.appbar.MaterialToolbar>
 
@@ -192,7 +196,6 @@
         android:layout_gravity="bottom"
         android:orientation="vertical"
         android:padding="16dp"
-        android:background="@color/ios_systemBackground"
         android:elevation="8dp">
 
         <!-- Pulsante Completa Allenamento -->
@@ -225,5 +228,19 @@
             style="@style/Widget.Material3.Button.OutlinedButton" />
 
     </LinearLayout>
+
+    <!-- FAB Aggiungi Esercizio (visibile solo in modalità modifica) -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/addExerciseBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="150dp"
+        android:src="@drawable/ic_add"
+        android:contentDescription="Aggiungi esercizio"
+        app:backgroundTint="@color/primary"
+        app:tint="@color/white"
+        android:visibility="gone" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
