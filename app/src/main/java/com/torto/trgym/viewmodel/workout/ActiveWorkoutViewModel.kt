@@ -57,12 +57,23 @@ class ActiveWorkoutViewModel @Inject constructor(
     private val _sessionSets = MutableStateFlow<Map<String, List<WorkoutSessionSet>>>(emptyMap())
     val sessionSets: StateFlow<Map<String, List<WorkoutSessionSet>>> = _sessionSets.asStateFlow()
 
+    // Flag to track whether session data is loaded
+    private val _sessionDataLoaded = MutableStateFlow(false)
+
     // Exercises with sets - switches between original card data and session data
     @OptIn(ExperimentalCoroutinesApi::class)
-    val exercisesWithSets = combine(_activeSession, workoutRepository.getExercisesForCard(workoutCardId)) { activeSession, originalExercises ->
-        if (activeSession != null) {
-            // Use session data when workout is active
+    val exercisesWithSets = combine(
+        _activeSession, 
+        _sessionDataLoaded,
+        workoutRepository.getExercisesForCard(workoutCardId)
+    ) { activeSession, sessionDataLoaded, originalExercises ->
+        if (activeSession != null && sessionDataLoaded) {
+            // Use session data when workout is active and data is loaded
             workoutRepository.getSessionExercisesWithSets(activeSession.id)
+        } else if (activeSession != null) {
+            // Wait for session data to load, use an empty flow temporarily
+            // but don't emit it immediately (using emptyFlow() instead of flowOf(emptyList()))
+            emptyFlow<List<WorkoutSessionExerciseDetail>>()
         } else {
             // Use original card data when no active session
             if (originalExercises.isEmpty()) {
@@ -82,8 +93,8 @@ class ActiveWorkoutViewModel @Inject constructor(
         }
     }.flatMapLatest { flow ->
         when (flow) {
-            is Flow<*> -> {
-                if (_activeSession.value != null) {
+            else -> {
+                if (_activeSession.value != null && _sessionDataLoaded.value) {
                     // Convert session data to WorkoutExerciseDetail format
                     @Suppress("UNCHECKED_CAST")
                     (flow as Flow<List<WorkoutSessionExerciseDetail>>).map { sessionExercises ->
@@ -92,19 +103,21 @@ class ActiveWorkoutViewModel @Inject constructor(
                             val workoutExercise = WorkoutExercise(
                                 id = sessionExerciseDetail.exercise.id,
                                 workoutCardId = workoutCardId,
-                                exerciseId = sessionExerciseDetail.exercise.originalExerciseId.toIntOrNull() ?: 0,
+                                exerciseId = sessionExerciseDetail.exercise.originalExerciseId.toIntOrNull()
+                                    ?: 0,
                                 name = sessionExerciseDetail.exercise.name,
                                 orderIndex = sessionExerciseDetail.exercise.orderIndex,
                                 updatedAt = System.currentTimeMillis()
                             )
-                            
+
                             // Convert WorkoutSessionSet to ExerciseSet format
                             val exerciseSets = sessionExerciseDetail.sets.map { sessionSet ->
                                 ExerciseSet(
                                     id = sessionSet.id,
                                     exerciseId = sessionExerciseDetail.exercise.id,
                                     setNumber = sessionSet.setNumber,
-                                    weightKg = sessionSet.actualWeightKg ?: sessionSet.targetWeightKg,
+                                    weightKg = sessionSet.actualWeightKg
+                                        ?: sessionSet.targetWeightKg,
                                     reps = sessionSet.actualReps ?: sessionSet.targetReps,
                                     createdAt = System.currentTimeMillis(),
                                     updatedAt = System.currentTimeMillis(),
@@ -112,7 +125,7 @@ class ActiveWorkoutViewModel @Inject constructor(
                                     syncedWithServer = false
                                 )
                             }
-                            
+
                             WorkoutExerciseDetail(workoutExercise, exerciseSets)
                         }
                     }
@@ -121,7 +134,6 @@ class ActiveWorkoutViewModel @Inject constructor(
                     flow as Flow<List<WorkoutExerciseDetail>>
                 }
             }
-            else -> flowOf(emptyList())
         }
     }.stateIn(
         scope = viewModelScope,
@@ -151,45 +163,56 @@ class ActiveWorkoutViewModel @Inject constructor(
 
     private fun checkForActiveSession() {
         viewModelScope.launch {
-            val activeSession = workoutRepository.getActiveWorkoutSession()
+            try {
+                // Reset sessionDataLoaded flag
+                _sessionDataLoaded.value = false
+                
+                val activeSession = workoutRepository.getActiveWorkoutSession()
 
-            if (activeSession != null) {
-                // Resume the active session
-                _activeSession.value = activeSession
-                _uiState.value = UiState.WorkoutInProgress
-
-                // Load session exercises and sets
-                loadSessionExercisesAndSets(activeSession.id)
-            } else {
-                _uiState.value = UiState.ReadyToStart
+                if (activeSession != null) {
+                    // Set session before setting UI state
+                    _activeSession.value = activeSession
+                    
+                    // Load session exercises and sets before indicating data is ready
+                    loadSessionExercisesAndSets(activeSession.id)
+                    
+                    // Only after data is loaded, update UI state
+                    _uiState.value = UiState.WorkoutInProgress
+                } else {
+                    _uiState.value = UiState.ReadyToStart
+                }
+            } catch (e: Exception) {
+                _uiState.value = UiState.Error(e.message ?: "Errore nel controllo della sessione attiva")
             }
         }
     }
 
-    private fun loadSessionExercisesAndSets(sessionId: String) {
-        viewModelScope.launch {
-            try {
-                val exercises = workoutRepository.getSessionExercises(sessionId)
-                _sessionExercises.value = exercises
+    private suspend fun loadSessionExercisesAndSets(sessionId: String) {
+        try {
+            val exercises = workoutRepository.getSessionExercises(sessionId)
+            
+            val setsMap = mutableMapOf<String, List<WorkoutSessionSet>>()
+            val completedSetsMap = mutableMapOf<String, Boolean>()
 
-                val setsMap = mutableMapOf<String, List<WorkoutSessionSet>>()
-                val completedSetsMap = mutableMapOf<String, Boolean>()
+            exercises.forEach { exercise ->
+                val sets = workoutRepository.getSessionSets(exercise.id)
+                setsMap[exercise.id] = sets
 
-                exercises.forEach { exercise ->
-                    val sets = workoutRepository.getSessionSets(exercise.id)
-                    setsMap[exercise.id] = sets
-
-                    // Track completed sets
-                    sets.forEach { set ->
-                        completedSetsMap[set.id] = set.isCompleted
-                    }
+                // Track completed sets
+                sets.forEach { set ->
+                    completedSetsMap[set.id] = set.isCompleted
                 }
-
-                _sessionSets.value = setsMap
-                _completedSets.value = completedSetsMap
-            } catch (e: Exception) {
-                _uiState.value = UiState.Error(e.message ?: "Errore nel caricamento della sessione")
             }
+
+            // Update all states at once to reduce UI flicker
+            _sessionExercises.value = exercises
+            _sessionSets.value = setsMap
+            _completedSets.value = completedSetsMap
+            
+            // Finally indicate that session data is loaded
+            _sessionDataLoaded.value = true
+        } catch (e: Exception) {
+            _uiState.value = UiState.Error(e.message ?: "Errore nel caricamento della sessione")
         }
     }
 
@@ -219,6 +242,9 @@ class ActiveWorkoutViewModel @Inject constructor(
     }
 
     private suspend fun initializeSessionExercisesAndSets(sessionId: String) {
+        // Reset sessionDataLoaded flag
+        _sessionDataLoaded.value = false
+        
         val exercises = exercisesWithSets.value
 
         val sessionExercises = exercises.mapIndexed { index, exerciseDetail ->
@@ -232,7 +258,6 @@ class ActiveWorkoutViewModel @Inject constructor(
         }
 
         workoutRepository.insertSessionExercises(sessionExercises)
-        _sessionExercises.value = sessionExercises
 
         // Initialize session sets
         val sessionSetsMap = mutableMapOf<String, List<WorkoutSessionSet>>()
@@ -257,8 +282,13 @@ class ActiveWorkoutViewModel @Inject constructor(
             sessionSetsMap[sessionExercise.id] = sessionSets
         }
 
+        // Update all states at once
+        _sessionExercises.value = sessionExercises
         _sessionSets.value = sessionSetsMap
         _completedSets.value = completedSetsMap
+        
+        // Finally indicate that session data is loaded
+        _sessionDataLoaded.value = true
     }
 
     fun pauseTimer() {
