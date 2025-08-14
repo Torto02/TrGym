@@ -14,7 +14,7 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.torto.trgym.MainActivity
 import com.torto.trgym.R
-import com.torto.trgym.data.repository.WorkoutSessionRepository
+
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,8 +25,7 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class WorkoutTimerService : Service() {
 
-    @Inject
-    lateinit var workoutSessionRepository: WorkoutSessionRepository
+
 
     private val binder = WorkoutTimerBinder()
     private val serviceScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
