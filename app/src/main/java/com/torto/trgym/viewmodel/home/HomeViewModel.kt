@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.torto.trgym.data.repository.WorkoutRepository
 import com.torto.trgym.database.entities.WorkoutCard
+import com.torto.trgym.database.entities.WorkoutSession
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -59,6 +60,10 @@ class HomeViewModel @Inject constructor(
                 _uiState.value = UiState.Error(e.message ?: "Errore nell'eliminazione della scheda")
             }
         }
+    }
+
+    suspend fun getActiveWorkoutSession(): WorkoutSession? {
+        return workoutRepository.getActiveWorkoutSession()
     }
 
     sealed interface UiState {

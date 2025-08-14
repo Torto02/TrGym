@@ -40,6 +40,11 @@
         <action
             android:id="@+id/action_home_to_freeWorkout"
             app:destination="@id/freeWorkoutFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_activeWorkoutFragment"
+            app:destination="@id/activeWorkoutFragment"
+
+             />
     </fragment>
 
     <!-- Workout Detail Fragment -->
@@ -54,6 +59,11 @@
         <action
             android:id="@+id/action_workoutDetailFragment_to_exerciseDetailFragment"
             app:destination="@id/exerciseDetailFragment" />
+
+        <!-- Add this action to navigate from WorkoutDetailFragment to ActiveWorkoutFragment -->
+        <action
+            android:id="@+id/action_workoutDetailFragment_to_activeWorkoutFragment"
+            app:destination="@id/activeWorkoutFragment" />
 
 
     </fragment>
@@ -105,6 +115,17 @@
             android:id="@+id/action_exercisesFragment_to_exerciseDetailFragment"
             app:destination="@id/exerciseDetailFragment"
             />
+    </fragment>
+
+    <!-- Add the ActiveWorkoutFragment destination -->
+    <fragment
+        android:id="@+id/activeWorkoutFragment"
+        android:name="com.torto.trgym.ui.workout.ActiveWorkoutFragment"
+        android:label="Allenamento in corso"
+        tools:layout="@layout/fragment_active_workout">
+        <argument
+            android:name="workoutCardId"
+            app:argType="string" />
     </fragment>
 
 <!--    <fragment-->

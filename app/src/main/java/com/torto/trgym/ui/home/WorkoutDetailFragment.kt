@@ -21,6 +21,7 @@ import com.torto.trgym.R
 import com.torto.trgym.adapters.WorkoutExercisesAdapter
 import com.torto.trgym.database.entities.WorkoutExercise
 import com.torto.trgym.database.entities.ExerciseSet
+import com.torto.trgym.database.entities.WorkoutSession
 import com.torto.trgym.ui.dialogs.SelectExercisesDialog
 import com.torto.trgym.viewmodel.home.WorkoutDetailViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -98,8 +99,7 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
         }
 
         startWorkoutButton.setOnClickListener {
-            // TODO: Implementare avvio allenamento in futuro
-            Toast.makeText(requireContext(), "Funzionalità in arrivo", Toast.LENGTH_SHORT).show()
+            checkAndStartWorkout()
         }
 
         addExerciseBtn.setOnClickListener {
@@ -115,6 +115,51 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
                 false
             }
         }
+    }
+
+    private fun checkAndStartWorkout() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val activeSession = workoutDetailViewModel.checkForActiveSession()
+
+                if (activeSession != null) {
+                    // Show dialog asking if they want to continue the active session
+                    showActiveSessionDialog(activeSession)
+                } else {
+                    // No active session, start a new one
+                    navigateToActiveWorkout()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(), "Errore: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun showActiveSessionDialog(activeSession: WorkoutSession) {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Allenamento in corso")
+            .setMessage("Hai già un allenamento in corso. Vuoi continuare quello esistente o annullarlo e iniziarne uno nuovo?")
+            .setPositiveButton("Continua esistente") { _, _ ->
+                // Navigate to active workout with the existing session
+                val action = WorkoutDetailFragmentDirections
+                    .actionWorkoutDetailFragmentToActiveWorkoutFragment(activeSession.workoutCardId)
+                findNavController().navigate(action)
+            }
+            .setNegativeButton("Annulla esistente") { _, _ ->
+                // Cancel the existing session and start a new one
+                viewLifecycleOwner.lifecycleScope.launch {
+                    workoutDetailViewModel.cancelActiveSession(activeSession)
+                    navigateToActiveWorkout()
+                }
+            }
+            .setNeutralButton("Annulla", null)
+            .show()
+    }
+
+    private fun navigateToActiveWorkout() {
+        val action = WorkoutDetailFragmentDirections
+            .actionWorkoutDetailFragmentToActiveWorkoutFragment(workoutDetailViewModel.workoutCard.value?.id ?: "")
+        findNavController().navigate(action)
     }
 
     private fun observeViewModels() {

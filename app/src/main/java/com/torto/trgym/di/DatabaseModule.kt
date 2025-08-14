@@ -82,6 +82,6 @@ object DatabaseModule {
         return database.workoutDao()
     }
 
-    @Provides
-    fun provideWorkoutSessionDao(db: AppDatabase): WorkoutSessionDao = db.workoutSessionDao()
+//    @Provides
+//    fun provideWorkoutSessionDao(db: AppDatabase): WorkoutSessionDao = db.workoutSessionDao()
 }

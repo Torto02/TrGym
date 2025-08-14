@@ -306,6 +306,20 @@ class WorkoutDetailViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Checks if there's an active workout session
+     */
+    suspend fun checkForActiveSession(): WorkoutSession? {
+        return workoutRepository.getActiveWorkoutSession()
+    }
+
+    /**
+     * Cancels an active workout session
+     */
+    suspend fun cancelActiveSession(session: WorkoutSession) {
+        workoutRepository.deleteWorkoutSession(session)
+    }
+
     sealed interface UiState {
         object Loading : UiState
         object Success : UiState

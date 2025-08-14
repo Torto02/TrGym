@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.Toast
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -17,6 +18,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
 import com.torto.trgym.R
 import com.torto.trgym.adapters.WorkoutCardsAdapter
+import com.torto.trgym.database.entities.WorkoutSession
 import com.torto.trgym.viewmodel.home.HomeViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -26,6 +28,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
     private val viewModel: HomeViewModel by viewModels()
     private lateinit var workoutCardsAdapter: WorkoutCardsAdapter
+    private lateinit var activeWorkoutCard: MaterialCardView
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -33,11 +36,13 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         setupViews(view)
         setupRecyclerView(view)
         observeViewModel()
+        checkForActiveWorkout()
     }
 
     private fun setupViews(view: View) {
         val freeWorkoutCard = view.findViewById<MaterialCardView>(R.id.freeWorkoutCard)
         val addWorkoutCardBtn = view.findViewById<com.google.android.material.button.MaterialButton>(R.id.addWorkoutCardBtn)
+        activeWorkoutCard = view.findViewById(R.id.activeWorkoutCard)
 
         freeWorkoutCard.setOnClickListener {
             // Naviga alla schermata di allenamento libero
@@ -46,6 +51,10 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
         addWorkoutCardBtn.setOnClickListener {
             showCreateWorkoutCardDialog()
+        }
+        
+        activeWorkoutCard.setOnClickListener {
+            navigateToActiveWorkout()
         }
     }
 
@@ -163,5 +172,56 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             }
             .setNegativeButton("Annulla", null)
             .show()
+    }
+
+    private fun checkForActiveWorkout() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val activeSession = viewModel.getActiveWorkoutSession()
+                if (activeSession != null) {
+                    showActiveWorkoutBanner(activeSession)
+                } else {
+                    hideActiveWorkoutBanner()
+                }
+            } catch (e: Exception) {
+                // Ignore errors
+            }
+        }
+    }
+
+    private fun showActiveWorkoutBanner(session: WorkoutSession) {
+        activeWorkoutCard.visibility = View.VISIBLE
+        
+        // Update workout name in the banner
+        val workoutNameText = activeWorkoutCard.findViewById<TextView>(R.id.activeWorkoutName)
+        workoutNameText.text = session.name
+        
+        // Update timer if needed
+        val timerText = activeWorkoutCard.findViewById<TextView>(R.id.activeWorkoutTimer)
+        val startTime = session.startTime
+        val elapsedTime = System.currentTimeMillis() - startTime
+        timerText.text = formatElapsedTime(elapsedTime)
+    }
+
+    private fun hideActiveWorkoutBanner() {
+        activeWorkoutCard.visibility = View.GONE
+    }
+
+    private fun navigateToActiveWorkout() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val activeSession = viewModel.getActiveWorkoutSession() ?: return@launch
+            
+            // Use the correct action ID that matches your navigation graph
+            findNavController().navigate(
+                HomeFragmentDirections.actionHomeFragmentToActiveWorkoutFragment(activeSession.workoutCardId)
+            )
+        }
+    }
+
+    private fun formatElapsedTime(elapsedMillis: Long): String {
+        val hours = java.util.concurrent.TimeUnit.MILLISECONDS.toHours(elapsedMillis)
+        val minutes = java.util.concurrent.TimeUnit.MILLISECONDS.toMinutes(elapsedMillis) % 60
+        val seconds = java.util.concurrent.TimeUnit.MILLISECONDS.toSeconds(elapsedMillis) % 60
+        return String.format("%02d:%02d:%02d", hours, minutes, seconds)
     }
 }

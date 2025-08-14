@@ -679,4 +679,53 @@ class WorkoutRepository @Inject constructor(
             Log.e("WorkoutRepository", "Error deleting exercise set from Supabase", e)
         }
     }
+
+    // Workout Session methods
+    suspend fun getActiveWorkoutSession(): WorkoutSession? = withContext(Dispatchers.IO) {
+        workoutDao.getActiveWorkoutSession()
+    }
+
+    suspend fun insertWorkoutSession(session: WorkoutSession) = withContext(Dispatchers.IO) {
+        workoutDao.insertWorkoutSession(session)
+    }
+
+    suspend fun updateWorkoutSession(session: WorkoutSession) = withContext(Dispatchers.IO) {
+        workoutDao.updateWorkoutSession(session)
+    }
+
+    suspend fun deleteWorkoutSession(session: WorkoutSession) = withContext(Dispatchers.IO) {
+        workoutDao.deleteWorkoutSession(session)
+    }
+
+    suspend fun getSessionExercises(sessionId: String): List<WorkoutSessionExercise> = withContext(Dispatchers.IO) {
+        workoutDao.getSessionExercises(sessionId)
+    }
+
+    suspend fun insertSessionExercises(exercises: List<WorkoutSessionExercise>) = withContext(Dispatchers.IO) {
+        workoutDao.insertSessionExercises(exercises)
+    }
+
+    suspend fun updateSessionExercise(exercise: WorkoutSessionExercise) = withContext(Dispatchers.IO) {
+        workoutDao.updateSessionExercise(exercise)
+    }
+
+    suspend fun getSessionSets(exerciseId: String): List<WorkoutSessionSet> = withContext(Dispatchers.IO) {
+        workoutDao.getSessionSets(exerciseId)
+    }
+
+    suspend fun insertSessionSets(sets: List<WorkoutSessionSet>) = withContext(Dispatchers.IO) {
+        workoutDao.insertSessionSets(sets)
+    }
+
+    suspend fun updateSessionSet(set: WorkoutSessionSet) = withContext(Dispatchers.IO) {
+        workoutDao.updateSessionSet(set)
+    }
+
+    suspend fun updateSessionSetCompletion(setId: String, isCompleted: Boolean) = withContext(Dispatchers.IO) {
+        workoutDao.updateSessionSetCompletion(setId, isCompleted, System.currentTimeMillis())
+    }
+
+    suspend fun getLatestWorkoutSessions(limit: Int = 10): List<WorkoutSession> = withContext(Dispatchers.IO) {
+        workoutDao.getLatestWorkoutSessions(limit)
+    }
 }

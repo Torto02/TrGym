@@ -20,6 +20,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun equipmentDao(): EquipmentDao
     abstract fun starredExerciseDao(): StarredExerciseDao
     abstract fun workoutDao(): WorkoutDao // Nuovo DAO
-    abstract fun workoutSessionDao(): WorkoutSessionDao // Nuovo DAO
+//    abstract fun workoutSessionDao(): WorkoutSessionDao // Nuovo DAO
 
 }

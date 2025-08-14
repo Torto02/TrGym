@@ -66,6 +66,51 @@ interface WorkoutDao {
     @Query("DELETE FROM exercise_sets WHERE exerciseId = :exerciseId")
     suspend fun deleteSetsForExercise(exerciseId: String)
 
+    // WorkoutSession queries
+    @Query("SELECT * FROM workout_sessions WHERE isCompleted = 0 LIMIT 1")
+    suspend fun getActiveWorkoutSession(): WorkoutSession?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertWorkoutSession(session: WorkoutSession): Long
+
+    @Update
+    suspend fun updateWorkoutSession(session: WorkoutSession)
+
+    @Delete
+    suspend fun deleteWorkoutSession(session: WorkoutSession)
+
+    @Query("SELECT * FROM workout_sessions ORDER BY startTime DESC LIMIT :limit")
+    suspend fun getLatestWorkoutSessions(limit: Int): List<WorkoutSession>
+
+    // WorkoutSessionExercise queries
+    @Query("SELECT * FROM workout_session_exercises WHERE workoutSessionId = :sessionId ORDER BY orderIndex ASC")
+    suspend fun getSessionExercises(sessionId: String): List<WorkoutSessionExercise>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertSessionExercises(exercises: List<WorkoutSessionExercise>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertSessionExercise(exercise: WorkoutSessionExercise): Long
+
+    @Update
+    suspend fun updateSessionExercise(exercise: WorkoutSessionExercise)
+
+    // WorkoutSessionSet queries
+    @Query("SELECT * FROM workout_session_sets WHERE exerciseId = :exerciseId ORDER BY setNumber ASC")
+    suspend fun getSessionSets(exerciseId: String): List<WorkoutSessionSet>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertSessionSets(sets: List<WorkoutSessionSet>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertSessionSet(set: WorkoutSessionSet): Long
+
+    @Update
+    suspend fun updateSessionSet(set: WorkoutSessionSet)
+
+    @Query("UPDATE workout_session_sets SET isCompleted = :isCompleted, completedAt = :completedAt WHERE id = :setId")
+    suspend fun updateSessionSetCompletion(setId: String, isCompleted: Boolean, completedAt: Long?)
+
     // Complex queries
     @Transaction
     @Query("SELECT * FROM workout_cards WHERE id = :cardId")

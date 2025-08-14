@@ -142,7 +142,7 @@ package com.torto.trgym.viewmodel.profile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.torto.trgym.data.repository.AuthRepository
-import com.torto.trgym.data.repository.WorkoutSessionRepository
+//import com.torto.trgym.data.repository.WorkoutSessionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -152,7 +152,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     private val authRepository: AuthRepository,
-    private val workoutSessionRepository: WorkoutSessionRepository
+//    private val workoutSessionRepository: WorkoutSessionRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<ProfileUiState>(ProfileUiState.Loading)
@@ -172,14 +172,14 @@ class ProfileViewModel @Inject constructor(
                 }
 
                 // Ottieni statistiche reali dal database
-                val totalWorkouts = workoutSessionRepository.getTotalCompletedWorkouts()
+//                val totalWorkouts = workoutSessionRepository.getTotalCompletedWorkouts()
                 val currentStreak = calculateCurrentStreak()
                 val totalCalories = calculateTotalCalories()
 
                 val profileData = ProfileData(
                     email = user.email ?: "Ospite",
                     displayName = "Utente",
-                    totalWorkouts = totalWorkouts,
+                    totalWorkouts = 0,
                     currentStreak = currentStreak,
                     totalCalories = totalCalories
                 )
@@ -194,24 +194,24 @@ class ProfileViewModel @Inject constructor(
 
     private suspend fun calculateCurrentStreak(): Int {
         // Calcola i giorni consecutivi di allenamento
-        val recentWorkouts = workoutSessionRepository.getRecentCompletedWorkouts(30)
+//        val recentWorkouts = workoutSessionRepository.getRecentCompletedWorkouts(30)
 
-        if (recentWorkouts.isEmpty()) return 0
+//        if (recentWorkouts.isEmpty()) return 0
 
         var streak = 0
         var currentDate = System.currentTimeMillis()
         val oneDayMs = 24 * 60 * 60 * 1000L
 
         // Raggruppa allenamenti per giorno
-        val workoutsByDay = recentWorkouts.groupBy { workout ->
-            (workout.startTime / oneDayMs) * oneDayMs
-        }
+//        val workoutsByDay = recentWorkouts.groupBy { workout ->
+//            (workout.startTime / oneDayMs) * oneDayMs
+//        }
 
         // Conta i giorni consecutivi dall'oggi
-        while (workoutsByDay.containsKey((currentDate / oneDayMs) * oneDayMs)) {
-            streak++
-            currentDate -= oneDayMs
-        }
+//        while (workoutsByDay.containsKey((currentDate / oneDayMs) * oneDayMs)) {
+//            streak++
+//            currentDate -= oneDayMs
+//        }
 
         return streak
     }
