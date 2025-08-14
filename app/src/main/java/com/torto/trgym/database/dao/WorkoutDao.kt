@@ -112,6 +112,30 @@ interface WorkoutDao {
     @Query("UPDATE workout_session_sets SET isCompleted = :isCompleted, completedAt = :completedAt WHERE id = :setId")
     suspend fun updateSessionSetCompletion(setId: String, isCompleted: Boolean, completedAt: Long?)
 
+    @Delete
+    suspend fun deleteSessionExercise(exercise: WorkoutSessionExercise)
+
+    @Delete
+    suspend fun deleteSessionSet(set: WorkoutSessionSet)
+
+    @Query("UPDATE workout_session_exercises SET orderIndex = orderIndex - 1 WHERE workoutSessionId = :sessionId AND orderIndex > :deletedOrderIndex")
+    suspend fun updateSessionExercisesOrderAfterDeletion(sessionId: String, deletedOrderIndex: Int)
+
+    @Query("UPDATE workout_session_sets SET setNumber = setNumber - 1 WHERE exerciseId = :exerciseId AND setNumber > :deletedSetNumber")
+    suspend fun decrementSessionSetNumbersAfterDeletion(exerciseId: String, deletedSetNumber: Int)
+
+    @Transaction
+    suspend fun deleteSessionSetAndReorder(set: WorkoutSessionSet) {
+        deleteSessionSet(set)
+        decrementSessionSetNumbersAfterDeletion(set.exerciseId, set.setNumber)
+    }
+
+    @Transaction
+    suspend fun deleteSessionExerciseAndReorder(exercise: WorkoutSessionExercise) {
+        deleteSessionExercise(exercise)
+        updateSessionExercisesOrderAfterDeletion(exercise.workoutSessionId, exercise.orderIndex)
+    }
+
     // Complex queries
     @Transaction
     @Query("SELECT * FROM workout_cards WHERE id = :cardId")

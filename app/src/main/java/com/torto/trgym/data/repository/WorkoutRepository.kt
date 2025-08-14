@@ -738,5 +738,13 @@ class WorkoutRepository @Inject constructor(
         workoutDao.insertSessionSet(set)
     }
 
+    suspend fun deleteSessionExercise(exercise: WorkoutSessionExercise) = withContext(Dispatchers.IO) {
+        workoutDao.deleteSessionExerciseAndReorder(exercise)
+    }
+
+    suspend fun deleteSessionSet(set: WorkoutSessionSet) = withContext(Dispatchers.IO) {
+        workoutDao.deleteSessionSetAndReorder(set)
+    }
+
 
 }

@@ -20,7 +20,11 @@ import com.torto.trgym.database.entities.WorkoutSessionSet
 
 class ActiveWorkoutExercisesAdapter(
     private val onSetCompletionChanged: (String, Boolean) -> Unit,
-    private val onSetValueChanged: (WorkoutSessionSet) -> Unit
+    private val onSetValueChanged: (WorkoutSessionSet) -> Unit,
+    private val onSetValueChangedSimple: ((String, Double?, Int?) -> Unit)? = null,
+    private val onExerciseMenuClicked: ((String) -> Unit)? = null,
+    private val onSetMenuClicked: ((String) -> Unit)? = null,
+    private val onAddSetClicked: ((String) -> Unit)? = null
 ) : ListAdapter<WorkoutExerciseDetail, ActiveWorkoutExercisesAdapter.ExerciseViewHolder>(ExerciseDiffCallback()) {
 
     // Map to track the completion status of sets
@@ -95,6 +99,19 @@ class ActiveWorkoutExercisesAdapter(
             dragHandle.visibility = if (isEditMode) View.VISIBLE else View.GONE
             exerciseStatusIcon.visibility = if (isEditMode) View.GONE else View.VISIBLE
 
+            // Setup click listeners for edit mode
+            exerciseMenu.setOnClickListener {
+                if (isEditMode) {
+                    onExerciseMenuClicked?.invoke(exercise.id)
+                }
+            }
+
+            addSetButton.setOnClickListener {
+                if (isEditMode) {
+                    onAddSetClicked?.invoke(exercise.id)
+                }
+            }
+
             exerciseName.text = exercise.name
 
             // Calculate exercise completion status
@@ -123,30 +140,20 @@ class ActiveWorkoutExercisesAdapter(
             // Update sets adapter
             if (setsAdapter == null) {
                 setsAdapter = ActiveWorkoutSetsAdapter(
-                    onSetCompletionChanged = { originalSetId, isCompleted ->
-                        val sessionSetId = setIdMapping[originalSetId]
-                        if (sessionSetId != null) {
-                            onSetCompletionChanged(sessionSetId, isCompleted)
-                        }
+                    onSetCompletionChanged = { setId, isCompleted ->
+                        // The ID is already the session set ID when in session mode
+                        onSetCompletionChanged(setId, isCompleted)
                     },
-                    onSetValueChanged = { originalSetId, weight, reps ->
-                        val sessionSetId = setIdMapping[originalSetId]
-                        if (sessionSetId != null) {
-                            val set = sets.find { it.id == originalSetId }
-                            if (set != null) {
-                                val sessionSet = WorkoutSessionSet(
-                                    id = sessionSetId,
-                                    exerciseId = "", // Will be set by the ViewModel
-                                    setNumber = set.setNumber,
-                                    targetWeightKg = set.weightKg,
-                                    actualWeightKg = weight,
-                                    targetReps = set.reps,
-                                    actualReps = reps,
-                                    isCompleted = completedSets[sessionSetId] ?: false
-                                )
-                                onSetValueChanged(sessionSet)
-                            }
-                        }
+                    onSetValueChanged = { setId, weight, reps ->
+                        // Legacy callback - not used in session mode
+                    },
+                    onSetMenuClicked = { setId ->
+                        // The ID is already the session set ID when in session mode
+                        onSetMenuClicked?.invoke(setId)
+                    },
+                    onSetValueChangedSimple = { setId, weight, reps ->
+                        // Direct callback for session mode
+                        onSetValueChangedSimple?.invoke(setId, weight, reps)
                     }
                 )
                 setsRecyclerView.adapter = setsAdapter
@@ -180,7 +187,9 @@ class ActiveWorkoutExercisesAdapter(
 
 class ActiveWorkoutSetsAdapter(
     private val onSetCompletionChanged: (String, Boolean) -> Unit,
-    private val onSetValueChanged: (String, Double?, Int?) -> Unit
+    private val onSetValueChanged: (String, Double?, Int?) -> Unit,
+    private val onSetMenuClicked: ((String) -> Unit)? = null,
+    private val onSetValueChangedSimple: ((String, Double?, Int?) -> Unit)? = null
 ) : ListAdapter<ExerciseSet, ActiveWorkoutSetsAdapter.SetViewHolder>(SetDiffCallback()) {
 
     private val completedSets = mutableMapOf<String, Boolean>()
@@ -270,14 +279,21 @@ class ActiveWorkoutSetsAdapter(
             setMenu.visibility = if (isEditMode) View.VISIBLE else View.GONE
             setCompletedCheckbox.visibility = if (isEditMode) View.GONE else View.VISIBLE
 
+            // Setup menu click listener
+            setMenu.setOnClickListener {
+                if (isEditMode) {
+                    onSetMenuClicked?.invoke(set.id)
+                }
+            }
+
             // Get session set completion state
             val sessionSetId = setIdMapping[set.id]
             val isCompleted = sessionSetId?.let { completedSets[it] } ?: false
             setCompletedCheckbox.isChecked = isCompleted
 
-            // Abilita/disabilita gli input in base alla modalità
-            weightInput.isEnabled = true // Sempre abilitati, anche in modalità non-edit
-            repsInput.isEnabled = true
+            // Abilita/disabilita gli input in base alla modalità di modifica
+            weightInput.isEnabled = isEditMode
+            repsInput.isEnabled = isEditMode
 
             isBindingData = false
         }
@@ -286,7 +302,8 @@ class ActiveWorkoutSetsAdapter(
             currentSet?.let {
                 val weight = weightInput.text.toString().toDoubleOrNull()
                 val reps = repsInput.text.toString().toIntOrNull()
-                onSetValueChanged(it.id, weight, reps)
+                // Use the simple callback for direct session set updates
+                onSetValueChangedSimple?.invoke(it.id, weight, reps) ?: onSetValueChanged(it.id, weight, reps)
             }
         }
     }

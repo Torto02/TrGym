@@ -32,6 +32,8 @@ import com.torto.trgym.adapters.ActiveWorkoutExercisesAdapter
 import com.torto.trgym.services.WorkoutTimerService
 import com.torto.trgym.ui.dialogs.SelectExercisesDialog
 import com.torto.trgym.viewmodel.workout.ActiveWorkoutViewModel
+import com.torto.trgym.database.entities.WorkoutSessionExercise
+import com.torto.trgym.database.entities.WorkoutSessionSet
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
@@ -126,7 +128,19 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
                 viewModel.toggleSetCompletion(setId, isCompleted)
             },
             onSetValueChanged = { set ->
-                viewModel.updateSessionSet(set)
+                viewModel.updateSessionSetValues(set)
+            },
+            onSetValueChangedSimple = { setId, weight, reps ->
+                viewModel.updateSessionSetFromValues(setId, weight, reps)
+            },
+            onExerciseMenuClicked = { exerciseId ->
+                showExerciseMenu(exerciseId)
+            },
+            onSetMenuClicked = { setId ->
+                showSetMenu(setId)
+            },
+            onAddSetClicked = { exerciseId ->
+                viewModel.addSetToSessionExercise(exerciseId)
             }
         )
 
@@ -409,5 +423,57 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
             requireContext().unbindService(connection)
             isBound = false
         }
+    }
+
+    private fun showExerciseMenu(exerciseId: String) {
+        // Find the session exercise from ViewModel
+        val sessionExercise = viewModel.sessionExercises.value.find { it.id == exerciseId }
+        if (sessionExercise != null) {
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Opzioni esercizio")
+                .setItems(arrayOf("Elimina esercizio")) { _, which ->
+                    when (which) {
+                        0 -> showDeleteExerciseConfirmation(sessionExercise)
+                    }
+                }
+                .show()
+        }
+    }
+
+    private fun showSetMenu(setId: String) {
+        // Find the session set from ViewModel
+        val sessionSet = viewModel.sessionSets.value.values.flatten().find { it.id == setId }
+        if (sessionSet != null) {
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Opzioni serie")
+                .setItems(arrayOf("Elimina serie")) { _, which ->
+                    when (which) {
+                        0 -> showDeleteSetConfirmation(sessionSet)
+                    }
+                }
+                .show()
+        }
+    }
+
+    private fun showDeleteExerciseConfirmation(sessionExercise: WorkoutSessionExercise) {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Elimina esercizio")
+            .setMessage("Sei sicuro di voler eliminare \"${sessionExercise.name}\" e tutte le sue serie?")
+            .setPositiveButton("Elimina") { _, _ ->
+                viewModel.deleteSessionExercise(sessionExercise)
+            }
+            .setNegativeButton("Annulla", null)
+            .show()
+    }
+
+    private fun showDeleteSetConfirmation(sessionSet: WorkoutSessionSet) {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Elimina serie")
+            .setMessage("Sei sicuro di voler eliminare la serie ${sessionSet.setNumber}?")
+            .setPositiveButton("Elimina") { _, _ ->
+                viewModel.deleteSessionSet(sessionSet)
+            }
+            .setNegativeButton("Annulla", null)
+            .show()
     }
 }

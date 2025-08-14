@@ -43,13 +43,19 @@ class ActiveWorkoutViewModel @Inject constructor(
     private val _isEditMode = MutableStateFlow(false)
     val isEditMode: StateFlow<Boolean> = _isEditMode.asStateFlow()
 
+    // Temporary changes map for batch saving during edit mode
+    private val pendingSetChanges = mutableMapOf<String, WorkoutSessionSet>()
+
     // Track exercise completion state
     private val _completedSets = MutableStateFlow<Map<String, Boolean>>(emptyMap())
     val completedSets: StateFlow<Map<String, Boolean>> = _completedSets.asStateFlow()
 
     // List of session exercises and sets
     private val _sessionExercises = MutableStateFlow<List<WorkoutSessionExercise>>(emptyList())
+    val sessionExercises: StateFlow<List<WorkoutSessionExercise>> = _sessionExercises.asStateFlow()
+    
     private val _sessionSets = MutableStateFlow<Map<String, List<WorkoutSessionSet>>>(emptyMap())
+    val sessionSets: StateFlow<Map<String, List<WorkoutSessionSet>>> = _sessionSets.asStateFlow()
 
     // Exercises with sets - switches between original card data and session data
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -355,7 +361,28 @@ class ActiveWorkoutViewModel @Inject constructor(
 
     // Toggle edit mode function
     fun toggleEditMode() {
-        _isEditMode.value = !_isEditMode.value
+        viewModelScope.launch {
+            if (_isEditMode.value) {
+                // Exiting edit mode - save all pending changes
+                savePendingChanges()
+                _isEditMode.value = false
+            } else {
+                // Entering edit mode - clear any pending changes
+                pendingSetChanges.clear()
+                _isEditMode.value = true
+            }
+        }
+    }
+
+    private suspend fun savePendingChanges() {
+        try {
+            pendingSetChanges.values.forEach { set ->
+                workoutRepository.updateSessionSet(set)
+            }
+            pendingSetChanges.clear()
+        } catch (e: Exception) {
+            _uiState.value = UiState.Error(e.message ?: "Errore nel salvataggio delle modifiche")
+        }
     }
 
     // Aggiungi esercizi selezionati alla sessione di allenamento attiva
@@ -409,6 +436,133 @@ class ActiveWorkoutViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiState.value = UiState.Error(e.message ?: "Errore nell'aggiunta degli esercizi")
             }
+        }
+    }
+
+    // Delete exercise from session
+    fun deleteSessionExercise(sessionExercise: WorkoutSessionExercise) {
+        if (!_isEditMode.value) return
+
+        viewModelScope.launch {
+            try {
+                workoutRepository.deleteSessionExercise(sessionExercise)
+                
+                // Remove any pending changes for sets of this exercise
+                val setsToRemove = pendingSetChanges.keys.filter { setId ->
+                    _sessionSets.value[sessionExercise.id]?.any { it.id == setId } == true
+                }
+                setsToRemove.forEach { pendingSetChanges.remove(it) }
+                
+                // Update local state
+                val updatedExercises = _sessionExercises.value.filter { it.id != sessionExercise.id }
+                _sessionExercises.value = updatedExercises
+                
+                val updatedSetsMap = _sessionSets.value.toMutableMap()
+                updatedSetsMap.remove(sessionExercise.id)
+                _sessionSets.value = updatedSetsMap
+                
+            } catch (e: Exception) {
+                _uiState.value = UiState.Error(e.message ?: "Errore nell'eliminazione dell'esercizio")
+            }
+        }
+    }
+
+    // Add set to session exercise
+    fun addSetToSessionExercise(sessionExerciseId: String) {
+        if (!_isEditMode.value) return
+
+        viewModelScope.launch {
+            try {
+                val currentSets = _sessionSets.value[sessionExerciseId] ?: emptyList()
+                val nextSetNumber = (currentSets.maxOfOrNull { it.setNumber } ?: 0) + 1
+
+                val newSet = WorkoutSessionSet(
+                    exerciseId = sessionExerciseId,
+                    setNumber = nextSetNumber,
+                    targetReps = 10,
+                    isCompleted = false
+                )
+
+                workoutRepository.insertSessionSet(newSet)
+                
+                // Update local state
+                val updatedSets = currentSets + newSet
+                val updatedSetsMap = _sessionSets.value.toMutableMap()
+                updatedSetsMap[sessionExerciseId] = updatedSets
+                _sessionSets.value = updatedSetsMap
+                
+                // Update completed sets map
+                val updatedCompletedSets = _completedSets.value.toMutableMap()
+                updatedCompletedSets[newSet.id] = false
+                _completedSets.value = updatedCompletedSets
+                
+            } catch (e: Exception) {
+                _uiState.value = UiState.Error(e.message ?: "Errore nell'aggiunta del set")
+            }
+        }
+    }
+
+    // Delete set from session exercise
+    fun deleteSessionSet(sessionSet: WorkoutSessionSet) {
+        if (!_isEditMode.value) return
+
+        viewModelScope.launch {
+            try {
+                workoutRepository.deleteSessionSet(sessionSet)
+                
+                // Remove from pending changes
+                pendingSetChanges.remove(sessionSet.id)
+                
+                // Update local state
+                val exerciseId = sessionSet.exerciseId
+                val currentSets = _sessionSets.value[exerciseId] ?: emptyList()
+                val updatedSets = currentSets.filter { it.id != sessionSet.id }
+                val updatedSetsMap = _sessionSets.value.toMutableMap()
+                updatedSetsMap[exerciseId] = updatedSets
+                _sessionSets.value = updatedSetsMap
+                
+                // Update completed sets map
+                val updatedCompletedSets = _completedSets.value.toMutableMap()
+                updatedCompletedSets.remove(sessionSet.id)
+                _completedSets.value = updatedCompletedSets
+                
+            } catch (e: Exception) {
+                _uiState.value = UiState.Error(e.message ?: "Errore nell'eliminazione del set")
+            }
+        }
+    }
+
+    // Update session set values (temporarily until edit mode ends)
+    fun updateSessionSetValues(sessionSet: WorkoutSessionSet) {
+        if (!_isEditMode.value) return
+
+        // Store changes temporarily - merge with existing pending changes
+        val existingPendingSet = pendingSetChanges[sessionSet.id]
+        val mergedSet = if (existingPendingSet != null) {
+            // Merge changes: keep non-null values from both sets
+            sessionSet.copy(
+                actualWeightKg = sessionSet.actualWeightKg ?: existingPendingSet.actualWeightKg,
+                actualReps = sessionSet.actualReps ?: existingPendingSet.actualReps
+            )
+        } else {
+            sessionSet
+        }
+
+        pendingSetChanges[sessionSet.id] = mergedSet
+    }
+
+    // Update session set values from weight and reps (for adapter compatibility)
+    fun updateSessionSetFromValues(setId: String, weight: Double?, reps: Int?) {
+        if (!_isEditMode.value) return
+
+        // Find the original session set
+        val originalSet = _sessionSets.value.values.flatten().find { it.id == setId }
+        if (originalSet != null) {
+            val updatedSet = originalSet.copy(
+                actualWeightKg = weight,
+                actualReps = reps
+            )
+            updateSessionSetValues(updatedSet)
         }
     }
 
