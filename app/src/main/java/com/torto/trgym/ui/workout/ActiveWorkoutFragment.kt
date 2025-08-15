@@ -1,17 +1,8 @@
 package com.torto.trgym.ui.workout
 
-import android.content.BroadcastReceiver
-import android.content.ComponentName
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
-import android.content.ServiceConnection
-import android.os.Build
 import android.os.Bundle
-import android.os.IBinder
 import android.view.View
 import android.widget.ImageView
-import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
@@ -24,19 +15,16 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
-import com.google.android.material.card.MaterialCardView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.torto.trgym.R
 import com.torto.trgym.adapters.ActiveWorkoutExercisesAdapter
-import com.torto.trgym.services.WorkoutTimerService
 import com.torto.trgym.ui.dialogs.SelectExercisesDialog
 import com.torto.trgym.viewmodel.workout.ActiveWorkoutViewModel
 import com.torto.trgym.database.entities.WorkoutSessionExercise
-import com.torto.trgym.database.entities.WorkoutSessionSet
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import java.util.concurrent.TimeUnit
+
 
 @AndroidEntryPoint
 class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
@@ -51,45 +39,10 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
     private lateinit var emptyStateLayout: View
     private lateinit var completeWorkoutButton: MaterialButton
     private lateinit var cancelWorkoutButton: MaterialButton
-    private lateinit var timerCard: MaterialCardView
-    private lateinit var timerText: TextView
     private lateinit var pauseResumeButton: ImageView
     private lateinit var editButton: TextView
     private lateinit var addExerciseBtn: FloatingActionButton // Aggiungo il FAB
 
-    // Timer service
-    private var timerService: WorkoutTimerService? = null
-    private var isBound = false
-
-    private val connection = object : ServiceConnection {
-        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-            val binder = service as WorkoutTimerService.LocalBinder
-            timerService = binder.getService()
-            isBound = true
-
-            // Update initial state
-            updateTimerDisplay(timerService?.getElapsedTime() ?: 0L)
-            updatePauseResumeButton(timerService?.isTimerRunning() ?: false)
-        }
-
-        override fun onServiceDisconnected(name: ComponentName?) {
-            timerService = null
-            isBound = false
-        }
-    }
-
-    private val timerUpdateReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent?.action == WorkoutTimerService.ACTION_TIME_UPDATE) {
-                val elapsedTime = intent.getLongExtra(WorkoutTimerService.EXTRA_ELAPSED_TIME, 0L)
-                val isRunning = intent.getBooleanExtra(WorkoutTimerService.EXTRA_IS_RUNNING, false)
-
-                viewModel.updateElapsedTime(elapsedTime)
-                updateTimerDisplay(elapsedTime)
-                updatePauseResumeButton(isRunning)
-            }
-        }
-    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -99,13 +52,6 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
         setupClickListeners()
         observeViewModel()
         setupBackPressHandler()
-
-        // Register timer updates receiver with the NOT_EXPORTED flag for Android 13+
-        requireActivity().registerReceiver(
-            timerUpdateReceiver,
-            IntentFilter(WorkoutTimerService.ACTION_TIME_UPDATE),
-            Context.RECEIVER_NOT_EXPORTED
-        )
     }
 
     private fun initViews(view: View) {
@@ -115,8 +61,6 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
         emptyStateLayout = view.findViewById(R.id.emptyStateLayout)
         completeWorkoutButton = view.findViewById(R.id.completeWorkoutButton)
         cancelWorkoutButton = view.findViewById(R.id.cancelWorkoutButton)
-        timerCard = view.findViewById(R.id.timerCard)
-        timerText = view.findViewById(R.id.timerText)
         pauseResumeButton = view.findViewById(R.id.pauseResumeButton)
         editButton = view.findViewById(R.id.editButton)
         addExerciseBtn = view.findViewById(R.id.addExerciseBtn) // Inizializzo il FAB
@@ -162,10 +106,6 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
 
         cancelWorkoutButton.setOnClickListener {
             showCancelWorkoutConfirmation()
-        }
-
-        pauseResumeButton.setOnClickListener {
-            toggleTimerState()
         }
 
         // Aggiungo il listener per il pulsante di modifica
@@ -235,12 +175,10 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
                         }
                         is ActiveWorkoutViewModel.UiState.WorkoutCompleted -> {
                             Toast.makeText(requireContext(), "Allenamento completato!", Toast.LENGTH_SHORT).show()
-                            stopTimerService()
                             findNavController().navigate(ActiveWorkoutFragmentDirections.actionActiveWorkoutFragmentToHomeFragment())
                         }
                         is ActiveWorkoutViewModel.UiState.WorkoutCancelled -> {
                             Toast.makeText(requireContext(), "Allenamento annullato", Toast.LENGTH_SHORT).show()
-                            stopTimerService()
                             findNavController().navigate(ActiveWorkoutFragmentDirections.actionActiveWorkoutFragmentToHomeFragment())
                         }
                         else -> { /* Handle other states if needed */ }
@@ -249,13 +187,7 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
             }
         }
 
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.timerRunning.collect { isRunning ->
-                    updatePauseResumeButton(isRunning)
-                }
-            }
-        }
+
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -293,76 +225,8 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
 
     private fun startWorkout() {
         viewModel.startWorkout()
-        startTimerService()
-        timerCard.visibility = View.VISIBLE
     }
 
-    private fun startTimerService() {
-        val serviceIntent = Intent(requireContext(), WorkoutTimerService::class.java).apply {
-            action = WorkoutTimerService.ACTION_START
-            putExtra("sessionId", viewModel.activeSession.value?.id)
-        }
-
-        requireContext().startService(serviceIntent)
-        requireContext().bindService(
-            Intent(requireContext(), WorkoutTimerService::class.java),
-            connection,
-            Context.BIND_AUTO_CREATE
-        )
-    }
-
-    private fun stopTimerService() {
-        if (isBound) {
-            requireContext().unbindService(connection)
-            isBound = false
-        }
-
-        requireContext().startService(
-            Intent(requireContext(), WorkoutTimerService::class.java).apply {
-                action = WorkoutTimerService.ACTION_STOP
-            }
-        )
-    }
-
-    private fun toggleTimerState() {
-        if (timerService?.isTimerRunning() == true) {
-            pauseTimer()
-        } else {
-            resumeTimer()
-        }
-    }
-
-    private fun pauseTimer() {
-        requireContext().startService(
-            Intent(requireContext(), WorkoutTimerService::class.java).apply {
-                action = WorkoutTimerService.ACTION_PAUSE
-            }
-        )
-        viewModel.pauseTimer()
-    }
-
-    private fun resumeTimer() {
-        requireContext().startService(
-            Intent(requireContext(), WorkoutTimerService::class.java).apply {
-                action = WorkoutTimerService.ACTION_RESUME
-            }
-        )
-        viewModel.resumeTimer()
-    }
-
-    private fun updateTimerDisplay(elapsedMillis: Long) {
-        val hours = TimeUnit.MILLISECONDS.toHours(elapsedMillis)
-        val minutes = TimeUnit.MILLISECONDS.toMinutes(elapsedMillis) % 60
-        val seconds = TimeUnit.MILLISECONDS.toSeconds(elapsedMillis) % 60
-
-        timerText.text = String.format("%02d:%02d:%02d", hours, minutes, seconds)
-    }
-
-    private fun updatePauseResumeButton(isRunning: Boolean) {
-        pauseResumeButton.setImageResource(
-            if (isRunning) R.drawable.ic_pause else R.drawable.ic_play
-        )
-    }
 
     private fun showCompleteWorkoutConfirmation() {
         MaterialAlertDialogBuilder(requireContext())
@@ -408,22 +272,6 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
         )
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        try {
-            requireActivity().unregisterReceiver(timerUpdateReceiver)
-        } catch (e: Exception) {
-            // Ignore if receiver wasn't registered
-        }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        if (isBound) {
-            requireContext().unbindService(connection)
-            isBound = false
-        }
-    }
 
     private fun showExerciseMenu(exerciseId: String) {
         // Find the session exercise from ViewModel
@@ -444,14 +292,7 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
         // Find the session set from ViewModel
         val sessionSet = viewModel.sessionSets.value.values.flatten().find { it.id == setId }
         if (sessionSet != null) {
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Opzioni serie")
-                .setItems(arrayOf("Elimina serie")) { _, which ->
-                    when (which) {
-                        0 -> showDeleteSetConfirmation(sessionSet)
-                    }
-                }
-                .show()
+            viewModel.deleteSessionSet(sessionSet)
         }
     }
 
@@ -466,14 +307,4 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
             .show()
     }
 
-    private fun showDeleteSetConfirmation(sessionSet: WorkoutSessionSet) {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Elimina serie")
-            .setMessage("Sei sicuro di voler eliminare la serie ${sessionSet.setNumber}?")
-            .setPositiveButton("Elimina") { _, _ ->
-                viewModel.deleteSessionSet(sessionSet)
-            }
-            .setNegativeButton("Annulla", null)
-            .show()
-    }
 }

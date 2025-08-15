@@ -941,11 +941,9 @@ class WorkoutRepository @Inject constructor(
 
 
     suspend fun insertSessionSet(set: WorkoutSessionSet) = withContext(Dispatchers.IO) {
-        // Insert locally first with pendingSync flag
         val setToInsert = set.copy(pendingSync = true, syncedWithServer = false)
         workoutDao.insertSessionSet(setToInsert)
 
-        // Upload to Supabase if user is authenticated
         try {
             val userId = supabaseClient.auth.currentUserOrNull()?.id
             if (userId != null) {
@@ -969,15 +967,12 @@ class WorkoutRepository @Inject constructor(
             }
         } catch (e: Exception) {
             Log.w("WorkoutRepository", "Could not upload session set to Supabase (offline?), will sync later", e)
-            // Keep pendingSync = true for later synchronization
         }
     }
 
     suspend fun deleteSessionExercise(exercise: WorkoutSessionExercise) = withContext(Dispatchers.IO) {
-        // Delete locally first
         workoutDao.deleteSessionExerciseAndReorder(exercise)
 
-        // Delete from Supabase if user is authenticated
         try {
             val userId = supabaseClient.auth.currentUserOrNull()?.id
             if (userId != null) {
@@ -990,15 +985,12 @@ class WorkoutRepository @Inject constructor(
             }
         } catch (e: Exception) {
             Log.e("WorkoutRepository", "Error deleting session exercise from Supabase", e)
-            // Don't fail the local operation if Supabase delete fails
         }
     }
 
     suspend fun deleteSessionSet(set: WorkoutSessionSet) = withContext(Dispatchers.IO) {
-        // Delete locally first
         workoutDao.deleteSessionSetAndReorder(set)
 
-        // Delete from Supabase if user is authenticated
         try {
             val userId = supabaseClient.auth.currentUserOrNull()?.id
             if (userId != null) {
@@ -1011,7 +1003,6 @@ class WorkoutRepository @Inject constructor(
             }
         } catch (e: Exception) {
             Log.e("WorkoutRepository", "Error deleting session set from Supabase", e)
-            // Don't fail the local operation if Supabase delete fails
         }
     }
 
