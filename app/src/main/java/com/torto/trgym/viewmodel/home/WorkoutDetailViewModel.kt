@@ -68,6 +68,15 @@ class WorkoutDetailViewModel @Inject constructor(
         observeExercises()
     }
 
+//    fun refreshWorkoutCard() {
+//        viewModelScope.launch {
+//            _uiState.value = UiState.Loading
+//            loadWorkoutCard()
+//            observeExercises()
+//
+//        }
+//    }
+
     private fun loadWorkoutCard() {
         viewModelScope.launch {
             try {

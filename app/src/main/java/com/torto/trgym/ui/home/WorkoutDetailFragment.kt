@@ -51,6 +51,11 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
         observeViewModels()
     }
 
+//    override fun onResume() {
+//        super.onResume()
+//        workoutDetailViewModel.refreshWorkoutCard()
+//    }
+
     private fun initViews(view: View) {
         backButton = view.findViewById(R.id.backButton)
         workoutTitle = view.findViewById(R.id.workoutTitle)

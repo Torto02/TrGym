@@ -34,4 +34,9 @@
     <string name="detail_tips_desc">Exercise tips: \n1. step 1\n \n2. step 2</string>
     <string name="ex_name">exercise name</string>
     <string name="backBtn">Back</string>
+    <string name="bodyMeasurements">Body measurements</string>
+    <string name="Synchronize">Synchronize</string>
+    <string name="TrainingHystory">Training hystory</string>
+    <string name="workout">Workouts</string>
+    <string name="Calories">Burned calories</string>
 </resources>

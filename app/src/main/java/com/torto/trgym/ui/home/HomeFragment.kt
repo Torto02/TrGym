@@ -35,6 +35,10 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     @Inject
     lateinit var workoutDao: WorkoutDao  // Aggiungo l'iniezione di WorkoutDao
 
+    override fun onResume() {
+        super.onResume()
+        viewModel.refreshHome()
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

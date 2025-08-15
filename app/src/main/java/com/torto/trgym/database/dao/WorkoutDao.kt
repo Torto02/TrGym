@@ -205,4 +205,6 @@ interface WorkoutDao {
     @Query("SELECT * FROM workout_exercises WHERE workoutCardId = :cardId AND orderIndex > :orderIndex ORDER BY orderIndex ASC")
     suspend fun getExercisesWithHigherOrderIndex(cardId: String, orderIndex: Int): List<WorkoutExercise>
 
+    @Query("SELECT COUNT(*) workoutCardId FROM workout_sessions WHERE isCompleted = 1")
+    suspend fun countWorkoutSessions():Int
 }

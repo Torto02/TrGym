@@ -1006,5 +1006,8 @@ class WorkoutRepository @Inject constructor(
         }
     }
 
+    suspend fun countWorkoutSessions(): Int = withContext(Dispatchers.IO) {
+        workoutDao.countWorkoutSessions()
+    }
 
 }

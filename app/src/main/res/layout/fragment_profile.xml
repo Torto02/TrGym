@@ -60,15 +60,6 @@
                     android:padding="24dp"
                     android:gravity="center">
 
-                    <!-- Immagine profilo -->
-                    <de.hdodenhof.circleimageview.CircleImageView
-                        android:id="@+id/imageProfile"
-                        android:layout_width="80dp"
-                        android:layout_height="80dp"
-                        android:src="@drawable/ic_account"
-                        app:civ_border_width="3dp"
-                        app:civ_border_color="@color/primary"
-                        android:layout_marginBottom="16dp" />
 
                     <!-- Nome utente -->
                     <TextView
@@ -105,11 +96,11 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:layout_marginEnd="6dp"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="1dp"
-                    app:cardBackgroundColor="@color/white"
-                    app:strokeWidth="1dp"
-                    app:strokeColor="@color/lightGray">
+                    app:cardCornerRadius="26dp"
+                    app:cardElevation="2dp"
+                    app:cardBackgroundColor="@color/primary"
+                    android:layout_margin="5dp"
+                    app:strokeColor="@color/primary">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -125,67 +116,30 @@
                             android:text="42"
                             android:textSize="24sp"
                             android:textStyle="bold"
-                            android:textColor="@color/primary"
-                            tools:text="42" />
+                            android:textColor="@color/white" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Allenamenti"
+                            android:text="@string/workout"
                             android:textSize="12sp"
-                            android:textColor="@color/ios_secondaryLabel" />
+                            android:textColor="@color/white" />
 
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
-                <com.google.android.material.card.MaterialCardView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginHorizontal="6dp"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="1dp"
-                    app:cardBackgroundColor="@color/white"
-                    app:strokeWidth="1dp"
-                    app:strokeColor="@color/lightGray">
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="16dp"
-                        android:gravity="center">
-
-                        <TextView
-                            android:id="@+id/currentStreak"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="7"
-                            android:textSize="24sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/primary"
-                            tools:text="7" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Giorni consecutivi"
-                            android:textSize="12sp"
-                            android:textColor="@color/ios_secondaryLabel" />
-
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
 
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:layout_marginStart="6dp"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="1dp"
-                    app:cardBackgroundColor="@color/white"
-                    app:strokeWidth="1dp"
-                    app:strokeColor="@color/lightGray">
+                    app:cardCornerRadius="26dp"
+                    app:cardElevation="2dp"
+                    android:layout_margin="5dp"
+                    app:cardBackgroundColor="#F00D0D"
+                    app:strokeColor="@color/white">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -201,15 +155,15 @@
                             android:text="2.1k"
                             android:textSize="24sp"
                             android:textStyle="bold"
-                            android:textColor="@color/primary"
+                            android:textColor="@color/white"
                             tools:text="2.1k" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Calorie bruciate"
+                            android:text="@string/Calories"
                             android:textSize="12sp"
-                            android:textColor="@color/ios_secondaryLabel" />
+                            android:textColor="@color/white" />
 
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
@@ -222,6 +176,7 @@
                 android:layout_height="wrap_content"
                 android:text="Funzionalità"
                 android:textColor="@color/ios_label"
+                android:layout_marginTop="20dp"
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:layout_marginBottom="12dp" />
@@ -297,52 +252,6 @@
                 </com.google.android.material.card.MaterialCardView>
                 -->
 
-                <!-- Obiettivi -->
-                <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/cardGoals"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="1dp"
-                    app:cardBackgroundColor="@color/white"
-                    app:strokeWidth="1dp"
-                    app:strokeColor="@color/lightGray"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:foreground="?attr/selectableItemBackground">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:padding="16dp"
-                        android:gravity="center_vertical">
-
-                        <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:src="@drawable/ic_goals"
-                            app:tint="@color/primary" />
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Obiettivi e Progressi"
-                            android:textSize="16sp"
-                            android:layout_marginStart="16dp"
-                            android:textColor="@color/ios_label" />
-
-                        <ImageView
-                            android:layout_width="16dp"
-                            android:layout_height="16dp"
-                            android:src="@drawable/ic_ios_back"
-                            android:rotation="180"
-                            app:tint="@color/ios_secondaryLabel" />
-
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
 
                 <!-- Storico allenamenti -->
                 <com.google.android.material.card.MaterialCardView
@@ -376,7 +285,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Storico Allenamenti"
+                            android:text="@string/TrainingHystory"
                             android:textSize="16sp"
                             android:layout_marginStart="16dp"
                             android:textColor="@color/ios_label" />
@@ -424,7 +333,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Misurazioni Corporee"
+                            android:text="@string/bodyMeasurements"
                             android:textSize="16sp"
                             android:layout_marginStart="16dp"
                             android:textColor="@color/ios_label" />
@@ -441,7 +350,7 @@
 
                 <!-- Impostazioni -->
                 <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/cardSettings"
+                    android:id="@+id/btnResync"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="8dp"
@@ -464,24 +373,17 @@
                         <ImageView
                             android:layout_width="24dp"
                             android:layout_height="24dp"
-                            android:src="@drawable/ic_settings"
+                            android:src="@drawable/ic_sync"
                             app:tint="@color/primary" />
 
                         <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Impostazioni"
+                            android:text="@string/Synchronize"
                             android:textSize="16sp"
                             android:layout_marginStart="16dp"
                             android:textColor="@color/ios_label" />
-
-                        <ImageView
-                            android:layout_width="16dp"
-                            android:layout_height="16dp"
-                            android:src="@drawable/ic_ios_back"
-                            android:rotation="180"
-                            app:tint="@color/ios_secondaryLabel" />
 
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
@@ -494,6 +396,7 @@
                     app:cardCornerRadius="16dp"
                     app:cardElevation="1dp"
                     app:cardBackgroundColor="@color/white"
+                    android:layout_marginTop="50dp"
                     app:strokeWidth="1dp"
                     app:strokeColor="@color/lightGray"
                     android:clickable="true"
@@ -517,7 +420,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Logout"
+                            android:text="@string/logoutBtn"
                             android:textSize="16sp"
                             android:layout_marginStart="16dp"
                             android:textColor="@android:color/holo_red_dark" />

@@ -19,12 +19,30 @@ class HomeViewModel @Inject constructor(
     val uiState: StateFlow<UiState> = _uiState
 
     // Carica le schede di allenamento
-    val workoutCards = workoutRepository.getAllWorkoutCards()
+    var workoutCards = workoutRepository.getAllWorkoutCards()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
+
+    fun refreshHome(){
+        workoutCards = workoutRepository.getAllWorkoutCards()
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = emptyList()
+            )
+        viewModelScope.launch {
+            workoutCards.collect { cards ->
+                _uiState.value = if (cards.isEmpty()) {
+                    UiState.Empty
+                } else {
+                    UiState.Success(cards)
+                }
+            }
+        }
+    }
 
     init {
         viewModelScope.launch {
