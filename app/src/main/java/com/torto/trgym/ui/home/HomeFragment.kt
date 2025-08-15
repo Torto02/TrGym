@@ -18,10 +18,12 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
 import com.torto.trgym.R
 import com.torto.trgym.adapters.WorkoutCardsAdapter
+import com.torto.trgym.database.dao.WorkoutDao
 import com.torto.trgym.database.entities.WorkoutSession
 import com.torto.trgym.viewmodel.home.HomeViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class HomeFragment : Fragment(R.layout.fragment_home) {
@@ -29,6 +31,10 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     private val viewModel: HomeViewModel by viewModels()
     private lateinit var workoutCardsAdapter: WorkoutCardsAdapter
     private lateinit var activeWorkoutCard: MaterialCardView
+
+    @Inject
+    lateinit var workoutDao: WorkoutDao  // Aggiungo l'iniezione di WorkoutDao
+
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -61,6 +67,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     private fun setupRecyclerView(view: View) {
         val recyclerView = view.findViewById<RecyclerView>(R.id.workoutCardsRecyclerView)
         workoutCardsAdapter = WorkoutCardsAdapter(
+            workoutDao = workoutDao,  // Passo il workoutDao all'adapter
             onCardClick = { workoutCard ->
                 val action = HomeFragmentDirections.actionHomeToWorkoutDetail(workoutCard.id)
                 findNavController().navigate(action)
@@ -68,6 +75,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             onMenuClick = { workoutCard ->
                 showWorkoutCardMenu(workoutCard)
             }
+
         )
 
         recyclerView.apply {

@@ -154,7 +154,7 @@ interface WorkoutDao {
     fun getSessionExercisesWithSetsFlow(sessionId: String): Flow<List<WorkoutSessionExerciseDetail>>
 
     @Query("SELECT COUNT(*) FROM workout_exercises WHERE workoutCardId = :cardId")
-    suspend fun getExerciseCountForCard(cardId: String): Int
+    fun getExerciseCountForCard(cardId: String): Int
 
 
     @Query("SELECT * FROM workout_cards WHERE pendingSync = 1")

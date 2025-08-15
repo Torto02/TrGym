@@ -9,11 +9,18 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.torto.trgym.R
+import com.torto.trgym.database.dao.WorkoutDao
 import com.torto.trgym.database.entities.WorkoutCard
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.*
 
+
 class WorkoutCardsAdapter(
+    private val workoutDao: WorkoutDao,
     private val onCardClick: (WorkoutCard) -> Unit,
     private val onMenuClick: (WorkoutCard) -> Unit
 ) : ListAdapter<WorkoutCard, WorkoutCardsAdapter.ViewHolder>(DiffCallback) {
@@ -21,7 +28,7 @@ class WorkoutCardsAdapter(
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_workout_card, parent, false)
-        return ViewHolder(view, onCardClick, onMenuClick)
+        return ViewHolder(view, workoutDao,onCardClick, onMenuClick)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
@@ -30,8 +37,9 @@ class WorkoutCardsAdapter(
 
     class ViewHolder(
         itemView: View,
+        private val workoutDao: WorkoutDao,
         private val onCardClick: (WorkoutCard) -> Unit,
-        private val onMenuClick: (WorkoutCard) -> Unit
+        private val onMenuClick: (WorkoutCard) -> Unit,
     ) : RecyclerView.ViewHolder(itemView) {
 
         private val workoutCardName: TextView = itemView.findViewById(R.id.workoutCardName)
@@ -39,6 +47,7 @@ class WorkoutCardsAdapter(
         private val exerciseCount: TextView = itemView.findViewById(R.id.exerciseCount)
         private val lastWorkout: TextView = itemView.findViewById(R.id.lastWorkout)
         private val workoutCardMenu: ImageView = itemView.findViewById(R.id.workoutCardMenu)
+
 
         fun bind(workoutCard: WorkoutCard) {
             workoutCardName.text = workoutCard.name
@@ -51,13 +60,18 @@ class WorkoutCardsAdapter(
                 workoutCardDescription.text = workoutCard.description
             }
 
-            // TODO: Implementare il conteggio degli esercizi tramite repository
-            exerciseCount.text = "0 esercizi" // Placeholder
+            CoroutineScope(Dispatchers.IO).launch {
+                val count = workoutDao.getExerciseCountForCard(workoutCard.id)
+                // Torna al thread principale per aggiornare l'UI
+                withContext(Dispatchers.Main) {
+                    exerciseCount.text = count.toString() + " exercises"
+                }
+            }
 
             // Formatta la data dell'ultimo aggiornamento
             val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
             val updateDate = Date(workoutCard.updatedAt)
-            lastWorkout.text = "Creata: ${dateFormat.format(updateDate)}"
+            lastWorkout.text = "Created: ${dateFormat.format(updateDate)}"
 
             // Click listeners
             itemView.setOnClickListener { onCardClick(workoutCard) }

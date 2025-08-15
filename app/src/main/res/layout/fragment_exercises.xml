@@ -4,7 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:tools="http://schemas.android.com/tools"
-    android:background="@color/ios_systemBackground">
+    android:background="@color/ios_systemBackground"
+    >
 
     <!-- Header con titolo -->
     <LinearLayout
@@ -15,8 +16,10 @@
         android:paddingHorizontal="20dp"
         android:paddingTop="16dp"
         android:paddingBottom="8dp"
+        android:background="@android:color/transparent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
+        android:elevation="10dp"
         app:layout_constraintEnd_toEndOf="parent">
 
         <TextView
@@ -60,7 +63,7 @@
                 app:cardCornerRadius="20dp"
                 app:cardElevation="0dp"
                 app:strokeWidth="0dp"
-                android:backgroundTint="#0021DB">
+                android:backgroundTint="@color/primary">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -143,16 +146,16 @@
         android:layout_height="0dp"
         android:layout_marginHorizontal="8dp"
         android:layout_marginTop="6dp"
-        android:layout_marginBottom="10dp"
         app:cardBackgroundColor="@color/white"
         app:cardCornerRadius="30dp"
         app:strokeWidth="0dp"
         app:cardElevation="0dp"
         app:strokeColor="@color/white"
-        app:layout_constraintTop_toBottomOf="@id/headerSection"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintEnd_toEndOf="parent"
+        >
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvExercises"
@@ -162,8 +165,8 @@
             android:clipToPadding="false"
             android:overScrollMode="never"
             android:scrollbars="none"
-            android:paddingTop="60dp"
-            android:paddingBottom="10dp" />
+            android:paddingTop="120dp"
+            android:paddingBottom="100dp" />
     </com.google.android.material.card.MaterialCardView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

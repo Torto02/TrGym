@@ -205,6 +205,8 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
         }
     }
 
+    private var wasInEditMode = false
+
     private fun updateEditModeUI(isEditMode: Boolean) {
         editButton.text = if (isEditMode) "Fine" else "Modifica"
         addExerciseBtn.visibility = if (isEditMode) View.VISIBLE else View.GONE
@@ -212,10 +214,13 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
         // Update start button visibility and text
         startWorkoutButton.visibility = if (isEditMode) View.GONE else View.VISIBLE
 
-        // Show save confirmation when exiting edit mode
-        if (!isEditMode && ::exercisesAdapter.isInitialized) {
+        // Show save confirmation ONLY when exiting edit mode (transition from true to false)
+        if (wasInEditMode && !isEditMode && ::exercisesAdapter.isInitialized) {
             Toast.makeText(requireContext(), "Modifiche salvate", Toast.LENGTH_SHORT).show()
         }
+
+        // Aggiorna lo stato precedente
+        wasInEditMode = isEditMode
     }
 
     private fun updateEmptyState(isEmpty: Boolean) {

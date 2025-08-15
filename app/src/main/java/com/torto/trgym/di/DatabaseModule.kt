@@ -36,7 +36,7 @@ object DatabaseModule {
             "TrGym.db"
         )
             .createFromAsset("TrGym.db")
-            .fallbackToDestructiveMigration() // Permette la migrazione distruttiva in caso di cambiamenti nel database
+//            .fallbackToDestructiveMigration() // Permette la migrazione distruttiva in caso di cambiamenti nel database
         return builder.build()
     }
 

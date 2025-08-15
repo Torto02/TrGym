@@ -173,6 +173,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:nestedScrollingEnabled="false"
+                android:layout_marginBottom="100dp"
                 tools:listitem="@layout/item_workout_exercise" />
 
             <!-- Messaggio quando non ci sono esercizi -->
@@ -222,6 +223,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:orientation="vertical"
+        android:layout_marginBottom="65dp"
         android:padding="16dp"
         android:elevation="8dp">
 
@@ -230,7 +232,7 @@
             android:id="@+id/completeWorkoutButton"
             android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:layout_marginBottom="8dp"
+            android:layout_marginBottom="4dp"
             android:text="Completa Allenamento"
             android:textColor="@color/white"
             android:textSize="16sp"

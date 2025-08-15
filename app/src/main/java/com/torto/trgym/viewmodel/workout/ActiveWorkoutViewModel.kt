@@ -310,7 +310,6 @@ class ActiveWorkoutViewModel @Inject constructor(
             try {
                 val session = _activeSession.value ?: return@launch
 
-                // Update session with end time and completed status
                 val updatedSession = session.copy(
                     endTime = System.currentTimeMillis(),
                     totalDurationMs = _elapsedTime.value,

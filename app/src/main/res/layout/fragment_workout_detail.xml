@@ -7,12 +7,17 @@
     android:layout_height="match_parent"
     android:background="@color/ios_systemBackground">
 
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:elevation="10dp">
     <!-- Toolbar -->
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:elevation="10dp">
+        android:layout_height="?attr/actionBarSize">
 
         <!-- Back Button a sinistra -->
         <com.google.android.material.button.MaterialButton
@@ -27,7 +32,7 @@
             android:textSize="18sp"
             android:textStyle="bold"
             app:icon="@drawable/ic_ios_back"
-            android:backgroundTint="@color/white"
+            android:backgroundTint="#80FFFFFF"
             app:iconTint="@color/primary"
             app:strokeColor="@color/lightGray"
             app:strokeWidth="1dp"
@@ -47,7 +52,7 @@
             android:text="Modifica"
             app:strokeColor="@color/lightGray"
             app:strokeWidth="1dp"
-            android:backgroundTint="@color/white"
+            android:backgroundTint="#80FFFFFF"
             android:textColor="@color/primary"
             android:textSize="16sp"
             android:textStyle="bold"
@@ -66,23 +71,22 @@
         android:id="@+id/workoutTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="?attr/actionBarSize"
         android:layout_marginBottom="16dp"
         android:text="Giorno"
         android:textColor="@color/primary"
-        app:strokeColor="@color/white"
+        app:strokeColor="@color/lightGray"
         android:textSize="20sp"
         android:textStyle="bold"
         android:layout_gravity="center_horizontal|top"
         android:paddingHorizontal="16dp"
         android:clickable="false"
         android:focusable="false"
-        android:elevation="1dp"
-        app:backgroundTint="@color/white"
+        android:elevation="0dp"
+        android:backgroundTint="#80FFFFFF"
         app:cornerRadius="20dp"
-        style="@style/Widget.Material3.Button.OutlinedButton"
-        tools:text="Giorno 1"
-        android:visibility="visible"/>
+        style="@style/Widget.Material3.Button.TextButton"
+        tools:text="Giorno 1" />
+    </LinearLayout>
 
     <!-- Contenuto scrollabile -->
     <androidx.core.widget.NestedScrollView
@@ -222,6 +226,7 @@
         android:layout_gravity="bottom"
         android:orientation="vertical"
         android:padding="16dp"
+        android:layout_marginBottom="50dp"
         android:elevation="8dp">
 
         <!-- Pulsante Inizia/Concludi Allenamento -->
@@ -230,7 +235,7 @@
             android:layout_width="match_parent"
             android:layout_height="56dp"
             android:layout_marginBottom="8dp"
-            android:text="Inizia Allenamento"
+            android:text="Start Workout"
             android:textColor="@color/white"
             android:textSize="16sp"
             android:textStyle="bold"
