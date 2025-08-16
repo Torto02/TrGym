@@ -51,11 +51,6 @@
                     android:host="login-callback" />
             </intent-filter>
         </activity>
-        <service
-            android:name=".utils.WorkoutTimerService"
-            android:enabled="true"
-            android:exported="false"
-            android:foregroundServiceType="health" />
     </application>
 
 </manifest>

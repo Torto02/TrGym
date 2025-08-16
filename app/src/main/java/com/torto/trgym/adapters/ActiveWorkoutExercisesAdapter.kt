@@ -31,9 +31,6 @@ class ActiveWorkoutExercisesAdapter(
 
     // Map to associate original ExerciseSet IDs with WorkoutSessionSet IDs
     private val setIdMapping = mutableMapOf<String, String>()
-    
-    // Flag per la modalità di modifica
-    private var isEditMode = false
 
     fun updateCompletedSets(setCompletionMap: Map<String, Boolean>) {
         completedSets.clear()
@@ -44,14 +41,6 @@ class ActiveWorkoutExercisesAdapter(
     fun updateSetIdMapping(mapping: Map<String, String>) {
         setIdMapping.clear()
         setIdMapping.putAll(mapping)
-    }
-    
-    // Metodo per impostare la modalità di modifica
-    fun setEditMode(editMode: Boolean) {
-        if (isEditMode != editMode) {
-            isEditMode = editMode
-            notifyDataSetChanged()
-        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ExerciseViewHolder {
@@ -92,24 +81,11 @@ class ActiveWorkoutExercisesAdapter(
             val exercise = exerciseDetail.exercise
             val sets = exerciseDetail.sets
 
-            // Aggiorno la visibilità in base alla modalità di modifica
-            exerciseMenu.visibility = if (isEditMode) View.VISIBLE else View.GONE
-            addSetButton.visibility = if (isEditMode) View.VISIBLE else View.GONE
-            dragHandle.visibility = if (isEditMode) View.VISIBLE else View.GONE
-            exerciseStatusIcon.visibility = if (isEditMode) View.GONE else View.VISIBLE
-
-            // Setup click listeners for edit mode
-            exerciseMenu.setOnClickListener {
-                if (isEditMode) {
-                    onExerciseMenuClicked?.invoke(exercise.id)
-                }
-            }
-
-            addSetButton.setOnClickListener {
-                if (isEditMode) {
-                    onAddSetClicked?.invoke(exercise.id)
-                }
-            }
+            // Nascondi sempre gli elementi di edit mode
+            exerciseMenu.visibility = View.GONE
+            addSetButton.visibility = View.GONE
+            dragHandle.visibility = View.GONE
+            exerciseStatusIcon.visibility = View.VISIBLE
 
             exerciseName.text = exercise.name
 
@@ -159,7 +135,6 @@ class ActiveWorkoutExercisesAdapter(
             }
 
             setsAdapter?.updateCompletedSets(completedSets, setIdMapping)
-            setsAdapter?.setEditMode(isEditMode)
             setsAdapter?.submitList(sets)
         }
     }
@@ -193,7 +168,6 @@ class ActiveWorkoutSetsAdapter(
 
     private val completedSets = mutableMapOf<String, Boolean>()
     private val setIdMapping = mutableMapOf<String, String>()
-    private var isEditMode = false
 
     fun updateCompletedSets(setCompletionMap: Map<String, Boolean>, mapping: Map<String, String>) {
         completedSets.clear()
@@ -203,14 +177,6 @@ class ActiveWorkoutSetsAdapter(
         setIdMapping.putAll(mapping)
 
         notifyDataSetChanged()
-    }
-    
-    // Metodo per impostare la modalità di modifica
-    fun setEditMode(editMode: Boolean) {
-        if (isEditMode != editMode) {
-            isEditMode = editMode
-            notifyDataSetChanged()
-        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SetViewHolder {
@@ -274,16 +240,9 @@ class ActiveWorkoutSetsAdapter(
             weightInput.setText(set.weightKg?.toString() ?: "")
             repsInput.setText(set.reps?.toString() ?: "")
 
-            // Aggiorno la visibilità in base alla modalità di modifica
-            setMenu.visibility = if (isEditMode) View.VISIBLE else View.GONE
-            setCompletedCheckbox.visibility = if (isEditMode) View.GONE else View.VISIBLE
-
-            // Setup menu click listener
-            setMenu.setOnClickListener {
-                if (isEditMode) {
-                    onSetMenuClicked?.invoke(set.id)
-                }
-            }
+            // Nascondi sempre gli elementi di edit mode
+            setMenu.visibility = View.GONE
+            setCompletedCheckbox.visibility = View.VISIBLE
 
             // Get session set completion state - ensure it defaults to unchecked
             val sessionSetId = setIdMapping[set.id]
@@ -298,9 +257,9 @@ class ActiveWorkoutSetsAdapter(
                     ContextCompat.getColor(itemView.context, R.color.transparent)
             )
 
-            // Abilita/disabilita gli input in base alla modalità di modifica
-            weightInput.isEnabled = isEditMode
-            repsInput.isEnabled = isEditMode
+            // Disabilita sempre gli input (non siamo in edit mode)
+            weightInput.isEnabled = false
+            repsInput.isEnabled = false
 
             isBindingData = false
         }

@@ -11,7 +11,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
@@ -39,13 +38,6 @@ class ActiveWorkoutViewModel @Inject constructor(
     private val _elapsedTime = MutableStateFlow(0L)
     val elapsedTime: StateFlow<Long> = _elapsedTime.asStateFlow()
 
-    // Edit mode state
-    private val _isEditMode = MutableStateFlow(false)
-    val isEditMode: StateFlow<Boolean> = _isEditMode.asStateFlow()
-
-    // Temporary changes map for batch saving during edit mode
-    private val pendingSetChanges = mutableMapOf<String, WorkoutSessionSet>()
-
     // Track exercise completion state
     private val _completedSets = MutableStateFlow<Map<String, Boolean>>(emptyMap())
     val completedSets: StateFlow<Map<String, Boolean>> = _completedSets.asStateFlow()
@@ -60,86 +52,68 @@ class ActiveWorkoutViewModel @Inject constructor(
     // Flag to track whether session data is loaded
     private val _sessionDataLoaded = MutableStateFlow(false)
 
-    // Exercises with sets - switches between original card data and session data
+    // Exercises with sets
     @OptIn(ExperimentalCoroutinesApi::class)
-    val exercisesWithSets = combine(
-        _activeSession, 
-        _sessionDataLoaded,
-        workoutRepository.getExercisesForCard(workoutCardId)
-    ) { activeSession, sessionDataLoaded, originalExercises ->
-        if (activeSession != null && sessionDataLoaded) {
-            // Use session data when workout is active and data is loaded
-            workoutRepository.getSessionExercisesWithSets(activeSession.id)
-        } else if (activeSession != null) {
-            // Wait for session data to load, use an empty flow temporarily
-            // but don't emit it immediately (using emptyFlow() instead of flowOf(emptyList()))
-            emptyFlow<List<WorkoutSessionExerciseDetail>>()
-        } else {
-            // Use original card data when no active session
-            if (originalExercises.isEmpty()) {
-                flowOf(emptyList<WorkoutExerciseDetail>())
-            } else {
-                combine(
-                    originalExercises.map { exercise ->
-                        workoutRepository.getSetsForExercise(exercise.id)
-                            .map { sets ->
-                                WorkoutExerciseDetail(exercise, sets)
-                            }
-                    }
-                ) { exerciseDetails ->
-                    exerciseDetails.toList().sortedBy { it.exercise.orderIndex }
-                }
-            }
-        }
-    }.flatMapLatest { flow ->
-        when (flow) {
-            else -> {
-                if (_activeSession.value != null && _sessionDataLoaded.value) {
-                    // Convert session data to WorkoutExerciseDetail format
-                    @Suppress("UNCHECKED_CAST")
-                    (flow as Flow<List<WorkoutSessionExerciseDetail>>).map { sessionExercises ->
-                        sessionExercises.map { sessionExerciseDetail ->
-                            // Convert WorkoutSessionExercise to WorkoutExercise format
-                            val workoutExercise = WorkoutExercise(
-                                id = sessionExerciseDetail.exercise.id,
-                                workoutCardId = workoutCardId,
-                                exerciseId = sessionExerciseDetail.exercise.originalExerciseId.toIntOrNull()
-                                    ?: 0,
-                                name = sessionExerciseDetail.exercise.name,
-                                orderIndex = sessionExerciseDetail.exercise.orderIndex,
-                                updatedAt = System.currentTimeMillis()
-                            )
-
-                            // Convert WorkoutSessionSet to ExerciseSet format
-                            val exerciseSets = sessionExerciseDetail.sets.map { sessionSet ->
-                                ExerciseSet(
-                                    id = sessionSet.id,
-                                    exerciseId = sessionExerciseDetail.exercise.id,
-                                    setNumber = sessionSet.setNumber,
-                                    weightKg = sessionSet.actualWeightKg
-                                        ?: sessionSet.targetWeightKg,
-                                    reps = sessionSet.actualReps ?: sessionSet.targetReps,
-                                    createdAt = System.currentTimeMillis(),
-                                    updatedAt = System.currentTimeMillis(),
-                                    pendingSync = false,
-                                    syncedWithServer = false
-                                )
-                            }
-
-                            WorkoutExerciseDetail(workoutExercise, exerciseSets)
+    val exercisesWithSets: StateFlow<List<WorkoutExerciseDetail>> = _activeSession
+        .flatMapLatest { activeSession ->
+            if (activeSession != null && _sessionDataLoaded.value) {
+                // Active session - load workout session exercises/sets
+                workoutRepository.getSessionExercisesWithSets(activeSession.id)
+                    .map { sessionDetails ->
+                        sessionDetails.map { detail ->
+                            convertSessionToWorkoutDetail(detail)
                         }
                     }
-                } else {
-                    @Suppress("UNCHECKED_CAST")
-                    flow as Flow<List<WorkoutExerciseDetail>>
-                }
+            } else {
+                // No active session or data not loaded - use original card data
+                workoutRepository.getExercisesForCard(workoutCardId)
+                    .flatMapLatest { exercises ->
+                        if (exercises.isEmpty()) {
+                            flowOf(emptyList())
+                        } else {
+                            // Create a flow of WorkoutExerciseDetail for each exercise
+                            val exerciseFlows = exercises.map { exercise ->
+                                workoutRepository.getSetsForExercise(exercise.id)
+                                    .map { sets -> WorkoutExerciseDetail(exercise, sets) }
+                            }
+
+                            // Combine all the flows into a single list flow
+                            combine(exerciseFlows) { exerciseDetails ->
+                                exerciseDetails.toList().sortedBy { it.exercise.orderIndex }
+                            }
+                        }
+                    }
             }
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
+    // Helper function to convert session detail to workout detail
+    private fun convertSessionToWorkoutDetail(detail: WorkoutSessionExerciseDetail): WorkoutExerciseDetail {
+        val workoutExercise = WorkoutExercise(
+            id = detail.exercise.id,
+            workoutCardId = workoutCardId,
+            exerciseId = detail.exercise.originalExerciseId.toIntOrNull(),
+            name = detail.exercise.name,
+            orderIndex = detail.exercise.orderIndex,
+            updatedAt = System.currentTimeMillis()
+        )
+
+        val exerciseSets = detail.sets.map { sessionSet ->
+            ExerciseSet(
+                id = sessionSet.id,
+                exerciseId = detail.exercise.id,
+                setNumber = sessionSet.setNumber,
+                weightKg = sessionSet.actualWeightKg ?: sessionSet.targetWeightKg,
+                reps = sessionSet.actualReps ?: sessionSet.targetReps,
+                updatedAt = System.currentTimeMillis()
+            )
         }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
+
+        return WorkoutExerciseDetail(workoutExercise, exerciseSets)
+    }
 
     init {
         loadWorkoutCard()
@@ -166,16 +140,16 @@ class ActiveWorkoutViewModel @Inject constructor(
             try {
                 // Reset sessionDataLoaded flag
                 _sessionDataLoaded.value = false
-                
+
                 val activeSession = workoutRepository.getActiveWorkoutSession()
 
                 if (activeSession != null) {
                     // Set session before setting UI state
                     _activeSession.value = activeSession
-                    
+
                     // Load session exercises and sets before indicating data is ready
                     loadSessionExercisesAndSets(activeSession.id)
-                    
+
                     // Only after data is loaded, update UI state
                     _uiState.value = UiState.WorkoutInProgress
                 } else {
@@ -190,7 +164,7 @@ class ActiveWorkoutViewModel @Inject constructor(
     private suspend fun loadSessionExercisesAndSets(sessionId: String) {
         try {
             val exercises = workoutRepository.getSessionExercises(sessionId)
-            
+
             val setsMap = mutableMapOf<String, List<WorkoutSessionSet>>()
             val completedSetsMap = mutableMapOf<String, Boolean>()
 
@@ -208,7 +182,7 @@ class ActiveWorkoutViewModel @Inject constructor(
             _sessionExercises.value = exercises
             _sessionSets.value = setsMap
             _completedSets.value = completedSetsMap
-            
+
             // Finally indicate that session data is loaded
             _sessionDataLoaded.value = true
         } catch (e: Exception) {
@@ -244,7 +218,7 @@ class ActiveWorkoutViewModel @Inject constructor(
     private suspend fun initializeSessionExercisesAndSets(sessionId: String) {
         // Reset sessionDataLoaded flag
         _sessionDataLoaded.value = false
-        
+
         val exercises = exercisesWithSets.value
 
         val sessionExercises = exercises.mapIndexed { index, exerciseDetail ->
@@ -286,7 +260,7 @@ class ActiveWorkoutViewModel @Inject constructor(
         _sessionExercises.value = sessionExercises
         _sessionSets.value = sessionSetsMap
         _completedSets.value = completedSetsMap
-        
+
         // Finally indicate that session data is loaded
         _sessionDataLoaded.value = true
     }
@@ -319,24 +293,40 @@ class ActiveWorkoutViewModel @Inject constructor(
         }
     }
 
-    fun updateSessionSet(set: WorkoutSessionSet) {
-        viewModelScope.launch {
-            try {
-                workoutRepository.updateSessionSet(set)
+    fun updateSessionSetFromValues(setId: String, weight: Double?, reps: Int?) {
+        // Trova il set in sessionSets e aggiorna immediatamente
+        for ((exerciseId, sets) in _sessionSets.value) {
+            val setIndex = sets.indexOfFirst { it.id == setId }
+            if (setIndex != -1) {
+                val originalSet = sets[setIndex]
+                val updatedSet = originalSet.copy(
+                    actualWeightKg = weight,
+                    actualReps = reps
+                )
 
-                // Update the local session sets map
-                val exerciseId = set.exerciseId
-                val currentSets = _sessionSets.value[exerciseId]?.toMutableList() ?: mutableListOf()
-                val setIndex = currentSets.indexOfFirst { it.id == set.id }
+                // Update local state immediately
+                val updatedSets = sets.toMutableList()
+                updatedSets[setIndex] = updatedSet
+                val updatedMap = _sessionSets.value.toMutableMap()
+                updatedMap[exerciseId] = updatedSets
+                _sessionSets.value = updatedMap
 
-                if (setIndex >= 0) {
-                    currentSets[setIndex] = set
-                    val updatedMap = _sessionSets.value.toMutableMap()
-                    updatedMap[exerciseId] = currentSets
-                    _sessionSets.value = updatedMap
+                // Update database
+                viewModelScope.launch {
+                    try {
+                        workoutRepository.updateSessionSet(updatedSet)
+                    } catch (e: Exception) {
+                        // Revert on error
+                        val revertedSets = sets.toMutableList()
+                        revertedSets[setIndex] = originalSet
+                        val revertedMap = _sessionSets.value.toMutableMap()
+                        revertedMap[exerciseId] = revertedSets
+                        _sessionSets.value = revertedMap
+                        _uiState.value = UiState.Error(e.message ?: "Errore nell'aggiornamento del set")
+                    }
                 }
-            } catch (e: Exception) {
-                _uiState.value = UiState.Error(e.message ?: "Errore nell'aggiornamento del set")
+
+                break
             }
         }
     }
@@ -349,7 +339,7 @@ class ActiveWorkoutViewModel @Inject constructor(
                 // Filter and keep only completed sets
                 val completedSetsIds = _completedSets.value.filter { it.value }.keys
                 val exercisesWithCompletedSets = mutableSetOf<String>()
-                
+
                 // Delete uncompleted sets and track exercises with completed sets
                 _sessionSets.value.forEach { (exerciseId, sets) ->
                     sets.forEach { set ->
@@ -362,7 +352,7 @@ class ActiveWorkoutViewModel @Inject constructor(
                         }
                     }
                 }
-                
+
                 // Delete exercises without any completed sets
                 _sessionExercises.value.forEach { exercise ->
                     if (exercise.id !in exercisesWithCompletedSets) {
@@ -408,226 +398,6 @@ class ActiveWorkoutViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiState.value = UiState.Error(e.message ?: "Errore nell'annullamento dell'allenamento")
             }
-        }
-    }
-
-    // Toggle edit mode function
-    fun toggleEditMode() {
-        viewModelScope.launch {
-            if (_isEditMode.value) {
-                // Exiting edit mode - save all pending changes
-                savePendingChanges()
-                _isEditMode.value = false
-            } else {
-                // Entering edit mode - clear any pending changes
-                pendingSetChanges.clear()
-                _isEditMode.value = true
-            }
-        }
-    }
-    
-    // New function to cancel edit mode without saving
-    fun cancelEditMode() {
-        viewModelScope.launch {
-            pendingSetChanges.clear()
-            _isEditMode.value = false
-            
-            // Reload session data to reset UI
-            _activeSession.value?.let { session ->
-                loadSessionExercisesAndSets(session.id)
-            }
-        }
-    }
-
-    private suspend fun savePendingChanges() {
-        try {
-            pendingSetChanges.values.forEach { set ->
-                workoutRepository.updateSessionSet(set)
-            }
-            pendingSetChanges.clear()
-        } catch (e: Exception) {
-            _uiState.value = UiState.Error(e.message ?: "Errore nel salvataggio delle modifiche")
-        }
-    }
-
-    // Aggiungi esercizi selezionati alla sessione di allenamento attiva
-    fun addExercisesToSession(selectedExercises: List<com.torto.trgym.database.dto.ExerciseWithImage>) {
-        viewModelScope.launch {
-            try {
-                val activeSession = _activeSession.value ?: return@launch
-                val currentExercises = _sessionExercises.value
-                var nextOrderIndex = currentExercises.size
-
-                // Crea una lista di nuovi esercizi per la sessione
-                val newSessionExercises = selectedExercises.map { exercise ->
-                    WorkoutSessionExercise(
-                        workoutSessionId = activeSession.id,
-                        originalExerciseId = exercise.id.toString(), // Convertito a String
-                        name = exercise.title.trim(),
-                        orderIndex = nextOrderIndex++,
-                        startTime = System.currentTimeMillis()
-                    )
-                }
-
-                // Inserisci gli esercizi nel database
-                workoutRepository.insertSessionExercises(newSessionExercises)
-
-                // Aggiorna la lista di esercizi della sessione
-                val updatedExercises = currentExercises + newSessionExercises
-                _sessionExercises.value = updatedExercises
-
-                // Crea set predefiniti per ogni nuovo esercizio
-                val sessionSetsMap = _sessionSets.value.toMutableMap()
-                val completedSetsMap = _completedSets.value.toMutableMap()
-
-                newSessionExercises.forEach { sessionExercise ->
-                    // Crea un set predefinito per l'esercizio (puoi personalizzare questa logica)
-                    val sessionSet = WorkoutSessionSet(
-                        exerciseId = sessionExercise.id,
-                        setNumber = 1,
-                        targetReps = 10,
-                        isCompleted = false
-                    )
-
-                    completedSetsMap[sessionSet.id] = false
-                    val setsList = listOf(sessionSet)
-                    sessionSetsMap[sessionExercise.id] = setsList
-                    workoutRepository.insertSessionSets(setsList)
-                }
-
-                _sessionSets.value = sessionSetsMap
-                _completedSets.value = completedSetsMap
-
-            } catch (e: Exception) {
-                _uiState.value = UiState.Error(e.message ?: "Errore nell'aggiunta degli esercizi")
-            }
-        }
-    }
-
-    // Delete exercise from session
-    fun deleteSessionExercise(sessionExercise: WorkoutSessionExercise) {
-        if (!_isEditMode.value) return
-
-        viewModelScope.launch {
-            try {
-                workoutRepository.deleteSessionExercise(sessionExercise)
-                
-                // Remove any pending changes for sets of this exercise
-                val setsToRemove = pendingSetChanges.keys.filter { setId ->
-                    _sessionSets.value[sessionExercise.id]?.any { it.id == setId } == true
-                }
-                setsToRemove.forEach { pendingSetChanges.remove(it) }
-                
-                // Update local state
-                val updatedExercises = _sessionExercises.value.filter { it.id != sessionExercise.id }
-                _sessionExercises.value = updatedExercises
-                
-                val updatedSetsMap = _sessionSets.value.toMutableMap()
-                updatedSetsMap.remove(sessionExercise.id)
-                _sessionSets.value = updatedSetsMap
-                
-            } catch (e: Exception) {
-                _uiState.value = UiState.Error(e.message ?: "Errore nell'eliminazione dell'esercizio")
-            }
-        }
-    }
-
-    // Add set to session exercise
-    fun addSetToSessionExercise(sessionExerciseId: String) {
-        if (!_isEditMode.value) return
-
-        viewModelScope.launch {
-            try {
-                val currentSets = _sessionSets.value[sessionExerciseId] ?: emptyList()
-                val nextSetNumber = (currentSets.maxOfOrNull { it.setNumber } ?: 0) + 1
-
-                val newSet = WorkoutSessionSet(
-                    exerciseId = sessionExerciseId,
-                    setNumber = nextSetNumber,
-                    targetReps = 10,
-                    isCompleted = false
-                )
-
-                workoutRepository.insertSessionSet(newSet)
-                
-                // Update local state
-                val updatedSets = currentSets + newSet
-                val updatedSetsMap = _sessionSets.value.toMutableMap()
-                updatedSetsMap[sessionExerciseId] = updatedSets
-                _sessionSets.value = updatedSetsMap
-                
-                // Update completed sets map
-                val updatedCompletedSets = _completedSets.value.toMutableMap()
-                updatedCompletedSets[newSet.id] = false
-                _completedSets.value = updatedCompletedSets
-                
-            } catch (e: Exception) {
-                _uiState.value = UiState.Error(e.message ?: "Errore nell'aggiunta del set")
-            }
-        }
-    }
-
-    // Delete set from session exercise
-    fun deleteSessionSet(sessionSet: WorkoutSessionSet) {
-        if (!_isEditMode.value) return
-
-        viewModelScope.launch {
-            try {
-                workoutRepository.deleteSessionSet(sessionSet)
-                
-                // Remove from pending changes
-                pendingSetChanges.remove(sessionSet.id)
-                
-                // Update local state
-                val exerciseId = sessionSet.exerciseId
-                val currentSets = _sessionSets.value[exerciseId] ?: emptyList()
-                val updatedSets = currentSets.filter { it.id != sessionSet.id }
-                val updatedSetsMap = _sessionSets.value.toMutableMap()
-                updatedSetsMap[exerciseId] = updatedSets
-                _sessionSets.value = updatedSetsMap
-                
-                // Update completed sets map
-                val updatedCompletedSets = _completedSets.value.toMutableMap()
-                updatedCompletedSets.remove(sessionSet.id)
-                _completedSets.value = updatedCompletedSets
-                
-            } catch (e: Exception) {
-                _uiState.value = UiState.Error(e.message ?: "Errore nell'eliminazione del set")
-            }
-        }
-    }
-
-    // Update session set values (temporarily until edit mode ends)
-    fun updateSessionSetValues(sessionSet: WorkoutSessionSet) {
-        if (!_isEditMode.value) return
-
-        // Store changes temporarily - merge with existing pending changes
-        val existingPendingSet = pendingSetChanges[sessionSet.id]
-        val mergedSet = if (existingPendingSet != null) {
-            // Merge changes: keep non-null values from both sets
-            sessionSet.copy(
-                actualWeightKg = sessionSet.actualWeightKg ?: existingPendingSet.actualWeightKg,
-                actualReps = sessionSet.actualReps ?: existingPendingSet.actualReps
-            )
-        } else {
-            sessionSet
-        }
-
-        pendingSetChanges[sessionSet.id] = mergedSet
-    }
-
-    // Update session set values from weight and reps (for adapter compatibility)
-    fun updateSessionSetFromValues(setId: String, weight: Double?, reps: Int?) {
-        if (!_isEditMode.value) return
-
-        // Find the original session set
-        val originalSet = _sessionSets.value.values.flatten().find { it.id == setId }
-        if (originalSet != null) {
-            val updatedSet = originalSet.copy(
-                actualWeightKg = weight,
-                actualReps = reps
-            )
-            updateSessionSetValues(updatedSet)
         }
     }
 

@@ -16,12 +16,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.torto.trgym.R
 import com.torto.trgym.adapters.ActiveWorkoutExercisesAdapter
-import com.torto.trgym.ui.dialogs.SelectExercisesDialog
 import com.torto.trgym.viewmodel.workout.ActiveWorkoutViewModel
-import com.torto.trgym.database.entities.WorkoutSessionExercise
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -40,9 +37,6 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
     private lateinit var completeWorkoutButton: MaterialButton
     private lateinit var cancelWorkoutButton: MaterialButton
     private lateinit var pauseResumeButton: ImageView
-    private lateinit var editButton: TextView
-    private lateinit var addExerciseBtn: FloatingActionButton // Aggiungo il FAB
-
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -62,8 +56,6 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
         completeWorkoutButton = view.findViewById(R.id.completeWorkoutButton)
         cancelWorkoutButton = view.findViewById(R.id.cancelWorkoutButton)
         pauseResumeButton = view.findViewById(R.id.pauseResumeButton)
-        editButton = view.findViewById(R.id.editButton)
-        addExerciseBtn = view.findViewById(R.id.addExerciseBtn) // Inizializzo il FAB
     }
 
     private fun setupRecyclerView() {
@@ -73,15 +65,6 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
             },
             onSetValueChangedSimple = { setId, weight, reps ->
                 viewModel.updateSessionSetFromValues(setId, weight, reps)
-            },
-            onExerciseMenuClicked = { exerciseId ->
-                showExerciseMenu(exerciseId)
-            },
-            onSetMenuClicked = { setId ->
-                showSetMenu(setId)
-            },
-            onAddSetClicked = { exerciseId ->
-                viewModel.addSetToSessionExercise(exerciseId)
             }
         )
 
@@ -94,11 +77,7 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
 
     private fun setupClickListeners() {
         backButton.setOnClickListener {
-            if (viewModel.isEditMode.value) {
-                showEditModeCancelConfirmation()
-            } else {
-                findNavController().navigate(ActiveWorkoutFragmentDirections.actionActiveWorkoutFragmentToHomeFragment())
-            }
+            showExitConfirmationDialog()
         }
 
         completeWorkoutButton.setOnClickListener {
@@ -108,44 +87,6 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
         cancelWorkoutButton.setOnClickListener {
             showCancelWorkoutConfirmation()
         }
-
-        // Aggiungo il listener per il pulsante di modifica
-        editButton.setOnClickListener {
-            viewModel.toggleEditMode()
-        }
-
-        // Listener per il pulsante FAB di aggiunta esercizi
-        addExerciseBtn.setOnClickListener {
-            showSelectExercisesDialog()
-        }
-    }
-    
-    private fun showEditModeCancelConfirmation() {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Uscire dalla modalità modifica?")
-            .setMessage("Hai delle modifiche non salvate. Vuoi salvarle prima di uscire?")
-            .setPositiveButton("Salva") { _, _ ->
-                viewModel.toggleEditMode()
-            }
-            .setNegativeButton("Annulla modifiche") { _, _ ->
-                viewModel.cancelEditMode()
-            }
-            .setNeutralButton("Continua modifiche", null)
-            .show()
-    }
-
-    private fun showSelectExercisesDialog() {
-        val dialog = SelectExercisesDialog()
-        dialog.setOnExercisesSelectedListener { selectedExercises ->
-            viewModel.addExercisesToSession(selectedExercises)
-            val message = if (selectedExercises.size == 1) {
-                "Esercizio aggiunto all'allenamento"
-            } else {
-                "${selectedExercises.size} esercizi aggiunti all'allenamento"
-            }
-            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
-        }
-        dialog.show(parentFragmentManager, "SelectExercisesDialog")
     }
 
     private fun observeViewModel() {
@@ -155,15 +96,6 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
                     workoutCard?.let {
                         workoutTitle.text = it.name
                     }
-                }
-            }
-        }
-
-        // Osservo lo stato di edit mode
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.isEditMode.collect { isEditMode ->
-                    updateEditModeUI(isEditMode)
                 }
             }
         }
@@ -201,8 +133,6 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
             }
         }
 
-
-
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.completedSets.collect { completedSets ->
@@ -210,21 +140,6 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
                 }
             }
         }
-    }
-
-    // Aggiungo il metodo per aggiornare l'UI in base allo stato di edit mode
-    private fun updateEditModeUI(isEditMode: Boolean) {
-        editButton.text = if (isEditMode) "Fine" else "Modifica"
-        
-        // Gestisco la visibilità del FAB
-        addExerciseBtn.visibility = if (isEditMode) View.VISIBLE else View.GONE
-        
-        // Passo lo stato di edit mode all'adapter
-        exercisesAdapter.setEditMode(isEditMode)
-        
-        // Nascondi/mostra i pulsanti di azione inferiori durante la modifica
-        completeWorkoutButton.visibility = if (isEditMode) View.GONE else View.VISIBLE
-        cancelWorkoutButton.visibility = if (isEditMode) View.GONE else View.VISIBLE
     }
 
     private fun updateEmptyState(isEmpty: Boolean) {
@@ -240,7 +155,6 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
     private fun startWorkout() {
         viewModel.startWorkout()
     }
-
 
     private fun showCompleteWorkoutConfirmation() {
         MaterialAlertDialogBuilder(requireContext())
@@ -280,49 +194,9 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
             viewLifecycleOwner,
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
-                    if (viewModel.isEditMode.value) {
-                        showEditModeCancelConfirmation()
-                    } else {
-                        findNavController().navigate(ActiveWorkoutFragmentDirections.actionActiveWorkoutFragmentToHomeFragment())
-                    }
+                    showExitConfirmationDialog()
                 }
             }
         )
     }
-
-
-    private fun showExerciseMenu(exerciseId: String) {
-        // Find the session exercise from ViewModel
-        val sessionExercise = viewModel.sessionExercises.value.find { it.id == exerciseId }
-        if (sessionExercise != null) {
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Opzioni esercizio")
-                .setItems(arrayOf("Elimina esercizio")) { _, which ->
-                    when (which) {
-                        0 -> showDeleteExerciseConfirmation(sessionExercise)
-                    }
-                }
-                .show()
-        }
-    }
-
-    private fun showSetMenu(setId: String) {
-        // Find the session set from ViewModel
-        val sessionSet = viewModel.sessionSets.value.values.flatten().find { it.id == setId }
-        if (sessionSet != null) {
-            viewModel.deleteSessionSet(sessionSet)
-        }
-    }
-
-    private fun showDeleteExerciseConfirmation(sessionExercise: WorkoutSessionExercise) {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Elimina esercizio")
-            .setMessage("Sei sicuro di voler eliminare \"${sessionExercise.name}\" e tutte le sue serie?")
-            .setPositiveButton("Elimina") { _, _ ->
-                viewModel.deleteSessionExercise(sessionExercise)
-            }
-            .setNegativeButton("Annulla", null)
-            .show()
-    }
-
 }
