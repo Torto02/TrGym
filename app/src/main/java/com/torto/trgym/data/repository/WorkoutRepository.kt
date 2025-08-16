@@ -2,8 +2,6 @@ package com.torto.trgym.data.repository
 
 import android.util.Log
 import com.torto.trgym.database.dao.WorkoutDao
-import com.torto.trgym.database.dto.WorkoutExerciseDetail
-import com.torto.trgym.database.dto.WorkoutCardDetail
 import com.torto.trgym.database.dto.WorkoutSessionExerciseDetail
 import com.torto.trgym.database.dto.SupabaseWorkoutCard
 import com.torto.trgym.database.dto.SupabaseWorkoutExercise
@@ -16,17 +14,11 @@ import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.coroutines.cancellation.CancellationException
 
 
 @Singleton
@@ -96,10 +88,6 @@ class WorkoutRepository @Inject constructor(
             Log.e("WorkoutRepository", "Error deleting workout_cards item ${workoutCard.id} from Supabase", e)
         }
     }
-
-    suspend fun getWorkoutCardWithExercises(cardId: String): WorkoutCardDetail? = workoutDao.getWorkoutCardWithExercises(cardId)
-    suspend fun getExerciseCountForCard(cardId: String): Int = workoutDao.getExerciseCountForCard(cardId)
-
 
     suspend fun syncExercisesForCard(cardId: String) = withContext(Dispatchers.IO) {
         try {
@@ -274,8 +262,6 @@ class WorkoutRepository @Inject constructor(
 
 
     fun getSessionExercisesWithSets(sessionId: String): Flow<List<WorkoutSessionExerciseDetail>> = workoutDao.getSessionExercisesWithSetsFlow(sessionId)
-    suspend fun getWorkoutExercise(exerciseId: String): WorkoutExercise? = workoutDao.getWorkoutExercise(exerciseId)
-    suspend fun getExerciseWithSets(exerciseId: String): WorkoutExerciseDetail? = workoutDao.getExerciseWithSets(exerciseId)
 
     suspend fun insertWorkoutExercise(exercise: WorkoutExercise) = withContext(Dispatchers.IO) {
         val exerciseToInsert = exercise.copy(pendingSync = true, syncedWithServer = false)

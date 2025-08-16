@@ -71,9 +71,6 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
             onSetCompletionChanged = { setId, isCompleted ->
                 viewModel.toggleSetCompletion(setId, isCompleted)
             },
-            onSetValueChanged = { set ->
-                viewModel.updateSessionSetValues(set)
-            },
             onSetValueChangedSimple = { setId, weight, reps ->
                 viewModel.updateSessionSetFromValues(setId, weight, reps)
             },

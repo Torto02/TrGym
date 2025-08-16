@@ -73,7 +73,16 @@ class HomeViewModel @Inject constructor(
     fun deleteWorkoutCard(workoutCard: WorkoutCard) {
         viewModelScope.launch {
             try {
+                //check if the workout card is active
+                val activeSession = workoutRepository.getActiveWorkoutSession()
+                if (activeSession != null && activeSession.workoutCardId == workoutCard.id) {
+                    //Mostriamo un dialogo di messaggio all'utente
+                    _uiState.value = UiState.Error("Impossibile eliminare la scheda: è attualmente in uso.")
+                    return@launch
+                }
+
                 workoutRepository.deleteWorkoutCard(workoutCard)
+
             } catch (e: Exception) {
                 _uiState.value = UiState.Error(e.message ?: "Errore nell'eliminazione della scheda")
             }

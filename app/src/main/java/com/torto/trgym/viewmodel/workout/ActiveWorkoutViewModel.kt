@@ -346,6 +346,37 @@ class ActiveWorkoutViewModel @Inject constructor(
             try {
                 val session = _activeSession.value ?: return@launch
 
+                // Filter and keep only completed sets
+                val completedSetsIds = _completedSets.value.filter { it.value }.keys
+                val exercisesWithCompletedSets = mutableSetOf<String>()
+                
+                // Delete uncompleted sets and track exercises with completed sets
+                _sessionSets.value.forEach { (exerciseId, sets) ->
+                    sets.forEach { set ->
+                        if (set.id !in completedSetsIds) {
+                            // Delete uncompleted set
+                            workoutRepository.deleteSessionSet(set)
+                        } else {
+                            // Track this exercise as having completed sets
+                            exercisesWithCompletedSets.add(exerciseId)
+                        }
+                    }
+                }
+                
+                // Delete exercises without any completed sets
+                _sessionExercises.value.forEach { exercise ->
+                    if (exercise.id !in exercisesWithCompletedSets) {
+                        workoutRepository.deleteSessionExercise(exercise)
+                    } else {
+                        // Update session exercise with end time and completed status
+                        val updatedExercise = exercise.copy(
+                            endTime = System.currentTimeMillis(),
+                            isCompleted = true
+                        )
+                        workoutRepository.updateSessionExercise(updatedExercise)
+                    }
+                }
+
                 // Update session with end time and completed status
                 val updatedSession = session.copy(
                     endTime = System.currentTimeMillis(),
@@ -354,15 +385,6 @@ class ActiveWorkoutViewModel @Inject constructor(
                 )
 
                 workoutRepository.updateWorkoutSession(updatedSession)
-
-                // Update session exercises with end time
-                _sessionExercises.value.forEach { exercise ->
-                    val updatedExercise = exercise.copy(
-                        endTime = System.currentTimeMillis(),
-                        isCompleted = true
-                    )
-                    workoutRepository.updateSessionExercise(updatedExercise)
-                }
 
                 _activeSession.value = null
                 _uiState.value = UiState.WorkoutCompleted

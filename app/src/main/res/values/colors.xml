@@ -42,8 +42,8 @@
     <!-- Basic Colors -->
     <color name="darkGray">#424242</color>
 
-
-
-
+    <!-- New Colors -->
+    <color name="completed_set_background">#E6F7FF</color>
+    <color name="transparent">#00000000</color>
 </resources>
 

@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
@@ -16,11 +17,9 @@ import com.google.android.material.checkbox.MaterialCheckBox
 import com.torto.trgym.R
 import com.torto.trgym.database.dto.WorkoutExerciseDetail
 import com.torto.trgym.database.entities.ExerciseSet
-import com.torto.trgym.database.entities.WorkoutSessionSet
 
 class ActiveWorkoutExercisesAdapter(
     private val onSetCompletionChanged: (String, Boolean) -> Unit,
-    private val onSetValueChanged: (WorkoutSessionSet) -> Unit,
     private val onSetValueChangedSimple: ((String, Double?, Int?) -> Unit)? = null,
     private val onExerciseMenuClicked: ((String) -> Unit)? = null,
     private val onSetMenuClicked: ((String) -> Unit)? = null,
@@ -286,10 +285,18 @@ class ActiveWorkoutSetsAdapter(
                 }
             }
 
-            // Get session set completion state
+            // Get session set completion state - ensure it defaults to unchecked
             val sessionSetId = setIdMapping[set.id]
             val isCompleted = sessionSetId?.let { completedSets[it] } ?: false
             setCompletedCheckbox.isChecked = isCompleted
+
+            // Highlight the entire row if completed
+            itemView.background.setTint(
+                if (isCompleted) 
+                    ContextCompat.getColor(itemView.context, R.color.completed_set_background)
+                else 
+                    ContextCompat.getColor(itemView.context, R.color.transparent)
+            )
 
             // Abilita/disabilita gli input in base alla modalità di modifica
             weightInput.isEnabled = isEditMode
