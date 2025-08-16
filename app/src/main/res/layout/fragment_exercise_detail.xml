@@ -26,19 +26,19 @@
         android:layout_height="?attr/actionBarSize"
         android:background="@android:color/transparent"
         android:elevation="4dp">
-    <ImageView
-        android:id="@+id/starButton"
-        android:layout_width="25dp"
-        android:layout_height="25dp"
-        android:layout_gravity="end|center_vertical"
-        android:layout_marginEnd="9dp"
-        android:src="@drawable/ic_star_outline"
-        android:contentDescription="@string/favorite_button_desc"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:clickable="true"
-        android:focusable="true"
-        android:elevation="20dp"
-        app:tint="@color/ios_secondaryLabel" />
+        <ImageView
+            android:id="@+id/starButton"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:layout_gravity="end|center_vertical"
+            android:layout_marginEnd="9dp"
+            android:src="@drawable/ic_star_outline"
+            android:contentDescription="@string/favorite_button_desc"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:elevation="20dp"
+            app:tint="@color/ios_secondaryLabel" />
 
     </com.google.android.material.appbar.MaterialToolbar>
 
@@ -76,6 +76,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="16dp"
+            android:layout_marginBottom="100dp"
             app:cardBackgroundColor="@color/white"
             app:cardCornerRadius="30dp"
             app:cardElevation="1dp"
@@ -86,7 +87,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:layout_marginBottom="100dp"
                 android:padding="15dp">
 
                 <!-- Titolo esercizio -->
