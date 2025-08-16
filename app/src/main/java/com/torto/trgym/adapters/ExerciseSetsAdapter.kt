@@ -84,10 +84,20 @@ class ExerciseSetsAdapter(
             setMenu.visibility = if (isEditMode) View.VISIBLE else View.GONE
             setCompletedCheckbox.visibility = View.GONE
 
-            // Set background alpha based on edit mode
-            val alpha = if (isEditMode) 1.0f else 0.6f
-            weightInput.alpha = alpha
-            repsInput.alpha = alpha
+            // Set visual cues for edit mode
+            if (isEditMode) {
+                // In edit mode, make inputs more prominent
+                weightInput.alpha = 1.0f
+                repsInput.alpha = 1.0f
+                weightInput.setBackgroundResource(R.drawable.bg_input_field_editing)
+                repsInput.setBackgroundResource(R.drawable.bg_input_field_editing)
+            } else {
+                // Normal mode
+                weightInput.alpha = 0.9f
+                repsInput.alpha = 0.9f
+                weightInput.setBackgroundResource(R.drawable.bg_input_field)
+                repsInput.setBackgroundResource(R.drawable.bg_input_field)
+            }
 
             isBindingData = false
             setupTextWatchersIfEditMode()

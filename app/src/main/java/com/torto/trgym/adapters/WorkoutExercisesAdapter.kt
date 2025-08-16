@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
@@ -72,10 +73,16 @@ class WorkoutExercisesAdapter(
             dragHandle.visibility = if (isEditMode) View.VISIBLE else View.GONE
             exerciseMenu.visibility = if (isEditMode) View.VISIBLE else View.GONE
             addSetButton.visibility = if (isEditMode) View.VISIBLE else View.GONE
-//            setsHeaderText.visibility = View.VISIBLE
 
             // Set exercise info
             exerciseName.text = exercise.name
+            
+            // Add an indicator for edit mode
+            if (isEditMode) {
+                exerciseName.setTextColor(ContextCompat.getColor(itemView.context, R.color.primary))
+            } else {
+                exerciseName.setTextColor(ContextCompat.getColor(itemView.context, R.color.ios_label))
+            }
 
             // Calculate exercise info
             val setsCount = sets.size

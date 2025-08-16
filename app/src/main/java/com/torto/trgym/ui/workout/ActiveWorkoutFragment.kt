@@ -94,7 +94,11 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
 
     private fun setupClickListeners() {
         backButton.setOnClickListener {
-            findNavController().navigate(ActiveWorkoutFragmentDirections.actionActiveWorkoutFragmentToHomeFragment())
+            if (viewModel.isEditMode.value) {
+                showEditModeCancelConfirmation()
+            } else {
+                findNavController().navigate(ActiveWorkoutFragmentDirections.actionActiveWorkoutFragmentToHomeFragment())
+            }
         }
 
         completeWorkoutButton.setOnClickListener {
@@ -115,8 +119,21 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
             showSelectExercisesDialog()
         }
     }
+    
+    private fun showEditModeCancelConfirmation() {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Uscire dalla modalità modifica?")
+            .setMessage("Hai delle modifiche non salvate. Vuoi salvarle prima di uscire?")
+            .setPositiveButton("Salva") { _, _ ->
+                viewModel.toggleEditMode()
+            }
+            .setNegativeButton("Annulla modifiche") { _, _ ->
+                viewModel.cancelEditMode()
+            }
+            .setNeutralButton("Continua modifiche", null)
+            .show()
+    }
 
-    // Metodo per mostrare il dialog di selezione esercizi
     private fun showSelectExercisesDialog() {
         val dialog = SelectExercisesDialog()
         dialog.setOnExercisesSelectedListener { selectedExercises ->
@@ -263,7 +280,11 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
             viewLifecycleOwner,
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
-                    findNavController().navigate(ActiveWorkoutFragmentDirections.actionActiveWorkoutFragmentToHomeFragment())
+                    if (viewModel.isEditMode.value) {
+                        showEditModeCancelConfirmation()
+                    } else {
+                        findNavController().navigate(ActiveWorkoutFragmentDirections.actionActiveWorkoutFragmentToHomeFragment())
+                    }
                 }
             }
         )

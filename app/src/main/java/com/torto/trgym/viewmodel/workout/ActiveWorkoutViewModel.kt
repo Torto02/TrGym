@@ -425,6 +425,19 @@ class ActiveWorkoutViewModel @Inject constructor(
             }
         }
     }
+    
+    // New function to cancel edit mode without saving
+    fun cancelEditMode() {
+        viewModelScope.launch {
+            pendingSetChanges.clear()
+            _isEditMode.value = false
+            
+            // Reload session data to reset UI
+            _activeSession.value?.let { session ->
+                loadSessionExercisesAndSets(session.id)
+            }
+        }
+    }
 
     private suspend fun savePendingChanges() {
         try {

@@ -36,29 +36,44 @@ class WorkoutDetailViewModel @Inject constructor(
     private val _isEditMode = MutableStateFlow(false)
     val isEditMode: StateFlow<Boolean> = _isEditMode.asStateFlow()
 
+    // Tracking collections for pending changes
     private val pendingSetChanges = mutableMapOf<String, ExerciseSet>()
+    private val pendingAddedExercises = mutableListOf<WorkoutExercise>()
+    private val pendingDeletedExercises = mutableListOf<WorkoutExercise>()
+    private val pendingAddedSets = mutableListOf<ExerciseSet>()
+    private val pendingDeletedSets = mutableListOf<ExerciseSet>()
+    private var pendingWorkoutCardUpdate: WorkoutCard? = null
 
-    val exercisesWithSets = workoutRepository.getExercisesForCard(workoutCardId)
-        .flatMapLatest { exercises ->
-            if (exercises.isEmpty()) {
-                flowOf(emptyList())
+    // Local cache of current exercises and sets (for UI updates)
+    private val _localExercisesWithSets = MutableStateFlow<List<WorkoutExerciseDetail>>(emptyList())
+
+    // Fixed version of the exercisesWithSets flow
+    val exercisesWithSets = _isEditMode
+        .flatMapLatest { isEditMode ->
+            if (isEditMode) {
+                // In edit mode, use our locally managed list that includes pending changes
+                _localExercisesWithSets
             } else {
-                combine(
-                    exercises.map { exercise ->
-                        workoutRepository.getSetsForExercise(exercise.id)
-                            .map { sets ->
-                                val updatedSets = sets.map { set ->
-                                    pendingSetChanges[set.id] ?: set
-                                }
-                                WorkoutExerciseDetail(exercise, updatedSets)
+                // Not in edit mode, use database data directly
+                workoutRepository.getExercisesForCard(workoutCardId)
+                    .flatMapLatest { exercises ->
+                        if (exercises.isEmpty()) {
+                            flowOf(emptyList())
+                        } else {
+                            // Create a flow of WorkoutExerciseDetail for each exercise
+                            val exerciseFlows = exercises.map { exercise ->
+                                workoutRepository.getSetsForExercise(exercise.id)
+                                    .map { sets -> WorkoutExerciseDetail(exercise, sets) }
                             }
+                            
+                            // Combine all the flows into a single list flow
+                            combine(exerciseFlows) { exerciseDetails ->
+                                exerciseDetails.toList().sortedBy { it.exercise.orderIndex }
+                            }
+                        }
                     }
-                ) { exerciseDetails ->
-                    exerciseDetails.toList().sortedBy { it.exercise.orderIndex }
-                }
             }
-        }
-        .stateIn(
+        }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
@@ -81,9 +96,22 @@ class WorkoutDetailViewModel @Inject constructor(
         }
     }
 
-
     init {
         loadWorkoutCard()
+        // Initialize local cache with DB data
+        viewModelScope.launch {
+            initializeLocalCache()
+        }
+    }
+
+    private suspend fun initializeLocalCache() {
+        val dbExercises = workoutRepository.getExercisesForCard(workoutCardId).first()
+        val exerciseDetails = dbExercises.map { exercise ->
+            val sets = workoutRepository.getSetsForExercise(exercise.id).first()
+            WorkoutExerciseDetail(exercise, sets)
+        }.sortedBy { it.exercise.orderIndex }
+        
+        _localExercisesWithSets.value = exerciseDetails
     }
 
     private fun loadWorkoutCard() {
@@ -101,20 +129,75 @@ class WorkoutDetailViewModel @Inject constructor(
     fun toggleEditMode() {
         viewModelScope.launch {
             if (_isEditMode.value) {
+                // Exiting edit mode - commit all pending changes
                 savePendingChanges()
+                _isEditMode.value = false
             } else {
-                pendingSetChanges.clear()
+                // Entering edit mode - initialize empty pending changes
+                clearPendingChanges()
+                initializeLocalCache() // Refresh local cache from DB
+                _isEditMode.value = true
             }
-            _isEditMode.value = !_isEditMode.value
         }
+    }
+
+    fun cancelEditMode() {
+        viewModelScope.launch {
+            if (_isEditMode.value) {
+                clearPendingChanges()
+                initializeLocalCache() // Reset local cache to DB state
+                _isEditMode.value = false
+            }
+        }
+    }
+
+    private fun clearPendingChanges() {
+        pendingSetChanges.clear()
+        pendingAddedExercises.clear()
+        pendingDeletedExercises.clear()
+        pendingAddedSets.clear()
+        pendingDeletedSets.clear()
+        pendingWorkoutCardUpdate = null
     }
 
     private suspend fun savePendingChanges() {
         try {
+            // 1. Update workout card if changed
+            pendingWorkoutCardUpdate?.let {
+                workoutRepository.updateWorkoutCard(it)
+                _workoutCard.value = it
+            }
+
+            // 2. Delete exercises (and their sets will cascade delete)
+            pendingDeletedExercises.forEach { exercise ->
+                workoutRepository.deleteWorkoutExercise(exercise)
+            }
+
+            // 3. Add new exercises
+            pendingAddedExercises.forEach { exercise ->
+                workoutRepository.insertWorkoutExercise(exercise)
+            }
+
+            // 4. Delete individual sets
+            pendingDeletedSets.forEach { set ->
+                workoutRepository.deleteExerciseSetAndReorder(set)
+            }
+
+            // 5. Add new sets
+            pendingAddedSets.forEach { set ->
+                workoutRepository.insertExerciseSet(set)
+            }
+
+            // 6. Update existing sets
             pendingSetChanges.values.forEach { set ->
                 workoutRepository.updateExerciseSet(set)
             }
-            pendingSetChanges.clear()
+
+            // Clear all pending changes
+            clearPendingChanges()
+            
+            // Reload local cache from DB
+            initializeLocalCache()
         } catch (e: Exception) {
             _uiState.value = UiState.Error(e.message ?: "Errore nel salvataggio delle modifiche")
         }
@@ -122,134 +205,229 @@ class WorkoutDetailViewModel @Inject constructor(
 
     fun addExercise(exerciseName: String) {
         if (!_isEditMode.value) return
-        executeWithErrorHandling("Errore nell'aggiunta dell'esercizio") {
-            val newExercise = WorkoutExercise(
-                workoutCardId = workoutCardId,
-                name = exerciseName.trim(),
-                orderIndex = exercisesWithSets.value.size,
-                updatedAt = System.currentTimeMillis()
-            )
-            workoutRepository.insertWorkoutExercise(newExercise)
-        }
+        
+        val newExercise = WorkoutExercise(
+            workoutCardId = workoutCardId,
+            name = exerciseName.trim(),
+            orderIndex = _localExercisesWithSets.value.size,
+            updatedAt = System.currentTimeMillis()
+        )
+        
+        // Add to pending changes
+        pendingAddedExercises.add(newExercise)
+        
+        // Update local cache for UI
+        val newDetail = WorkoutExerciseDetail(newExercise, emptyList())
+        _localExercisesWithSets.value = _localExercisesWithSets.value + newDetail
     }
 
     fun addMultipleExercises(selectedExercises: List<ExerciseWithImage>) {
         if (!_isEditMode.value) return
-        executeWithErrorHandling("Errore nell'aggiunta degli esercizi") {
-            var nextOrderIndex = exercisesWithSets.value.size
-            selectedExercises.forEach { exercise ->
-                val newExercise = WorkoutExercise(
-                    workoutCardId = workoutCardId,
-                    exerciseId = exercise.id,
-                    name = exercise.title.trim(),
-                    orderIndex = nextOrderIndex++,
-                    updatedAt = System.currentTimeMillis()
-                )
-                workoutRepository.insertWorkoutExercise(newExercise)
-            }
+        
+        var nextOrderIndex = _localExercisesWithSets.value.size
+        val newExercises = selectedExercises.map { exercise ->
+            WorkoutExercise(
+                workoutCardId = workoutCardId,
+                exerciseId = exercise.id,
+                name = exercise.title.trim(),
+                orderIndex = nextOrderIndex++,
+                updatedAt = System.currentTimeMillis()
+            )
         }
+        
+        // Add to pending changes
+        pendingAddedExercises.addAll(newExercises)
+        
+        // Update local cache for UI
+        val newDetails = newExercises.map { WorkoutExerciseDetail(it, emptyList()) }
+        _localExercisesWithSets.value = _localExercisesWithSets.value + newDetails
     }
 
     fun deleteExercise(exercise: WorkoutExercise) {
         if (!_isEditMode.value) return
-        executeWithErrorHandling("Errore nell'eliminazione dell'esercizio") {
-            workoutRepository.deleteWorkoutExercise(exercise)
-            pendingSetChanges.keys.removeAll { setId ->
-                exercisesWithSets.value.any { detail ->
-                    detail.exercise.id == exercise.id && detail.sets.any { it.id == setId }
-                }
-            }
+        
+        // If this is a newly added exercise (not yet in DB), just remove it from pendingAddedExercises
+        val isPendingAdd = pendingAddedExercises.removeIf { it.id == exercise.id }
+        
+        if (!isPendingAdd) {
+            // Add to pending deletes if it's an existing exercise
+            pendingDeletedExercises.add(exercise)
         }
+        
+        // Remove any pending set changes for this exercise
+        val exerciseDetail = _localExercisesWithSets.value.find { it.exercise.id == exercise.id }
+        exerciseDetail?.sets?.forEach { set ->
+            pendingSetChanges.remove(set.id)
+            pendingAddedSets.removeIf { it.id == set.id }
+        }
+        
+        // Update local cache for UI
+        _localExercisesWithSets.value = _localExercisesWithSets.value.filter { it.exercise.id != exercise.id }
     }
 
     fun addSetToExercise(exerciseId: String) {
         if (!_isEditMode.value) return
-        executeWithErrorHandling("Errore nell'aggiunta del set") {
-            val currentSets = workoutRepository.getSetsForExercise(exerciseId).first()
-            val newSet = ExerciseSet(
-                exerciseId = exerciseId,
-                setNumber = (currentSets.maxOfOrNull { it.setNumber } ?: 0) + 1,
-                weightKg = null,
-                reps = null,
-                updatedAt = System.currentTimeMillis()
-            )
-            workoutRepository.insertExerciseSet(newSet)
-        }
+        
+        // Find the exercise in our local cache
+        val exerciseIndex = _localExercisesWithSets.value.indexOfFirst { it.exercise.id == exerciseId }
+        if (exerciseIndex == -1) return
+        
+        val exerciseDetail = _localExercisesWithSets.value[exerciseIndex]
+        val sets = exerciseDetail.sets.toMutableList()
+        
+        // Create a new set
+        val newSet = ExerciseSet(
+            exerciseId = exerciseId,
+            setNumber = (sets.maxOfOrNull { it.setNumber } ?: 0) + 1,
+            weightKg = null,
+            reps = null,
+            updatedAt = System.currentTimeMillis()
+        )
+        
+        // Add to pending changes
+        pendingAddedSets.add(newSet)
+        
+        // Update local cache for UI
+        sets.add(newSet)
+        val updatedExerciseDetail = exerciseDetail.copy(sets = sets)
+        val updatedList = _localExercisesWithSets.value.toMutableList()
+        updatedList[exerciseIndex] = updatedExerciseDetail
+        _localExercisesWithSets.value = updatedList
     }
 
     fun updateExerciseSet(set: ExerciseSet) {
         if (!_isEditMode.value) return
         
-        val existingPendingSet = pendingSetChanges[set.id]
-        val mergedSet = existingPendingSet?.let {
-            set.copy(
-                weightKg = set.weightKg ?: it.weightKg,
-                reps = set.reps ?: it.reps,
-                updatedAt = System.currentTimeMillis()
-            )
-        } ?: set.copy(updatedAt = System.currentTimeMillis())
+        // For newly added sets, update the pending add
+        val isPendingAdd = pendingAddedSets.indexOfFirst { it.id == set.id }
+        if (isPendingAdd != -1) {
+            pendingAddedSets[isPendingAdd] = set
+        } else {
+            // For existing sets, add/update in pendingSetChanges
+            pendingSetChanges[set.id] = set.copy(updatedAt = System.currentTimeMillis())
+        }
         
-        pendingSetChanges[set.id] = mergedSet
+        // Update local cache for UI
+        val exerciseIndex = _localExercisesWithSets.value.indexOfFirst { it.exercise.id == set.exerciseId }
+        if (exerciseIndex != -1) {
+            val exerciseDetail = _localExercisesWithSets.value[exerciseIndex]
+            val setIndex = exerciseDetail.sets.indexOfFirst { it.id == set.id }
+            
+            if (setIndex != -1) {
+                val updatedSets = exerciseDetail.sets.toMutableList()
+                updatedSets[setIndex] = set
+                
+                val updatedExerciseDetail = exerciseDetail.copy(sets = updatedSets)
+                val updatedList = _localExercisesWithSets.value.toMutableList()
+                updatedList[exerciseIndex] = updatedExerciseDetail
+                _localExercisesWithSets.value = updatedList
+            }
+        }
     }
 
     fun deleteExerciseSet(set: ExerciseSet) {
         if (!_isEditMode.value) return
-        executeWithErrorHandling("Errore nell'eliminazione del set") {
-            workoutRepository.deleteExerciseSetAndReorder(set)
-            pendingSetChanges.remove(set.id)
+        
+        // If this is a newly added set, just remove it from pendingAddedSets
+        val isPendingAdd = pendingAddedSets.removeIf { it.id == set.id }
+        
+        if (!isPendingAdd) {
+            // Add to pending deletes if it's an existing set
+            pendingDeletedSets.add(set)
+        }
+        
+        // Remove from pending changes if present
+        pendingSetChanges.remove(set.id)
+        
+        // Update local cache for UI
+        val exerciseIndex = _localExercisesWithSets.value.indexOfFirst { it.exercise.id == set.exerciseId }
+        if (exerciseIndex != -1) {
+            val exerciseDetail = _localExercisesWithSets.value[exerciseIndex]
+            val updatedSets = exerciseDetail.sets.filter { it.id != set.id }
+            
+            // Reorder set numbers
+            val reorderedSets = updatedSets.mapIndexed { index, existingSet ->
+                if (existingSet.setNumber != index + 1) {
+                    val updatedSet = existingSet.copy(setNumber = index + 1)
+                    // Update in pending changes
+                    if (!pendingAddedSets.removeIf { it.id == existingSet.id }) {
+                        pendingSetChanges[existingSet.id] = updatedSet
+                    } else {
+                        pendingAddedSets.add(updatedSet)
+                    }
+                    updatedSet
+                } else {
+                    existingSet
+                }
+            }
+            
+            val updatedExerciseDetail = exerciseDetail.copy(sets = reorderedSets)
+            val updatedList = _localExercisesWithSets.value.toMutableList()
+            updatedList[exerciseIndex] = updatedExerciseDetail
+            _localExercisesWithSets.value = updatedList
         }
     }
 
     fun updateWorkoutCard(name: String, description: String?) {
         if (!_isEditMode.value) return
         
-        viewModelScope.launch {
-            try {
-                val currentCard = _workoutCard.value ?: return@launch
-                val updatedCard = currentCard.copy(
-                    name = name.trim(),
-                    description = description?.trim(),
-                    updatedAt = System.currentTimeMillis()
-                )
-                workoutRepository.updateWorkoutCard(updatedCard)
-                _workoutCard.value = updatedCard
-            } catch (e: Exception) {
-                _uiState.value = UiState.Error(e.message ?: "Errore nell'aggiornamento della scheda")
-            }
-        }
+        val currentCard = _workoutCard.value ?: return
+        val updatedCard = currentCard.copy(
+            name = name.trim(),
+            description = description?.trim(),
+            updatedAt = System.currentTimeMillis()
+        )
+        
+        // Store in pending changes
+        pendingWorkoutCardUpdate = updatedCard
+        
+        // Update UI immediately
+        _workoutCard.value = updatedCard
     }
 
     fun moveExercise(fromPosition: Int, toPosition: Int) {
-        executeWithErrorHandling("Errore nel riordino degli esercizi") {
-            val exercises = exercisesWithSets.value.toMutableList()
-            if (fromPosition in exercises.indices && toPosition in exercises.indices) {
-                val movedExercise = exercises.removeAt(fromPosition)
-                exercises.add(toPosition, movedExercise)
-                
-                exercises.forEachIndexed { index, exerciseDetail ->
-                    val updatedExercise = exerciseDetail.exercise.copy(
+        if (!_isEditMode.value) return
+        if (fromPosition == toPosition) return
+        
+        val exercises = _localExercisesWithSets.value.toMutableList()
+        if (fromPosition in exercises.indices && toPosition in exercises.indices) {
+            val movedExercise = exercises.removeAt(fromPosition)
+            exercises.add(toPosition, movedExercise)
+            
+            // Update order indices and add to pending changes
+            exercises.forEachIndexed { index, exerciseDetail ->
+                val originalExercise = exerciseDetail.exercise
+                if (originalExercise.orderIndex != index) {
+                    val updatedExercise = originalExercise.copy(
                         orderIndex = index,
                         updatedAt = System.currentTimeMillis()
                     )
-                    workoutRepository.updateWorkoutExercise(updatedExercise)
+                    
+                    // Update pending changes
+                    val isPendingAdd = pendingAddedExercises.indexOfFirst { it.id == originalExercise.id }
+                    if (isPendingAdd != -1) {
+                        pendingAddedExercises[isPendingAdd] = updatedExercise
+                    } else {
+                        // Remove from deleted if present (shouldn't happen, but just in case)
+                        pendingDeletedExercises.removeIf { it.id == originalExercise.id }
+                        // Add as a pending add if it's not already added
+                        if (!pendingAddedExercises.any { it.id == updatedExercise.id }) {
+                            pendingAddedExercises.add(updatedExercise)
+                        }
+                    }
+                    
+                    // Update local cache
+                    exercises[index] = exerciseDetail.copy(exercise = updatedExercise)
                 }
             }
+            
+            _localExercisesWithSets.value = exercises
         }
     }
 
     suspend fun checkForActiveSession(): WorkoutSession? = workoutRepository.getActiveWorkoutSession()
     
     suspend fun cancelActiveSession(session: WorkoutSession) = workoutRepository.deleteWorkoutSession(session)
-    
-    private fun executeWithErrorHandling(errorMessage: String, action: suspend () -> Unit) {
-        viewModelScope.launch {
-            try {
-                action()
-            } catch (e: Exception) {
-                _uiState.value = UiState.Error(e.message ?: errorMessage)
-            }
-        }
-    }
 
     sealed interface UiState {
         object Loading : UiState
@@ -257,3 +435,4 @@ class WorkoutDetailViewModel @Inject constructor(
         data class Error(val message: String) : UiState
     }
 }
+
