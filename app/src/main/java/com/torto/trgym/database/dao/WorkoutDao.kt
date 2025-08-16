@@ -33,6 +33,26 @@ interface WorkoutDao {
     @Query("SELECT * FROM workout_exercises WHERE workoutCardId = :cardId ORDER BY orderIndex ASC")
     fun getExercisesForCard(cardId: String): Flow<List<WorkoutExercise>>
 
+
+    // Aggiungi questi metodi al WorkoutDao
+
+    @Query("SELECT * FROM workout_exercises WHERE workoutCardId = :cardId ORDER BY orderIndex ASC")
+    suspend fun getExercisesForCardOnce(cardId: String): List<WorkoutExercise>
+
+    @Query("SELECT * FROM workout_exercises WHERE workoutCardId = :cardId AND pendingSync = 1")
+    suspend fun getUnsyncedWorkoutExercisesForCard(cardId: String): List<WorkoutExercise>
+
+    // Aggiungi questi metodi al WorkoutDao
+
+    @Query("SELECT * FROM exercise_sets WHERE exerciseId = :exerciseId ORDER BY setNumber ASC")
+    suspend fun getSetsForExerciseOnce(exerciseId: String): List<ExerciseSet>
+
+    @Query("SELECT * FROM exercise_sets WHERE exerciseId = :exerciseId AND pending_sync = 1")
+    suspend fun getUnsyncedSetsForExercise(exerciseId: String): List<ExerciseSet>
+
+    @Query("SELECT * FROM exercise_sets WHERE pending_sync = 1")
+    suspend fun getAllUnsyncedSets(): List<ExerciseSet>
+
     @Query("SELECT * FROM workout_exercises WHERE id = :exerciseId")
     suspend fun getWorkoutExercise(exerciseId: String): WorkoutExercise?
 

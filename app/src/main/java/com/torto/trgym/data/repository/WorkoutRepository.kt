@@ -16,11 +16,18 @@ import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.coroutines.cancellation.CancellationException
+
 
 @Singleton
 class WorkoutRepository @Inject constructor(
@@ -111,6 +118,315 @@ class WorkoutRepository @Inject constructor(
     // WorkoutExercise operations
     fun getExercisesForCard(cardId: String): Flow<List<WorkoutExercise>> =
         workoutDao.getExercisesForCard(cardId)
+
+
+    // Aggiungi questi metodi al WorkoutRepository
+
+    /**
+     * Sincronizza gli esercizi per una specifica workout card
+     */
+    suspend fun syncExercisesForCard(cardId: String) = withContext(Dispatchers.IO) {
+        try {
+            val userId = supabaseClient.auth.currentUserOrNull()?.id ?: return@withContext
+
+            // 1. Upload degli esercizi locali non sincronizzati
+            val unsyncedExercises = workoutDao.getUnsyncedWorkoutExercisesForCard(cardId)
+            unsyncedExercises.forEach { exercise ->
+                try {
+                    val supabaseExercise = SupabaseWorkoutExercise(
+                        id = exercise.id,
+                        workoutCardId = exercise.workoutCardId,
+                        exerciseId = exercise.exerciseId,
+                        name = exercise.name,
+                        orderIndex = exercise.orderIndex
+                    )
+                    supabaseClient.from("exercises").upsert(supabaseExercise)
+                    workoutDao.markWorkoutExerciseAsSynced(exercise.id)
+                } catch (e: Exception) {
+                    Log.w("WorkoutRepository", "Could not sync exercise ${exercise.id}", e)
+                }
+            }
+
+            // 2. Download degli esercizi da Supabase
+            val supabaseExercises = supabaseClient
+                .from("exercises")
+                .select {
+                    filter {
+                        eq("workout_card_id", cardId)
+                    }
+                }
+                .decodeList<SupabaseWorkoutExercise>()
+
+            // 3. Merge intelligente
+            val localExercises = workoutDao.getExercisesForCardOnce(cardId)
+            performExercisesMerge(localExercises, supabaseExercises, cardId)
+
+            Log.d("WorkoutRepository", "Synced exercises for card: $cardId")
+        } catch (e: Exception) {
+            Log.e("WorkoutRepository", "Error syncing exercises for card $cardId", e)
+        }
+    }
+
+    private suspend fun performExercisesMerge(
+        localExercises: List<WorkoutExercise>,
+        supabaseExercises: List<SupabaseWorkoutExercise>,
+        cardId: String
+    ) {
+        val localIds = localExercises.map { it.id }.toSet()
+        val supabaseIds = supabaseExercises.mapNotNull { it.id }.toSet()
+
+        // Aggiungi esercizi da Supabase che non esistono localmente
+        val toAddLocally = supabaseExercises.filter { it.id !in localIds }
+        toAddLocally.forEach { supabaseExercise ->
+            supabaseExercise.id?.let { id ->
+                val localExercise = WorkoutExercise(
+                    id = id,
+                    workoutCardId = supabaseExercise.workoutCardId,
+                    exerciseId = supabaseExercise.exerciseId,
+                    name = supabaseExercise.name,
+                    orderIndex = supabaseExercise.orderIndex,
+                    createdAt = System.currentTimeMillis(),
+                    updatedAt = System.currentTimeMillis(),
+                    syncedWithServer = true,
+                    pendingSync = false
+                )
+                workoutDao.insertWorkoutExercise(localExercise)
+
+                // Sincronizza anche i set per questo esercizio
+                syncExerciseSetsForExercise(id)
+            }
+        }
+
+        // Rimuovi esercizi locali sincronizzati che non esistono più su server
+        val toRemoveLocally = localIds - supabaseIds
+        toRemoveLocally.forEach { exerciseId ->
+            val localExercise = localExercises.find { it.id == exerciseId }
+            if (localExercise?.syncedWithServer == true && localExercise.pendingSync == false) {
+                workoutDao.deleteWorkoutExercise(localExercise)
+                Log.d("WorkoutRepository", "Removed synced exercise $exerciseId that was deleted on server")
+            }
+        }
+
+        // Aggiorna esercizi esistenti se necessario (controlla timestamp o altri campi)
+        val toUpdate = supabaseExercises.filter { it.id in localIds }
+        toUpdate.forEach { supabaseExercise ->
+            supabaseExercise.id?.let { id ->
+                val localExercise = localExercises.find { it.id == id }
+                if (localExercise != null && localExercise.syncedWithServer && !localExercise.pendingSync) {
+                    // Aggiorna solo se i dati sono diversi
+                    if (localExercise.name != supabaseExercise.name ||
+                        localExercise.orderIndex != supabaseExercise.orderIndex) {
+                        val updatedExercise = localExercise.copy(
+                            name = supabaseExercise.name,
+                            orderIndex = supabaseExercise.orderIndex,
+                            updatedAt = System.currentTimeMillis()
+                        )
+                        workoutDao.updateWorkoutExercise(updatedExercise)
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Metodo per ottenere esercizi con sincronizzazione automatica
+     */
+    fun getExercisesForCardWithSync(cardId: String): Flow<List<WorkoutExercise>> = flow {
+        // Prima sincronizza
+        syncExercisesForCard(cardId)
+        // Poi emetti il Flow dal database locale aggiornato
+        emitAll(workoutDao.getExercisesForCard(cardId))
+    }
+
+    // Versione ottimizzata che sincronizza solo quando necessario
+
+    /**
+     * Metodo per ottenere set con sincronizzazione condizionale
+     */
+    fun getSetsForExerciseWithSmartSync(exerciseId: String): Flow<List<ExerciseSet>> = flow {
+        try {
+            // Controlla se ci sono modifiche non sincronizzate localmente
+            val hasUnsyncedChanges = workoutDao.getUnsyncedSetsForExercise(exerciseId).isNotEmpty()
+
+            // Controlla l'ultima sincronizzazione (potresti aggiungere un timestamp nel database)
+            val lastSyncTime = getLastSyncTimeForExercise(exerciseId)
+            val needsSync = hasUnsyncedChanges ||
+                    (System.currentTimeMillis() - lastSyncTime) > SYNC_INTERVAL_MS
+
+            if (needsSync) {
+                syncSetsForExercise(exerciseId)
+                updateLastSyncTimeForExercise(exerciseId)
+            }
+
+            // Emetti il Flow dal database locale
+            emitAll(workoutDao.getSetsForExercise(exerciseId))
+        } catch (e: Exception) {
+            Log.e("WorkoutRepository", "Error in smart sync for exercise $exerciseId", e)
+            // In caso di errore, restituisci comunque i dati locali
+            emitAll(workoutDao.getSetsForExercise(exerciseId))
+        }
+    }
+
+    private suspend fun getLastSyncTimeForExercise(exerciseId: String): Long {
+        // Implementa il recupero del timestamp dell'ultima sincronizzazione
+        // Potresti aggiungere una tabella o campo per tracciare questo
+        return 0L // Placeholder
+    }
+
+    private suspend fun updateLastSyncTimeForExercise(exerciseId: String) {
+        // Implementa l'aggiornamento del timestamp dell'ultima sincronizzazione
+    }
+
+    companion object {
+        private const val SYNC_INTERVAL_MS = 30_000L // 30 secondi
+    }
+
+    // Aggiungi questi metodi al WorkoutRepository
+
+    /**
+     * Sincronizza i set per un specifico esercizio
+     */
+    suspend fun syncSetsForExercise(exerciseId: String) = withContext(Dispatchers.IO) {
+        try {
+            val userId = supabaseClient.auth.currentUserOrNull()?.id ?: return@withContext
+
+            // 1. Upload dei set locali non sincronizzati
+            val unsyncedSets = workoutDao.getUnsyncedSetsForExercise(exerciseId)
+            unsyncedSets.forEach { set ->
+                try {
+                    val supabaseSet = SupabaseExerciseSet(
+                        id = set.id,
+                        exerciseId = set.exerciseId,
+                        setNumber = set.setNumber,
+                        weightKg = set.weightKg,
+                        reps = set.reps
+                    )
+                    supabaseClient.from("exercise_sets").upsert(supabaseSet)
+                    workoutDao.markExerciseSetAsSynced(set.id)
+                } catch (e: Exception) {
+                    Log.w("WorkoutRepository", "Could not sync set ${set.id}", e)
+                }
+            }
+
+            // 2. Download dei set da Supabase
+            val supabaseSets = supabaseClient
+                .from("exercise_sets")
+                .select {
+                    filter {
+                        eq("exercise_id", exerciseId)
+                    }
+                }
+                .decodeList<SupabaseExerciseSet>()
+
+            // 3. Merge intelligente
+            val localSets = workoutDao.getSetsForExerciseOnce(exerciseId)
+            performSetsMerge(localSets, supabaseSets, exerciseId)
+
+            Log.d("WorkoutRepository", "Synced sets for exercise: $exerciseId")
+        } catch (e: Exception) {
+            Log.e("WorkoutRepository", "Error syncing sets for exercise $exerciseId", e)
+        }
+    }
+
+    private suspend fun performSetsMerge(
+        localSets: List<ExerciseSet>,
+        supabaseSets: List<SupabaseExerciseSet>,
+        exerciseId: String
+    ) {
+        val localIds = localSets.map { it.id }.toSet()
+        val supabaseIds = supabaseSets.mapNotNull { it.id }.toSet()
+
+        // Aggiungi set da Supabase che non esistono localmente
+        val toAddLocally = supabaseSets.filter { it.id !in localIds }
+        toAddLocally.forEach { supabaseSet ->
+            supabaseSet.id?.let { id ->
+                val localSet = ExerciseSet(
+                    id = id,
+                    exerciseId = supabaseSet.exerciseId,
+                    setNumber = supabaseSet.setNumber,
+                    weightKg = supabaseSet.weightKg,
+                    reps = supabaseSet.reps,
+                    createdAt = System.currentTimeMillis(),
+                    updatedAt = System.currentTimeMillis(),
+                    syncedWithServer = true,
+                    pendingSync = false
+                )
+                workoutDao.insertExerciseSet(localSet)
+            }
+        }
+
+        // Rimuovi set locali sincronizzati che non esistono più su server
+        val toRemoveLocally = localIds - supabaseIds
+        toRemoveLocally.forEach { setId ->
+            val localSet = localSets.find { it.id == setId }
+            if (localSet?.syncedWithServer == true && localSet.pendingSync == false) {
+                workoutDao.deleteExerciseSet(localSet)
+                Log.d("WorkoutRepository", "Removed synced set $setId that was deleted on server")
+            }
+        }
+
+        // Aggiorna set esistenti se necessario
+        val toUpdate = supabaseSets.filter { it.id in localIds }
+        toUpdate.forEach { supabaseSet ->
+            supabaseSet.id?.let { id ->
+                val localSet = localSets.find { it.id == id }
+                if (localSet != null && localSet.syncedWithServer && !localSet.pendingSync) {
+                    // Aggiorna solo se i dati sono diversi
+                    if (localSet.setNumber != supabaseSet.setNumber ||
+                        localSet.weightKg != supabaseSet.weightKg ||
+                        localSet.reps != supabaseSet.reps) {
+                        val updatedSet = localSet.copy(
+                            setNumber = supabaseSet.setNumber,
+                            weightKg = supabaseSet.weightKg,
+                            reps = supabaseSet.reps,
+                            updatedAt = System.currentTimeMillis()
+                        )
+                        workoutDao.updateExerciseSet(updatedSet)
+                    }
+                }
+            }
+        }
+
+        // Riordina i set per setNumber dopo il merge
+        val allLocalSets = workoutDao.getSetsForExerciseOnce(exerciseId)
+        val sortedSets = allLocalSets.sortedBy { it.setNumber }
+        sortedSets.forEachIndexed { index, set ->
+            val correctSetNumber = index + 1
+            if (set.setNumber != correctSetNumber) {
+                val correctedSet = set.copy(
+                    setNumber = correctSetNumber,
+                    updatedAt = System.currentTimeMillis()
+                )
+                workoutDao.updateExerciseSet(correctedSet)
+            }
+        }
+    }
+
+    /**
+     * Metodo per ottenere set con sincronizzazione automatica
+     */
+    fun getSetsForExerciseWithSync(exerciseId: String): Flow<List<ExerciseSet>> = flow {
+        // Prima sincronizza
+        syncSetsForExercise(exerciseId)
+        // Poi emetti il Flow dal database locale aggiornato
+        emitAll(workoutDao.getSetsForExercise(exerciseId))
+    }
+
+    /**
+     * Sincronizza tutti i set per tutti gli esercizi di una workout card
+     */
+    suspend fun syncAllSetsForCard(cardId: String) = withContext(Dispatchers.IO) {
+        try {
+            val exercises = workoutDao.getExercisesForCardOnce(cardId)
+            exercises.forEach { exercise ->
+                syncSetsForExercise(exercise.id)
+            }
+            Log.d("WorkoutRepository", "Synced all sets for card: $cardId")
+        } catch (e: Exception) {
+            Log.e("WorkoutRepository", "Error syncing all sets for card $cardId", e)
+        }
+    }
+
 
     fun getSessionExercisesWithSets(sessionId: String): Flow<List<WorkoutSessionExerciseDetail>> =
         workoutDao.getSessionExercisesWithSetsFlow(sessionId)

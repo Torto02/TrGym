@@ -1,5 +1,6 @@
 package com.torto.trgym.viewmodel.home
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,6 +11,7 @@ import com.torto.trgym.database.dto.ExerciseWithImage
 import com.torto.trgym.database.dto.WorkoutExerciseDetail
 import com.torto.trgym.database.entities.*
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -36,14 +38,19 @@ class WorkoutDetailViewModel @Inject constructor(
     private val pendingSetChanges = mutableMapOf<String, ExerciseSet>()
 
     // Lista degli esercizi con i relativi set - sempre aggiornata dal database
-    val exercisesWithSets = workoutRepository.getExercisesForCard(workoutCardId)
+    // Nel WorkoutDetailViewModel, sostituisci exercisesWithSets con:
+
+    // Nel WorkoutDetailViewModel, sostituisci exercisesWithSets con:
+
+    val exercisesWithSets = workoutRepository.getExercisesForCardWithSync(workoutCardId)
         .flatMapLatest { exercises ->
             if (exercises.isEmpty()) {
                 flowOf(emptyList())
             } else {
                 combine(
                     exercises.map { exercise ->
-                        workoutRepository.getSetsForExercise(exercise.id)
+                        // Usa getSetsForExerciseWithSync invece di getSetsForExercise
+                        workoutRepository.getSetsForExerciseWithSync(exercise.id)
                             .map { sets ->
                                 // Apply pending changes to display
                                 val updatedSets = sets.map { set ->
@@ -63,19 +70,27 @@ class WorkoutDetailViewModel @Inject constructor(
             initialValue = emptyList()
         )
 
+// E modifica refreshWorkoutCard() per sincronizzare anche tutti i set:
+
+    fun refreshWorkoutCard() {
+        viewModelScope.launch {
+            _uiState.value = UiState.Loading
+            loadWorkoutCard()
+            // Forza la sincronizzazione degli esercizi
+            workoutRepository.syncExercisesForCard(workoutCardId)
+            // Forza la sincronizzazione di tutti i set della card
+            workoutRepository.syncAllSetsForCard(workoutCardId)
+            observeExercises()
+        }
+    }
+
+
     init {
         loadWorkoutCard()
         observeExercises()
     }
 
-//    fun refreshWorkoutCard() {
-//        viewModelScope.launch {
-//            _uiState.value = UiState.Loading
-//            loadWorkoutCard()
-//            observeExercises()
-//
-//        }
-//    }
+
 
     private fun loadWorkoutCard() {
         viewModelScope.launch {
@@ -176,15 +191,6 @@ class WorkoutDetailViewModel @Inject constructor(
         }
     }
 
-    // Aggiungi un nuovo metodo per ottenere i dettagli dell'esercizio originale
-    fun getOriginalExerciseDetails(workoutExercise: WorkoutExercise): Flow<ExerciseDetail?> {
-        return if (workoutExercise.exerciseId != null) {
-            exerciseRepository.getExerciseDetail(workoutExercise.exerciseId)
-        } else {
-            flowOf(null)
-        }
-    }
-
     fun deleteExercise(exercise: WorkoutExercise) {
         if (!_isEditMode.value) return
 
@@ -214,7 +220,7 @@ class WorkoutDetailViewModel @Inject constructor(
                     orderIndex = exerciseDetail.exercise.orderIndex - 1,
                     updatedAt = System.currentTimeMillis()
                 )
-                workoutRepository.updateWorkoutExercise(updatedExercise)
+//                workoutRepository.updateWorkoutExercise(updatedExercise)
             }
     }
 

@@ -26,6 +26,295 @@ import com.torto.trgym.ui.dialogs.SelectExercisesDialog
 import com.torto.trgym.viewmodel.home.WorkoutDetailViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+//
+//@AndroidEntryPoint
+//class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
+//
+//    private val workoutDetailViewModel: WorkoutDetailViewModel by viewModels()
+//    private lateinit var exercisesAdapter: WorkoutExercisesAdapter
+//
+//    // Views
+//    private lateinit var backButton: TextView
+//    private lateinit var workoutTitle: TextView
+//    private lateinit var editButton: TextView
+//    private lateinit var exercisesRecyclerView: RecyclerView
+//    private lateinit var emptyStateLayout: View
+//    private lateinit var startWorkoutButton: MaterialButton
+//    private lateinit var addExerciseBtn: FloatingActionButton
+//
+//    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+//        super.onViewCreated(view, savedInstanceState)
+//
+//        initViews(view)
+//        setupRecyclerView()
+//        setupClickListeners()
+//        observeViewModels()
+//    }
+//
+//    override fun onResume() {
+//        super.onResume()
+//        workoutDetailViewModel.refreshWorkoutCard()
+//    }
+//
+//    private fun initViews(view: View) {
+//        backButton = view.findViewById(R.id.backButton)
+//        workoutTitle = view.findViewById(R.id.workoutTitle)
+//        editButton = view.findViewById(R.id.editButton)
+//        exercisesRecyclerView = view.findViewById(R.id.exercisesRecyclerView)
+//        emptyStateLayout = view.findViewById(R.id.emptyStateLayout)
+//        startWorkoutButton = view.findViewById(R.id.startWorkoutButton)
+//        addExerciseBtn = view.findViewById(R.id.addExerciseBtn)
+//    }
+//
+//    private fun setupRecyclerView() {
+//        exercisesAdapter = WorkoutExercisesAdapter(
+//            onExerciseClick = { exercise ->
+//                if (!workoutDetailViewModel.isEditMode.value) {
+//                    showExerciseDetail(exercise)
+//                }
+//            },
+//            onAddSetClick = { exerciseId ->
+//                workoutDetailViewModel.addSetToExercise(exerciseId)
+//            },
+//            onSetChanged = { set ->
+//                workoutDetailViewModel.updateExerciseSet(set)
+//            },
+//            onDeleteExercise = { exercise ->
+//                showDeleteExerciseConfirmation(exercise)
+//            },
+//            onDeleteSet = { set ->
+//                workoutDetailViewModel.deleteExerciseSet(set)
+//            }
+//        )
+//
+//        exercisesRecyclerView.apply {
+//            adapter = exercisesAdapter
+//            layoutManager = LinearLayoutManager(requireContext())
+//            setHasFixedSize(false)
+//        }
+//    }
+//
+//    private fun setupClickListeners() {
+//        backButton.setOnClickListener {
+//            findNavController().popBackStack()
+//        }
+//
+//        editButton.setOnClickListener {
+//            workoutDetailViewModel.toggleEditMode()
+//        }
+//
+//        startWorkoutButton.setOnClickListener {
+//            checkAndStartWorkout()
+//        }
+//
+//        addExerciseBtn.setOnClickListener {
+//            showSelectExercisesDialog()
+//        }
+//
+//        // Long click sul titolo per modificare nome scheda
+//        workoutTitle.setOnLongClickListener {
+//            if (workoutDetailViewModel.isEditMode.value) {
+//                showEditWorkoutCardDialog()
+//                true
+//            } else {
+//                false
+//            }
+//        }
+//    }
+//
+//    private fun checkAndStartWorkout() {
+//        viewLifecycleOwner.lifecycleScope.launch {
+//            try {
+//                val activeSession = workoutDetailViewModel.checkForActiveSession()
+//
+//                if (activeSession != null) {
+//                    // Show dialog asking if they want to continue the active session
+//                    showActiveSessionDialog(activeSession)
+//                } else {
+//                    // No active session, start a new one
+//                    navigateToActiveWorkout()
+//                }
+//            } catch (e: Exception) {
+//                Toast.makeText(requireContext(), "Errore: ${e.message}", Toast.LENGTH_SHORT).show()
+//            }
+//        }
+//    }
+//
+//    private fun showActiveSessionDialog(activeSession: WorkoutSession) {
+//        MaterialAlertDialogBuilder(requireContext())
+//            .setTitle("Allenamento in corso")
+//            .setMessage("Hai già un allenamento in corso. Vuoi continuare quello esistente o annullarlo e iniziarne uno nuovo?")
+//            .setPositiveButton("Continua esistente") { _, _ ->
+//                // Navigate to active workout with the existing session
+//                val action = WorkoutDetailFragmentDirections
+//                    .actionWorkoutDetailFragmentToActiveWorkoutFragment(activeSession.workoutCardId)
+//                findNavController().navigate(action)
+//            }
+//            .setNegativeButton("Annulla esistente") { _, _ ->
+//                // Cancel the existing session and start a new one
+//                viewLifecycleOwner.lifecycleScope.launch {
+//                    workoutDetailViewModel.cancelActiveSession(activeSession)
+//                    navigateToActiveWorkout()
+//                }
+//            }
+//            .setNeutralButton("Annulla", null)
+//            .show()
+//    }
+//
+//    private fun navigateToActiveWorkout() {
+//        val action = WorkoutDetailFragmentDirections
+//            .actionWorkoutDetailFragmentToActiveWorkoutFragment(workoutDetailViewModel.workoutCard.value?.id ?: "")
+//        findNavController().navigate(action)
+//    }
+//
+//    private fun observeViewModels() {
+//        viewLifecycleOwner.lifecycleScope.launch {
+//            viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+//                workoutDetailViewModel.workoutCard.collect { workoutCard ->
+//                    workoutCard?.let {
+//                        workoutTitle.text = it.name
+//                    }
+//                }
+//            }
+//        }
+//
+//        viewLifecycleOwner.lifecycleScope.launch {
+//            viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+//                workoutDetailViewModel.exercisesWithSets.collect { exercises ->
+//                    exercisesAdapter.submitList(exercises)
+//                    updateEmptyState(exercises.isEmpty())
+//                }
+//            }
+//        }
+//
+//        viewLifecycleOwner.lifecycleScope.launch {
+//            viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+//                workoutDetailViewModel.isEditMode.collect { isEditMode ->
+//                    updateEditModeUI(isEditMode)
+//                    exercisesAdapter.setEditMode(isEditMode)
+//                }
+//            }
+//        }
+//
+//        viewLifecycleOwner.lifecycleScope.launch {
+//            viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+//                workoutDetailViewModel.uiState.collect { state ->
+//                    when (state) {
+//                        is WorkoutDetailViewModel.UiState.Error -> {
+//                            Toast.makeText(requireContext(), state.message, Toast.LENGTH_LONG).show()
+//                        }
+//                        else -> { /* Handle other states if needed */ }
+//                    }
+//                }
+//            }
+//        }
+//    }
+//
+//    private var wasInEditMode = false
+//
+//    private fun updateEditModeUI(isEditMode: Boolean) {
+//        editButton.text = if (isEditMode) "Fine" else "Modifica"
+//        addExerciseBtn.visibility = if (isEditMode) View.VISIBLE else View.GONE
+//
+//        // Update start button visibility and text
+//        startWorkoutButton.visibility = if (isEditMode) View.GONE else View.VISIBLE
+//
+//        // Show save confirmation ONLY when exiting edit mode (transition from true to false)
+//        if (wasInEditMode && !isEditMode && ::exercisesAdapter.isInitialized) {
+//            Toast.makeText(requireContext(), "Modifiche salvate", Toast.LENGTH_SHORT).show()
+//        }
+//
+//        // Aggiorna lo stato precedente
+//        wasInEditMode = isEditMode
+//    }
+//
+//    private fun updateEmptyState(isEmpty: Boolean) {
+//        if (isEmpty) {
+//            emptyStateLayout.visibility = View.VISIBLE
+//            exercisesRecyclerView.visibility = View.GONE
+//        } else {
+//            emptyStateLayout.visibility = View.GONE
+//            exercisesRecyclerView.visibility = View.VISIBLE
+//        }
+//    }
+//
+//    private fun showSelectExercisesDialog() {
+//        val dialog = SelectExercisesDialog()
+//        dialog.setOnExercisesSelectedListener { selectedExercises ->
+//            workoutDetailViewModel.addMultipleExercises(selectedExercises)
+//            val message = if (selectedExercises.size == 1) {
+//                "Esercizio aggiunto"
+//            } else {
+//                "${selectedExercises.size} esercizi aggiunti"
+//            }
+//            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+//        }
+//        dialog.show(parentFragmentManager, "SelectExercisesDialog")
+//    }
+//
+//    private fun showDeleteExerciseConfirmation(exercise: WorkoutExercise) {
+//        MaterialAlertDialogBuilder(requireContext())
+//            .setTitle("Elimina esercizio")
+//            .setMessage("Sei sicuro di voler eliminare \"${exercise.name}\"? Tutti i set associati verranno eliminati.")
+//            .setPositiveButton("Elimina") { _, _ ->
+//                workoutDetailViewModel.deleteExercise(exercise)
+//                Toast.makeText(requireContext(), "Esercizio eliminato", Toast.LENGTH_SHORT).show()
+//            }
+//            .setNegativeButton("Annulla", null)
+//            .show()
+//    }
+//
+//    private fun showDeleteSetConfirmation(set: ExerciseSet) {
+//        MaterialAlertDialogBuilder(requireContext())
+//            .setTitle("Elimina serie")
+//            .setMessage("Sei sicuro di voler eliminare la serie ${set.setNumber}?")
+//            .setPositiveButton("Elimina") { _, _ ->
+//                workoutDetailViewModel.deleteExerciseSet(set)
+//                Toast.makeText(requireContext(), "Serie eliminata", Toast.LENGTH_SHORT).show()
+//            }
+//            .setNegativeButton("Annulla", null)
+//            .show()
+//    }
+//
+//    private fun showExerciseDetail(workoutExercise: WorkoutExercise) {
+//        val exerciseId = workoutExercise.exerciseId
+//        if (exerciseId != null) {
+//            val action = WorkoutDetailFragmentDirections
+//                .actionWorkoutDetailFragmentToExerciseDetailFragment(exerciseId)
+//            findNavController().navigate(action)
+//        } else {
+//            Toast.makeText(requireContext(), "Dettagli non disponibili per esercizi personalizzati", Toast.LENGTH_SHORT).show()
+//        }
+//    }
+//
+//
+//    private fun showEditWorkoutCardDialog() {
+//        val dialogView = layoutInflater.inflate(R.layout.dialog_edit_workout_card, null)
+//        val nameInput = dialogView.findViewById<TextInputEditText>(R.id.workoutNameInput)
+//        val descriptionInput = dialogView.findViewById<TextInputEditText>(R.id.workoutDescriptionInput)
+//
+//        val currentCard = workoutDetailViewModel.workoutCard.value
+//        nameInput.setText(currentCard?.name ?: "")
+//        descriptionInput.setText(currentCard?.description ?: "")
+//
+//        MaterialAlertDialogBuilder(requireContext())
+//            .setTitle("Modifica scheda")
+//            .setView(dialogView)
+//            .setPositiveButton("Salva") { _, _ ->
+//                val name = nameInput.text.toString().trim()
+//                val description = descriptionInput.text.toString().trim().takeIf { it.isNotEmpty() }
+//
+//                if (name.isNotEmpty()) {
+//                    workoutDetailViewModel.updateWorkoutCard(name, description)
+//                    Toast.makeText(requireContext(), "Scheda aggiornata", Toast.LENGTH_SHORT).show()
+//                } else {
+//                    Toast.makeText(requireContext(), "Il nome è obbligatorio", Toast.LENGTH_SHORT).show()
+//                }
+//            }
+//            .setNegativeButton("Annulla", null)
+//            .show()
+//    }
+//}
 
 @AndroidEntryPoint
 class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
@@ -33,37 +322,33 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
     private val workoutDetailViewModel: WorkoutDetailViewModel by viewModels()
     private lateinit var exercisesAdapter: WorkoutExercisesAdapter
 
-    // Views
-    private lateinit var backButton: TextView
-    private lateinit var workoutTitle: TextView
-    private lateinit var editButton: TextView
-    private lateinit var exercisesRecyclerView: RecyclerView
-    private lateinit var emptyStateLayout: View
-    private lateinit var startWorkoutButton: MaterialButton
-    private lateinit var addExerciseBtn: FloatingActionButton
+    // Views - simplified with lazy initialization
+    private val backButton by lazy { requireView().findViewById<TextView>(R.id.backButton) }
+    private val workoutTitle by lazy { requireView().findViewById<TextView>(R.id.workoutTitle) }
+    private val editButton by lazy { requireView().findViewById<TextView>(R.id.editButton) }
+    private val exercisesRecyclerView by lazy { requireView().findViewById<RecyclerView>(R.id.exercisesRecyclerView) }
+    private val emptyStateLayout by lazy { requireView().findViewById<View>(R.id.emptyStateLayout) }
+    private val startWorkoutButton by lazy { requireView().findViewById<MaterialButton>(R.id.startWorkoutButton) }
+    private val addExerciseBtn by lazy { requireView().findViewById<FloatingActionButton>(R.id.addExerciseBtn) }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        initViews(view)
-        setupRecyclerView()
-        setupClickListeners()
-        observeViewModels()
+        setupUI()
+        observeViewModel()
     }
 
-//    override fun onResume() {
-//        super.onResume()
-//        workoutDetailViewModel.refreshWorkoutCard()
-//    }
+    override fun onResume() {
+        super.onResume()
+        workoutDetailViewModel.refreshWorkoutCard()
+    }
 
-    private fun initViews(view: View) {
-        backButton = view.findViewById(R.id.backButton)
-        workoutTitle = view.findViewById(R.id.workoutTitle)
-        editButton = view.findViewById(R.id.editButton)
-        exercisesRecyclerView = view.findViewById(R.id.exercisesRecyclerView)
-        emptyStateLayout = view.findViewById(R.id.emptyStateLayout)
-        startWorkoutButton = view.findViewById(R.id.startWorkoutButton)
-        addExerciseBtn = view.findViewById(R.id.addExerciseBtn)
+    // ==========================================
+    // SIMPLIFIED SETUP
+    // ==========================================
+
+    private fun setupUI() {
+        setupRecyclerView()
+        setupClickListeners()
     }
 
     private fun setupRecyclerView() {
@@ -73,18 +358,10 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
                     showExerciseDetail(exercise)
                 }
             },
-            onAddSetClick = { exerciseId ->
-                workoutDetailViewModel.addSetToExercise(exerciseId)
-            },
-            onSetChanged = { set ->
-                workoutDetailViewModel.updateExerciseSet(set)
-            },
-            onDeleteExercise = { exercise ->
-                showDeleteExerciseConfirmation(exercise)
-            },
-            onDeleteSet = { set ->
-                workoutDetailViewModel.deleteExerciseSet(set)
-            }
+            onAddSetClick = workoutDetailViewModel::addSetToExercise,
+            onSetChanged = workoutDetailViewModel::updateExerciseSet,
+            onDeleteExercise = { exercise -> showDeleteConfirmation("Elimina esercizio", "Sei sicuro di voler eliminare \"${exercise.name}\"?") { workoutDetailViewModel.deleteExercise(exercise) } },
+            onDeleteSet = workoutDetailViewModel::deleteExerciseSet
         )
 
         exercisesRecyclerView.apply {
@@ -95,137 +372,73 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
     }
 
     private fun setupClickListeners() {
-        backButton.setOnClickListener {
-            findNavController().popBackStack()
-        }
+        backButton.setOnClickListener { findNavController().popBackStack() }
+        editButton.setOnClickListener { workoutDetailViewModel.toggleEditMode() }
+        startWorkoutButton.setOnClickListener { checkAndStartWorkout() }
+        addExerciseBtn.setOnClickListener { showSelectExercisesDialog() }
 
-        editButton.setOnClickListener {
-            workoutDetailViewModel.toggleEditMode()
-        }
-
-        startWorkoutButton.setOnClickListener {
-            checkAndStartWorkout()
-        }
-
-        addExerciseBtn.setOnClickListener {
-            showSelectExercisesDialog()
-        }
-
-        // Long click sul titolo per modificare nome scheda
+        // Long click for editing workout card name
         workoutTitle.setOnLongClickListener {
             if (workoutDetailViewModel.isEditMode.value) {
                 showEditWorkoutCardDialog()
                 true
-            } else {
-                false
-            }
+            } else false
         }
     }
 
-    private fun checkAndStartWorkout() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                val activeSession = workoutDetailViewModel.checkForActiveSession()
+    // ==========================================
+    // SIMPLIFIED VIEWMODEL OBSERVATION
+    // ==========================================
 
-                if (activeSession != null) {
-                    // Show dialog asking if they want to continue the active session
-                    showActiveSessionDialog(activeSession)
-                } else {
-                    // No active session, start a new one
-                    navigateToActiveWorkout()
-                }
-            } catch (e: Exception) {
-                Toast.makeText(requireContext(), "Errore: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
-    private fun showActiveSessionDialog(activeSession: WorkoutSession) {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Allenamento in corso")
-            .setMessage("Hai già un allenamento in corso. Vuoi continuare quello esistente o annullarlo e iniziarne uno nuovo?")
-            .setPositiveButton("Continua esistente") { _, _ ->
-                // Navigate to active workout with the existing session
-                val action = WorkoutDetailFragmentDirections
-                    .actionWorkoutDetailFragmentToActiveWorkoutFragment(activeSession.workoutCardId)
-                findNavController().navigate(action)
-            }
-            .setNegativeButton("Annulla esistente") { _, _ ->
-                // Cancel the existing session and start a new one
-                viewLifecycleOwner.lifecycleScope.launch {
-                    workoutDetailViewModel.cancelActiveSession(activeSession)
-                    navigateToActiveWorkout()
-                }
-            }
-            .setNeutralButton("Annulla", null)
-            .show()
-    }
-
-    private fun navigateToActiveWorkout() {
-        val action = WorkoutDetailFragmentDirections
-            .actionWorkoutDetailFragmentToActiveWorkoutFragment(workoutDetailViewModel.workoutCard.value?.id ?: "")
-        findNavController().navigate(action)
-    }
-
-    private fun observeViewModels() {
+    private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                workoutDetailViewModel.workoutCard.collect { workoutCard ->
-                    workoutCard?.let {
-                        workoutTitle.text = it.name
-                    }
-                }
-            }
-        }
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                workoutDetailViewModel.exercisesWithSets.collect { exercises ->
-                    exercisesAdapter.submitList(exercises)
-                    updateEmptyState(exercises.isEmpty())
-                }
-            }
-        }
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                workoutDetailViewModel.isEditMode.collect { isEditMode ->
-                    updateEditModeUI(isEditMode)
-                    exercisesAdapter.setEditMode(isEditMode)
-                }
-            }
-        }
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                workoutDetailViewModel.uiState.collect { state ->
-                    when (state) {
-                        is WorkoutDetailViewModel.UiState.Error -> {
-                            Toast.makeText(requireContext(), state.message, Toast.LENGTH_LONG).show()
-                        }
-                        else -> { /* Handle other states if needed */ }
-                    }
-                }
+                // Combine all observations into one block for efficiency
+                launch { observeWorkoutCard() }
+                launch { observeExercises() }
+                launch { observeEditMode() }
+                launch { observeUiState() }
             }
         }
     }
 
-    private var wasInEditMode = false
+    private suspend fun observeWorkoutCard() {
+        workoutDetailViewModel.workoutCard.collect { card ->
+            card?.let { workoutTitle.text = it.name }
+        }
+    }
+
+    private suspend fun observeExercises() {
+        workoutDetailViewModel.exercisesWithSets.collect { exercises ->
+            exercisesAdapter.submitList(exercises)
+            updateEmptyState(exercises.isEmpty())
+        }
+    }
+
+    private suspend fun observeEditMode() {
+        workoutDetailViewModel.isEditMode.collect { isEditMode ->
+            updateEditModeUI(isEditMode)
+            exercisesAdapter.setEditMode(isEditMode)
+        }
+    }
+
+    private suspend fun observeUiState() {
+        workoutDetailViewModel.uiState.collect { state ->
+            when (state) {
+                is WorkoutDetailViewModel.UiState.Error -> showError(state.message)
+                else -> { /* Handle loading/success states if needed */ }
+            }
+        }
+    }
+
+    // ==========================================
+    // SIMPLIFIED UI UPDATES
+    // ==========================================
 
     private fun updateEditModeUI(isEditMode: Boolean) {
         editButton.text = if (isEditMode) "Fine" else "Modifica"
         addExerciseBtn.visibility = if (isEditMode) View.VISIBLE else View.GONE
-
-        // Update start button visibility and text
         startWorkoutButton.visibility = if (isEditMode) View.GONE else View.VISIBLE
-
-        // Show save confirmation ONLY when exiting edit mode (transition from true to false)
-        if (wasInEditMode && !isEditMode && ::exercisesAdapter.isInitialized) {
-            Toast.makeText(requireContext(), "Modifiche salvate", Toast.LENGTH_SHORT).show()
-        }
-
-        // Aggiorna lo stato precedente
-        wasInEditMode = isEditMode
     }
 
     private fun updateEmptyState(isEmpty: Boolean) {
@@ -238,6 +451,19 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
         }
     }
 
+    // ==========================================
+    // SIMPLIFIED DIALOG MANAGEMENT
+    // ==========================================
+
+    private fun showDeleteConfirmation(title: String, message: String, onConfirm: () -> Unit) {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(title)
+            .setMessage(message)
+            .setPositiveButton("Elimina") { _, _ -> onConfirm() }
+            .setNegativeButton("Annulla", null)
+            .show()
+    }
+
     private fun showSelectExercisesDialog() {
         val dialog = SelectExercisesDialog()
         dialog.setOnExercisesSelectedListener { selectedExercises ->
@@ -247,46 +473,10 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
             } else {
                 "${selectedExercises.size} esercizi aggiunti"
             }
-            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+            showSuccess(message)
         }
         dialog.show(parentFragmentManager, "SelectExercisesDialog")
     }
-
-    private fun showDeleteExerciseConfirmation(exercise: WorkoutExercise) {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Elimina esercizio")
-            .setMessage("Sei sicuro di voler eliminare \"${exercise.name}\"? Tutti i set associati verranno eliminati.")
-            .setPositiveButton("Elimina") { _, _ ->
-                workoutDetailViewModel.deleteExercise(exercise)
-                Toast.makeText(requireContext(), "Esercizio eliminato", Toast.LENGTH_SHORT).show()
-            }
-            .setNegativeButton("Annulla", null)
-            .show()
-    }
-
-    private fun showDeleteSetConfirmation(set: ExerciseSet) {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Elimina serie")
-            .setMessage("Sei sicuro di voler eliminare la serie ${set.setNumber}?")
-            .setPositiveButton("Elimina") { _, _ ->
-                workoutDetailViewModel.deleteExerciseSet(set)
-                Toast.makeText(requireContext(), "Serie eliminata", Toast.LENGTH_SHORT).show()
-            }
-            .setNegativeButton("Annulla", null)
-            .show()
-    }
-
-    private fun showExerciseDetail(workoutExercise: WorkoutExercise) {
-        val exerciseId = workoutExercise.exerciseId
-        if (exerciseId != null) {
-            val action = WorkoutDetailFragmentDirections
-                .actionWorkoutDetailFragmentToExerciseDetailFragment(exerciseId)
-            findNavController().navigate(action)
-        } else {
-            Toast.makeText(requireContext(), "Dettagli non disponibili per esercizi personalizzati", Toast.LENGTH_SHORT).show()
-        }
-    }
-
 
     private fun showEditWorkoutCardDialog() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_edit_workout_card, null)
@@ -306,12 +496,80 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
 
                 if (name.isNotEmpty()) {
                     workoutDetailViewModel.updateWorkoutCard(name, description)
-                    Toast.makeText(requireContext(), "Scheda aggiornata", Toast.LENGTH_SHORT).show()
+                    showSuccess("Scheda aggiornata")
                 } else {
-                    Toast.makeText(requireContext(), "Il nome è obbligatorio", Toast.LENGTH_SHORT).show()
+                    showError("Il nome è obbligatorio")
                 }
             }
             .setNegativeButton("Annulla", null)
             .show()
+    }
+
+    // ==========================================
+    // SIMPLIFIED WORKOUT MANAGEMENT
+    // ==========================================
+
+    private fun checkAndStartWorkout() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val activeSession = workoutDetailViewModel.checkForActiveSession()
+                if (activeSession != null) {
+                    showActiveSessionDialog(activeSession)
+                } else {
+                    navigateToActiveWorkout()
+                }
+            } catch (e: Exception) {
+                showError("Errore: ${e.message}")
+            }
+        }
+    }
+
+    private fun showActiveSessionDialog(activeSession: WorkoutSession) {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Allenamento in corso")
+            .setMessage("Hai già un allenamento in corso. Vuoi continuare quello esistente o annullarlo?")
+            .setPositiveButton("Continua") { _, _ ->
+                val action = WorkoutDetailFragmentDirections
+                    .actionWorkoutDetailFragmentToActiveWorkoutFragment(activeSession.workoutCardId)
+                findNavController().navigate(action)
+            }
+            .setNegativeButton("Annulla esistente") { _, _ ->
+                viewLifecycleOwner.lifecycleScope.launch {
+                    workoutDetailViewModel.cancelActiveSession(activeSession)
+                    navigateToActiveWorkout()
+                }
+            }
+            .setNeutralButton("Annulla", null)
+            .show()
+    }
+
+    private fun navigateToActiveWorkout() {
+        val cardId = workoutDetailViewModel.workoutCard.value?.id ?: return
+        val action = WorkoutDetailFragmentDirections
+            .actionWorkoutDetailFragmentToActiveWorkoutFragment(cardId)
+        findNavController().navigate(action)
+    }
+
+    private fun showExerciseDetail(workoutExercise: WorkoutExercise) {
+        val exerciseId = workoutExercise.exerciseId
+        if (exerciseId != null) {
+            val action = WorkoutDetailFragmentDirections
+                .actionWorkoutDetailFragmentToExerciseDetailFragment(exerciseId)
+            findNavController().navigate(action)
+        } else {
+            showError("Dettagli non disponibili per esercizi personalizzati")
+        }
+    }
+
+    // ==========================================
+    // UTILITY METHODS
+    // ==========================================
+
+    private fun showError(message: String) {
+        Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
+    }
+
+    private fun showSuccess(message: String) {
+        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
     }
 }
