@@ -101,31 +101,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun observeAuthenticationStatus() {
-        lifecycleScope.launch {
-            authRepository.observeAuthStatus().collect { status ->
-                when (status) {
-                    is SessionStatus.Authenticated -> {
-                        syncStarredExercises()
-                        syncWorkoutCards()
-                        navController.currentDestination?.id.let { current ->
-                            if (current == R.id.loginFragment || current == R.id.registerFragment) {
-                                navController.navigate(R.id.homeFragment)
-                            }
-                        }
-                        isAuthenticationResolved = true
-                    }
-                    is SessionStatus.NotAuthenticated -> {
-                        navController.navigate(R.id.loginFragment)
-                        isAuthenticationResolved = true
-                    }
-                    else -> {
-                    }
-                }
-            }
-        }
-    }
-
     private fun syncStarredExercises() {
         lifecycleScope.launch {
             try {
@@ -142,6 +117,56 @@ class MainActivity : AppCompatActivity() {
                 workoutRepo.syncWorkoutCards()
             } catch (e: Exception) {
                 Log.e("MainActivity", "Error syncing workout cards", e)
+            }
+        }
+    }
+
+    private fun syncWorkoutSessions() {
+        lifecycleScope.launch {
+            try {
+                // Sync active and recent workout sessions
+                val activeSession = workoutRepo.getActiveWorkoutSession()
+                if (activeSession != null) {
+                    // Sync the active session and all its exercises and sets
+                    workoutRepo.updateWorkoutSession(activeSession)
+                    
+                    val exercises = workoutRepo.getSessionExercises(activeSession.id)
+                    exercises.forEach { exercise ->
+                        workoutRepo.updateSessionExercise(exercise)
+                        val sets = workoutRepo.getSessionSets(exercise.id)
+                        sets.forEach { set ->
+                            workoutRepo.updateSessionSet(set)
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("MainActivity", "Error syncing workout sessions", e)
+            }
+        }
+    }
+
+    private fun observeAuthenticationStatus() {
+        lifecycleScope.launch {
+            authRepository.observeAuthStatus().collect { status ->
+                when (status) {
+                    is SessionStatus.Authenticated -> {
+                        syncStarredExercises()
+                        syncWorkoutCards()
+                        syncWorkoutSessions() // Added workout sessions sync
+                        navController.currentDestination?.id.let { current ->
+                            if (current == R.id.loginFragment || current == R.id.registerFragment) {
+                                navController.navigate(R.id.homeFragment)
+                            }
+                        }
+                        isAuthenticationResolved = true
+                    }
+                    is SessionStatus.NotAuthenticated -> {
+                        navController.navigate(R.id.loginFragment)
+                        isAuthenticationResolved = true
+                    }
+                    else -> {
+                    }
+                }
             }
         }
     }

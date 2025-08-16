@@ -25,8 +25,6 @@ data class SupabaseWorkoutExercise(
     val id: String? = null,
     @SerialName("workout_card_id")
     val workoutCardId: String,
-    @SerialName("exercise_id")
-    val exerciseId: Int? = null,  // Aggiunto per sincronizzare con Supabase
     val name: String,
     @SerialName("order_index")
     val orderIndex: Int,

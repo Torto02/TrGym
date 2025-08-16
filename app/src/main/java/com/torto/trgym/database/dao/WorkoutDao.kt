@@ -10,7 +10,10 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface WorkoutDao {
 
-    // WorkoutCard queries
+    // ==========================================
+    // WORKOUT CARD OPERATIONS
+    // ==========================================
+    
     @Query("SELECT * FROM workout_cards ORDER BY updatedAt DESC")
     fun getAllWorkoutCards(): Flow<List<WorkoutCard>>
 
@@ -28,30 +31,23 @@ interface WorkoutDao {
 
     @Query("DELETE FROM workout_cards")
     suspend fun deleteAllWorkoutCards()
+    
+    @Query("SELECT COUNT(*) FROM workout_exercises WHERE workoutCardId = :cardId")
+    suspend fun getExerciseCountForCard(cardId: String): Int
+    
+    @Transaction
+    @Query("SELECT * FROM workout_cards WHERE id = :cardId")
+    suspend fun getWorkoutCardWithExercises(cardId: String): WorkoutCardDetail?
 
-    // WorkoutExercise queries
+    // ==========================================
+    // WORKOUT EXERCISE OPERATIONS
+    // ==========================================
+    
     @Query("SELECT * FROM workout_exercises WHERE workoutCardId = :cardId ORDER BY orderIndex ASC")
     fun getExercisesForCard(cardId: String): Flow<List<WorkoutExercise>>
 
-
-    // Aggiungi questi metodi al WorkoutDao
-
     @Query("SELECT * FROM workout_exercises WHERE workoutCardId = :cardId ORDER BY orderIndex ASC")
     suspend fun getExercisesForCardOnce(cardId: String): List<WorkoutExercise>
-
-    @Query("SELECT * FROM workout_exercises WHERE workoutCardId = :cardId AND pendingSync = 1")
-    suspend fun getUnsyncedWorkoutExercisesForCard(cardId: String): List<WorkoutExercise>
-
-    // Aggiungi questi metodi al WorkoutDao
-
-    @Query("SELECT * FROM exercise_sets WHERE exerciseId = :exerciseId ORDER BY setNumber ASC")
-    suspend fun getSetsForExerciseOnce(exerciseId: String): List<ExerciseSet>
-
-    @Query("SELECT * FROM exercise_sets WHERE exerciseId = :exerciseId AND pending_sync = 1")
-    suspend fun getUnsyncedSetsForExercise(exerciseId: String): List<ExerciseSet>
-
-    @Query("SELECT * FROM exercise_sets WHERE pending_sync = 1")
-    suspend fun getAllUnsyncedSets(): List<ExerciseSet>
 
     @Query("SELECT * FROM workout_exercises WHERE id = :exerciseId")
     suspend fun getWorkoutExercise(exerciseId: String): WorkoutExercise?
@@ -67,10 +63,29 @@ interface WorkoutDao {
 
     @Query("DELETE FROM workout_exercises WHERE workoutCardId = :cardId")
     suspend fun deleteExercisesForCard(cardId: String)
+    
+    @Transaction
+    @Query("SELECT * FROM workout_exercises WHERE id = :exerciseId")
+    suspend fun getExerciseWithSets(exerciseId: String): WorkoutExerciseDetail?
+    
+    @Query("UPDATE workout_exercises SET orderIndex = orderIndex - 1, updatedAt = :timestamp WHERE workoutCardId = :cardId AND orderIndex > :deletedOrderIndex")
+    suspend fun updateExercisesOrderAfterDeletion(cardId: String, deletedOrderIndex: Int, timestamp: Long = System.currentTimeMillis())
 
-    // ExerciseSet queries
+    @Transaction
+    suspend fun deleteExerciseAndReorder(exercise: WorkoutExercise) {
+        deleteWorkoutExercise(exercise)
+        updateExercisesOrderAfterDeletion(exercise.workoutCardId, exercise.orderIndex)
+    }
+
+    // ==========================================
+    // EXERCISE SET OPERATIONS
+    // ==========================================
+    
     @Query("SELECT * FROM exercise_sets WHERE exerciseId = :exerciseId ORDER BY setNumber ASC")
     fun getSetsForExercise(exerciseId: String): Flow<List<ExerciseSet>>
+    
+    @Query("SELECT * FROM exercise_sets WHERE exerciseId = :exerciseId ORDER BY setNumber ASC")
+    suspend fun getSetsForExerciseOnce(exerciseId: String): List<ExerciseSet>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertExerciseSet(set: ExerciseSet): Long
@@ -86,8 +101,20 @@ interface WorkoutDao {
 
     @Query("DELETE FROM exercise_sets WHERE exerciseId = :exerciseId")
     suspend fun deleteSetsForExercise(exerciseId: String)
+    
+    @Query("UPDATE exercise_sets SET setNumber = setNumber - 1 WHERE exerciseId = :exerciseId AND setNumber > :deletedSetNumber")
+    suspend fun decrementSetNumbersAfterDeletion(exerciseId: String, deletedSetNumber: Int)
 
-    // WorkoutSession queries
+    @Transaction
+    suspend fun deleteSetAndReorder(set: ExerciseSet) {
+        deleteExerciseSet(set)
+        decrementSetNumbersAfterDeletion(set.exerciseId, set.setNumber)
+    }
+
+    // ==========================================
+    // WORKOUT SESSION OPERATIONS
+    // ==========================================
+    
     @Query("SELECT * FROM workout_sessions WHERE isCompleted = 0 LIMIT 1")
     suspend fun getActiveWorkoutSession(): WorkoutSession?
 
@@ -102,8 +129,14 @@ interface WorkoutDao {
 
     @Query("SELECT * FROM workout_sessions ORDER BY startTime DESC LIMIT :limit")
     suspend fun getLatestWorkoutSessions(limit: Int): List<WorkoutSession>
+    
+    @Query("SELECT COUNT(*) FROM workout_sessions WHERE isCompleted = 1")
+    suspend fun countWorkoutSessions(): Int
 
-    // WorkoutSessionExercise queries
+    // ==========================================
+    // SESSION EXERCISE OPERATIONS
+    // ==========================================
+    
     @Query("SELECT * FROM workout_session_exercises WHERE workoutSessionId = :sessionId ORDER BY orderIndex ASC")
     suspend fun getSessionExercises(sessionId: String): List<WorkoutSessionExercise>
 
@@ -115,8 +148,31 @@ interface WorkoutDao {
 
     @Update
     suspend fun updateSessionExercise(exercise: WorkoutSessionExercise)
+    
+    @Delete
+    suspend fun deleteSessionExercise(exercise: WorkoutSessionExercise)
+    
+    @Query("UPDATE workout_session_exercises SET orderIndex = orderIndex - 1 WHERE workoutSessionId = :sessionId AND orderIndex > :deletedOrderIndex")
+    suspend fun updateSessionExercisesOrderAfterDeletion(sessionId: String, deletedOrderIndex: Int)
 
-    // WorkoutSessionSet queries
+    @Transaction
+    suspend fun deleteSessionExerciseAndReorder(exercise: WorkoutSessionExercise) {
+        deleteSessionExercise(exercise)
+        updateSessionExercisesOrderAfterDeletion(exercise.workoutSessionId, exercise.orderIndex)
+    }
+    
+    @Transaction
+    @Query("SELECT * FROM workout_session_exercises WHERE workoutSessionId = :sessionId ORDER BY orderIndex ASC")
+    suspend fun getSessionExercisesWithSets(sessionId: String): List<WorkoutSessionExerciseDetail>
+
+    @Transaction
+    @Query("SELECT * FROM workout_session_exercises WHERE workoutSessionId = :sessionId ORDER BY orderIndex ASC")
+    fun getSessionExercisesWithSetsFlow(sessionId: String): Flow<List<WorkoutSessionExerciseDetail>>
+
+    // ==========================================
+    // SESSION SET OPERATIONS
+    // ==========================================
+    
     @Query("SELECT * FROM workout_session_sets WHERE exerciseId = :exerciseId ORDER BY setNumber ASC")
     suspend fun getSessionSets(exerciseId: String): List<WorkoutSessionSet>
 
@@ -133,13 +189,7 @@ interface WorkoutDao {
     suspend fun updateSessionSetCompletion(setId: String, isCompleted: Boolean, completedAt: Long?)
 
     @Delete
-    suspend fun deleteSessionExercise(exercise: WorkoutSessionExercise)
-
-    @Delete
     suspend fun deleteSessionSet(set: WorkoutSessionSet)
-
-    @Query("UPDATE workout_session_exercises SET orderIndex = orderIndex - 1 WHERE workoutSessionId = :sessionId AND orderIndex > :deletedOrderIndex")
-    suspend fun updateSessionExercisesOrderAfterDeletion(sessionId: String, deletedOrderIndex: Int)
 
     @Query("UPDATE workout_session_sets SET setNumber = setNumber - 1 WHERE exerciseId = :exerciseId AND setNumber > :deletedSetNumber")
     suspend fun decrementSessionSetNumbersAfterDeletion(exerciseId: String, deletedSetNumber: Int)
@@ -150,41 +200,25 @@ interface WorkoutDao {
         decrementSessionSetNumbersAfterDeletion(set.exerciseId, set.setNumber)
     }
 
-    @Transaction
-    suspend fun deleteSessionExerciseAndReorder(exercise: WorkoutSessionExercise) {
-        deleteSessionExercise(exercise)
-        updateSessionExercisesOrderAfterDeletion(exercise.workoutSessionId, exercise.orderIndex)
-    }
 
-    // Complex queries
-    @Transaction
-    @Query("SELECT * FROM workout_cards WHERE id = :cardId")
-    suspend fun getWorkoutCardWithExercises(cardId: String): WorkoutCardDetail?
-
-    @Transaction
-    @Query("SELECT * FROM workout_exercises WHERE id = :exerciseId")
-    suspend fun getExerciseWithSets(exerciseId: String): WorkoutExerciseDetail?
-
-    @Transaction
-    @Query("SELECT * FROM workout_session_exercises WHERE workoutSessionId = :sessionId ORDER BY orderIndex ASC")
-    suspend fun getSessionExercisesWithSets(sessionId: String): List<WorkoutSessionExerciseDetail>
-
-    @Transaction
-    @Query("SELECT * FROM workout_session_exercises WHERE workoutSessionId = :sessionId ORDER BY orderIndex ASC")
-    fun getSessionExercisesWithSetsFlow(sessionId: String): Flow<List<WorkoutSessionExerciseDetail>>
-
-    @Query("SELECT COUNT(*) FROM workout_exercises WHERE workoutCardId = :cardId")
-    fun getExerciseCountForCard(cardId: String): Int
-
-
+    // ==========================================
+    // SYNC OPERATIONS
+    // ==========================================
+    
     @Query("SELECT * FROM workout_cards WHERE pendingSync = 1")
     suspend fun getUnsyncedWorkoutCards(): List<WorkoutCard>
 
     @Query("SELECT * FROM workout_exercises WHERE pendingSync = 1")
     suspend fun getUnsyncedWorkoutExercises(): List<WorkoutExercise>
+    
+    @Query("SELECT * FROM workout_exercises WHERE workoutCardId = :cardId AND pendingSync = 1")
+    suspend fun getUnsyncedWorkoutExercisesForCard(cardId: String): List<WorkoutExercise>
 
     @Query("SELECT * FROM exercise_sets WHERE pending_sync = 1")
     suspend fun getUnsyncedExerciseSets(): List<ExerciseSet>
+    
+    @Query("SELECT * FROM exercise_sets WHERE exerciseId = :exerciseId AND pending_sync = 1")
+    suspend fun getUnsyncedSetsForExercise(exerciseId: String): List<ExerciseSet>
 
     @Query("UPDATE workout_cards SET syncedWithServer = 1, pendingSync = 0 WHERE id = :cardId")
     suspend fun markWorkoutCardAsSynced(cardId: String)
@@ -203,28 +237,4 @@ interface WorkoutDao {
 
     @Query("UPDATE workout_session_sets SET syncedWithServer = 1, pendingSync = 0 WHERE id = :setId")
     suspend fun markSessionSetAsSynced(setId: String)
-
-    @Query("UPDATE exercise_sets SET setNumber = setNumber - 1 WHERE exerciseId = :exerciseId AND setNumber > :deletedSetNumber")
-    suspend fun decrementSetNumbersAfterDeletion(exerciseId: String, deletedSetNumber: Int)
-
-    @Transaction
-    suspend fun deleteSetAndReorder(set: ExerciseSet) {
-        deleteExerciseSet(set)
-        decrementSetNumbersAfterDeletion(set.exerciseId, set.setNumber)
-    }
-
-    @Transaction
-    suspend fun deleteExerciseAndReorder(exercise: WorkoutExercise) {
-        deleteWorkoutExercise(exercise)
-        updateExercisesOrderAfterDeletion(exercise.workoutCardId, exercise.orderIndex)
-    }
-
-    @Query("UPDATE workout_exercises SET orderIndex = orderIndex - 1, updatedAt = :timestamp WHERE workoutCardId = :cardId AND orderIndex > :deletedOrderIndex")
-    suspend fun updateExercisesOrderAfterDeletion(cardId: String, deletedOrderIndex: Int, timestamp: Long = System.currentTimeMillis())
-
-    @Query("SELECT * FROM workout_exercises WHERE workoutCardId = :cardId AND orderIndex > :orderIndex ORDER BY orderIndex ASC")
-    suspend fun getExercisesWithHigherOrderIndex(cardId: String, orderIndex: Int): List<WorkoutExercise>
-
-    @Query("SELECT COUNT(*) workoutCardId FROM workout_sessions WHERE isCompleted = 1")
-    suspend fun countWorkoutSessions():Int
 }

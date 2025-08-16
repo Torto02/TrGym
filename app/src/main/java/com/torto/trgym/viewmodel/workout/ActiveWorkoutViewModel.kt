@@ -32,6 +32,10 @@ class ActiveWorkoutViewModel @Inject constructor(
     private val _activeSession = MutableStateFlow<WorkoutSession?>(null)
     val activeSession: StateFlow<WorkoutSession?> = _activeSession.asStateFlow()
 
+    // Timer state
+    private val _timerRunning = MutableStateFlow(false)
+    val timerRunning: StateFlow<Boolean> = _timerRunning.asStateFlow()
+
     private val _elapsedTime = MutableStateFlow(0L)
     val elapsedTime: StateFlow<Long> = _elapsedTime.asStateFlow()
 
@@ -53,8 +57,10 @@ class ActiveWorkoutViewModel @Inject constructor(
     private val _sessionSets = MutableStateFlow<Map<String, List<WorkoutSessionSet>>>(emptyMap())
     val sessionSets: StateFlow<Map<String, List<WorkoutSessionSet>>> = _sessionSets.asStateFlow()
 
+    // Flag to track whether session data is loaded
     private val _sessionDataLoaded = MutableStateFlow(false)
 
+    // Exercises with sets - switches between original card data and session data
     @OptIn(ExperimentalCoroutinesApi::class)
     val exercisesWithSets = combine(
         _activeSession, 
@@ -62,10 +68,14 @@ class ActiveWorkoutViewModel @Inject constructor(
         workoutRepository.getExercisesForCard(workoutCardId)
     ) { activeSession, sessionDataLoaded, originalExercises ->
         if (activeSession != null && sessionDataLoaded) {
+            // Use session data when workout is active and data is loaded
             workoutRepository.getSessionExercisesWithSets(activeSession.id)
         } else if (activeSession != null) {
+            // Wait for session data to load, use an empty flow temporarily
+            // but don't emit it immediately (using emptyFlow() instead of flowOf(emptyList()))
             emptyFlow<List<WorkoutSessionExerciseDetail>>()
         } else {
+            // Use original card data when no active session
             if (originalExercises.isEmpty()) {
                 flowOf(emptyList<WorkoutExerciseDetail>())
             } else {
@@ -85,9 +95,11 @@ class ActiveWorkoutViewModel @Inject constructor(
         when (flow) {
             else -> {
                 if (_activeSession.value != null && _sessionDataLoaded.value) {
+                    // Convert session data to WorkoutExerciseDetail format
                     @Suppress("UNCHECKED_CAST")
                     (flow as Flow<List<WorkoutSessionExerciseDetail>>).map { sessionExercises ->
                         sessionExercises.map { sessionExerciseDetail ->
+                            // Convert WorkoutSessionExercise to WorkoutExercise format
                             val workoutExercise = WorkoutExercise(
                                 id = sessionExerciseDetail.exercise.id,
                                 workoutCardId = workoutCardId,
@@ -152,14 +164,19 @@ class ActiveWorkoutViewModel @Inject constructor(
     private fun checkForActiveSession() {
         viewModelScope.launch {
             try {
+                // Reset sessionDataLoaded flag
                 _sessionDataLoaded.value = false
+                
                 val activeSession = workoutRepository.getActiveWorkoutSession()
 
                 if (activeSession != null) {
+                    // Set session before setting UI state
                     _activeSession.value = activeSession
-
+                    
+                    // Load session exercises and sets before indicating data is ready
                     loadSessionExercisesAndSets(activeSession.id)
-
+                    
+                    // Only after data is loaded, update UI state
                     _uiState.value = UiState.WorkoutInProgress
                 } else {
                     _uiState.value = UiState.ReadyToStart
@@ -181,14 +198,18 @@ class ActiveWorkoutViewModel @Inject constructor(
                 val sets = workoutRepository.getSessionSets(exercise.id)
                 setsMap[exercise.id] = sets
 
+                // Track completed sets
                 sets.forEach { set ->
                     completedSetsMap[set.id] = set.isCompleted
                 }
             }
 
+            // Update all states at once to reduce UI flicker
             _sessionExercises.value = exercises
             _sessionSets.value = setsMap
             _completedSets.value = completedSetsMap
+            
+            // Finally indicate that session data is loaded
             _sessionDataLoaded.value = true
         } catch (e: Exception) {
             _uiState.value = UiState.Error(e.message ?: "Errore nel caricamento della sessione")
@@ -210,6 +231,7 @@ class ActiveWorkoutViewModel @Inject constructor(
                 workoutRepository.insertWorkoutSession(session)
                 _activeSession.value = session
                 _uiState.value = UiState.WorkoutInProgress
+                _timerRunning.value = true
 
                 // Initialize session exercises and sets from the workout card
                 initializeSessionExercisesAndSets(session.id)
@@ -220,6 +242,7 @@ class ActiveWorkoutViewModel @Inject constructor(
     }
 
     private suspend fun initializeSessionExercisesAndSets(sessionId: String) {
+        // Reset sessionDataLoaded flag
         _sessionDataLoaded.value = false
         
         val exercises = exercisesWithSets.value
@@ -236,6 +259,7 @@ class ActiveWorkoutViewModel @Inject constructor(
 
         workoutRepository.insertSessionExercises(sessionExercises)
 
+        // Initialize session sets
         val sessionSetsMap = mutableMapOf<String, List<WorkoutSessionSet>>()
         val completedSetsMap = mutableMapOf<String, Boolean>()
 
@@ -257,10 +281,22 @@ class ActiveWorkoutViewModel @Inject constructor(
             workoutRepository.insertSessionSets(sessionSets)
             sessionSetsMap[sessionExercise.id] = sessionSets
         }
+
+        // Update all states at once
         _sessionExercises.value = sessionExercises
         _sessionSets.value = sessionSetsMap
         _completedSets.value = completedSetsMap
+        
+        // Finally indicate that session data is loaded
         _sessionDataLoaded.value = true
+    }
+
+    fun pauseTimer() {
+        _timerRunning.value = false
+    }
+
+    fun resumeTimer() {
+        _timerRunning.value = true
     }
 
     fun updateElapsedTime(time: Long) {
@@ -310,6 +346,7 @@ class ActiveWorkoutViewModel @Inject constructor(
             try {
                 val session = _activeSession.value ?: return@launch
 
+                // Update session with end time and completed status
                 val updatedSession = session.copy(
                     endTime = System.currentTimeMillis(),
                     totalDurationMs = _elapsedTime.value,
@@ -472,6 +509,7 @@ class ActiveWorkoutViewModel @Inject constructor(
                 val newSet = WorkoutSessionSet(
                     exerciseId = sessionExerciseId,
                     setNumber = nextSetNumber,
+                    targetReps = 10,
                     isCompleted = false
                 )
 

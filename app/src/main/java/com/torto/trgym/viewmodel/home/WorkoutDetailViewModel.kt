@@ -16,6 +16,8 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@OptIn(ExperimentalCoroutinesApi::class)
+
 @HiltViewModel
 class WorkoutDetailViewModel @Inject constructor(
     private val workoutRepository: WorkoutRepository,
@@ -34,25 +36,17 @@ class WorkoutDetailViewModel @Inject constructor(
     private val _isEditMode = MutableStateFlow(false)
     val isEditMode: StateFlow<Boolean> = _isEditMode.asStateFlow()
 
-    // Temporary changes map for batch saving
     private val pendingSetChanges = mutableMapOf<String, ExerciseSet>()
 
-    // Lista degli esercizi con i relativi set - sempre aggiornata dal database
-    // Nel WorkoutDetailViewModel, sostituisci exercisesWithSets con:
-
-    // Nel WorkoutDetailViewModel, sostituisci exercisesWithSets con:
-
-    val exercisesWithSets = workoutRepository.getExercisesForCardWithSync(workoutCardId)
+    val exercisesWithSets = workoutRepository.getExercisesForCard(workoutCardId)
         .flatMapLatest { exercises ->
             if (exercises.isEmpty()) {
                 flowOf(emptyList())
             } else {
                 combine(
                     exercises.map { exercise ->
-                        // Usa getSetsForExerciseWithSync invece di getSetsForExercise
-                        workoutRepository.getSetsForExerciseWithSync(exercise.id)
+                        workoutRepository.getSetsForExercise(exercise.id)
                             .map { sets ->
-                                // Apply pending changes to display
                                 val updatedSets = sets.map { set ->
                                     pendingSetChanges[set.id] ?: set
                                 }
@@ -70,51 +64,36 @@ class WorkoutDetailViewModel @Inject constructor(
             initialValue = emptyList()
         )
 
-// E modifica refreshWorkoutCard() per sincronizzare anche tutti i set:
-
     fun refreshWorkoutCard() {
         viewModelScope.launch {
             _uiState.value = UiState.Loading
             loadWorkoutCard()
-            // Forza la sincronizzazione degli esercizi
+            syncData()
+        }
+    }
+
+    private suspend fun syncData() {
+        try {
             workoutRepository.syncExercisesForCard(workoutCardId)
-            // Forza la sincronizzazione di tutti i set della card
             workoutRepository.syncAllSetsForCard(workoutCardId)
-            observeExercises()
+        } catch (e: Exception) {
+            Log.e("WorkoutDetailViewModel", "Error syncing data", e)
         }
     }
 
 
     init {
         loadWorkoutCard()
-        observeExercises()
     }
-
-
 
     private fun loadWorkoutCard() {
         viewModelScope.launch {
             try {
                 val card = workoutRepository.getWorkoutCard(workoutCardId)
                 _workoutCard.value = card
-
-                if (card == null) {
-                    _uiState.value = UiState.Error("Scheda non trovata")
-                } else {
-                    _uiState.value = UiState.Success
-                }
+                _uiState.value = if (card != null) UiState.Success else UiState.Error("Scheda non trovata")
             } catch (e: Exception) {
                 _uiState.value = UiState.Error(e.message ?: "Errore nel caricamento")
-            }
-        }
-    }
-
-    private fun observeExercises() {
-        viewModelScope.launch {
-            exercisesWithSets.collect {
-                if (_uiState.value is UiState.Loading) {
-                    _uiState.value = UiState.Success
-                }
             }
         }
     }
@@ -122,14 +101,11 @@ class WorkoutDetailViewModel @Inject constructor(
     fun toggleEditMode() {
         viewModelScope.launch {
             if (_isEditMode.value) {
-                // Saving mode - persist all pending changes
                 savePendingChanges()
-                _isEditMode.value = false
             } else {
-                // Entering edit mode
                 pendingSetChanges.clear()
-                _isEditMode.value = true
             }
+            _isEditMode.value = !_isEditMode.value
         }
     }
 
@@ -146,142 +122,87 @@ class WorkoutDetailViewModel @Inject constructor(
 
     fun addExercise(exerciseName: String) {
         if (!_isEditMode.value) return
-
-        viewModelScope.launch {
-            try {
-                val currentExercises = exercisesWithSets.value
-                val nextOrderIndex = currentExercises.size
-
-                val newExercise = WorkoutExercise(
-                    workoutCardId = workoutCardId,
-                    name = exerciseName.trim(),
-                    orderIndex = nextOrderIndex,
-                    updatedAt = System.currentTimeMillis()
-                )
-
-                workoutRepository.insertWorkoutExercise(newExercise)
-
-            } catch (e: Exception) {
-                _uiState.value = UiState.Error(e.message ?: "Errore nell'aggiunta dell'esercizio")
-            }
+        executeWithErrorHandling("Errore nell'aggiunta dell'esercizio") {
+            val newExercise = WorkoutExercise(
+                workoutCardId = workoutCardId,
+                name = exerciseName.trim(),
+                orderIndex = exercisesWithSets.value.size,
+                updatedAt = System.currentTimeMillis()
+            )
+            workoutRepository.insertWorkoutExercise(newExercise)
         }
     }
 
     fun addMultipleExercises(selectedExercises: List<ExerciseWithImage>) {
         if (!_isEditMode.value) return
-
-        viewModelScope.launch {
-            try {
-                val currentExercises = exercisesWithSets.value
-                var nextOrderIndex = currentExercises.size
-
-                selectedExercises.forEach { exercise ->
-                    val newExercise = WorkoutExercise(
-                        workoutCardId = workoutCardId,
-                        exerciseId = exercise.id,  // Mantieni il riferimento all'ID originale
-                        name = exercise.title.trim(),
-                        orderIndex = nextOrderIndex++,
-                        updatedAt = System.currentTimeMillis()
-                    )
-                    workoutRepository.insertWorkoutExercise(newExercise)
-                }
-            } catch (e: Exception) {
-                _uiState.value = UiState.Error(e.message ?: "Errore nell'aggiunta degli esercizi")
+        executeWithErrorHandling("Errore nell'aggiunta degli esercizi") {
+            var nextOrderIndex = exercisesWithSets.value.size
+            selectedExercises.forEach { exercise ->
+                val newExercise = WorkoutExercise(
+                    workoutCardId = workoutCardId,
+                    exerciseId = exercise.id,
+                    name = exercise.title.trim(),
+                    orderIndex = nextOrderIndex++,
+                    updatedAt = System.currentTimeMillis()
+                )
+                workoutRepository.insertWorkoutExercise(newExercise)
             }
         }
     }
 
     fun deleteExercise(exercise: WorkoutExercise) {
         if (!_isEditMode.value) return
-
-        viewModelScope.launch {
-            try {
-                workoutRepository.deleteWorkoutExercise(exercise)
-                // Remove any pending changes for sets of this exercise
-                pendingSetChanges.keys.removeAll { setId ->
-                    exercisesWithSets.value.any { detail ->
-                        detail.exercise.id == exercise.id && detail.sets.any { it.id == setId }
-                    }
+        executeWithErrorHandling("Errore nell'eliminazione dell'esercizio") {
+            workoutRepository.deleteWorkoutExercise(exercise)
+            pendingSetChanges.keys.removeAll { setId ->
+                exercisesWithSets.value.any { detail ->
+                    detail.exercise.id == exercise.id && detail.sets.any { it.id == setId }
                 }
-                // Riordina gli esercizi rimanenti
-                reorderExercisesAfterDeletion(exercise.orderIndex)
-            } catch (e: Exception) {
-                _uiState.value = UiState.Error(e.message ?: "Errore nell'eliminazione dell'esercizio")
             }
         }
     }
 
-    private suspend fun reorderExercisesAfterDeletion(deletedOrderIndex: Int) {
-        val currentExercises = exercisesWithSets.value
-        currentExercises
-            .filter { it.exercise.orderIndex > deletedOrderIndex }
-            .forEach { exerciseDetail ->
-                val updatedExercise = exerciseDetail.exercise.copy(
-                    orderIndex = exerciseDetail.exercise.orderIndex - 1,
-                    updatedAt = System.currentTimeMillis()
-                )
-//                workoutRepository.updateWorkoutExercise(updatedExercise)
-            }
-    }
-
     fun addSetToExercise(exerciseId: String) {
         if (!_isEditMode.value) return
-
-        viewModelScope.launch {
-            try {
-                val currentSets = workoutRepository.getSetsForExercise(exerciseId).first()
-                val nextSetNumber = (currentSets.maxOfOrNull { it.setNumber } ?: 0) + 1
-
-                val newSet = ExerciseSet(
-                    exerciseId = exerciseId,
-                    setNumber = nextSetNumber,
-                    weightKg = null,
-                    reps = null,
-                    updatedAt = System.currentTimeMillis()
-                )
-
-                workoutRepository.insertExerciseSet(newSet)
-            } catch (e: Exception) {
-                _uiState.value = UiState.Error(e.message ?: "Errore nell'aggiunta del set")
-            }
+        executeWithErrorHandling("Errore nell'aggiunta del set") {
+            val currentSets = workoutRepository.getSetsForExercise(exerciseId).first()
+            val newSet = ExerciseSet(
+                exerciseId = exerciseId,
+                setNumber = (currentSets.maxOfOrNull { it.setNumber } ?: 0) + 1,
+                weightKg = null,
+                reps = null,
+                updatedAt = System.currentTimeMillis()
+            )
+            workoutRepository.insertExerciseSet(newSet)
         }
     }
 
     fun updateExerciseSet(set: ExerciseSet) {
         if (!_isEditMode.value) return
-
-        // Store changes temporarily - merge with existing pending changes to preserve both weight and reps
+        
         val existingPendingSet = pendingSetChanges[set.id]
-        val mergedSet = if (existingPendingSet != null) {
-            // Merge changes: keep non-null values from both sets
+        val mergedSet = existingPendingSet?.let {
             set.copy(
-                weightKg = set.weightKg ?: existingPendingSet.weightKg,
-                reps = set.reps ?: existingPendingSet.reps,
+                weightKg = set.weightKg ?: it.weightKg,
+                reps = set.reps ?: it.reps,
                 updatedAt = System.currentTimeMillis()
             )
-        } else {
-            set.copy(updatedAt = System.currentTimeMillis())
-        }
-
+        } ?: set.copy(updatedAt = System.currentTimeMillis())
+        
         pendingSetChanges[set.id] = mergedSet
     }
 
     fun deleteExerciseSet(set: ExerciseSet) {
         if (!_isEditMode.value) return
-
-        viewModelScope.launch {
-            try {
-                workoutRepository.deleteExerciseSetAndReorder(set)
-                pendingSetChanges.remove(set.id)
-            } catch (e: Exception) {
-                _uiState.value = UiState.Error(e.message ?: "Errore nell'eliminazione del set")
-            }
+        executeWithErrorHandling("Errore nell'eliminazione del set") {
+            workoutRepository.deleteExerciseSetAndReorder(set)
+            pendingSetChanges.remove(set.id)
         }
     }
 
     fun updateWorkoutCard(name: String, description: String?) {
         if (!_isEditMode.value) return
-
+        
         viewModelScope.launch {
             try {
                 val currentCard = _workoutCard.value ?: return@launch
@@ -299,40 +220,35 @@ class WorkoutDetailViewModel @Inject constructor(
     }
 
     fun moveExercise(fromPosition: Int, toPosition: Int) {
-        viewModelScope.launch {
-            try {
-                val exercises = exercisesWithSets.value.toMutableList()
-                if (fromPosition in exercises.indices && toPosition in exercises.indices) {
-                    val movedExercise = exercises.removeAt(fromPosition)
-                    exercises.add(toPosition, movedExercise)
-
-                    // Aggiorna gli orderIndex
-                    exercises.forEachIndexed { index, exerciseDetail ->
-                        val updatedExercise = exerciseDetail.exercise.copy(
-                            orderIndex = index,
-                            updatedAt = System.currentTimeMillis()
-                        )
-                        workoutRepository.updateWorkoutExercise(updatedExercise)
-                    }
+        executeWithErrorHandling("Errore nel riordino degli esercizi") {
+            val exercises = exercisesWithSets.value.toMutableList()
+            if (fromPosition in exercises.indices && toPosition in exercises.indices) {
+                val movedExercise = exercises.removeAt(fromPosition)
+                exercises.add(toPosition, movedExercise)
+                
+                exercises.forEachIndexed { index, exerciseDetail ->
+                    val updatedExercise = exerciseDetail.exercise.copy(
+                        orderIndex = index,
+                        updatedAt = System.currentTimeMillis()
+                    )
+                    workoutRepository.updateWorkoutExercise(updatedExercise)
                 }
-            } catch (e: Exception) {
-                _uiState.value = UiState.Error(e.message ?: "Errore nel riordino degli esercizi")
             }
         }
     }
 
-    /**
-     * Checks if there's an active workout session
-     */
-    suspend fun checkForActiveSession(): WorkoutSession? {
-        return workoutRepository.getActiveWorkoutSession()
-    }
-
-    /**
-     * Cancels an active workout session
-     */
-    suspend fun cancelActiveSession(session: WorkoutSession) {
-        workoutRepository.deleteWorkoutSession(session)
+    suspend fun checkForActiveSession(): WorkoutSession? = workoutRepository.getActiveWorkoutSession()
+    
+    suspend fun cancelActiveSession(session: WorkoutSession) = workoutRepository.deleteWorkoutSession(session)
+    
+    private fun executeWithErrorHandling(errorMessage: String, action: suspend () -> Unit) {
+        viewModelScope.launch {
+            try {
+                action()
+            } catch (e: Exception) {
+                _uiState.value = UiState.Error(e.message ?: errorMessage)
+            }
+        }
     }
 
     sealed interface UiState {
