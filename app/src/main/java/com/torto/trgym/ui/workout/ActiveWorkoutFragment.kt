@@ -98,7 +98,6 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
     private fun setupClickListeners() {
         backButton.setOnClickListener {
             findNavController().navigate(ActiveWorkoutFragmentDirections.actionActiveWorkoutFragmentToHomeFragment())
-//            showExitConfirmationDialog()
         }
 
         completeWorkoutButton.setOnClickListener {
@@ -268,7 +267,6 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
                     findNavController().navigate(ActiveWorkoutFragmentDirections.actionActiveWorkoutFragmentToHomeFragment())
-//                    showExitConfirmationDialog()
                 }
             }
         )

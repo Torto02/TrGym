@@ -9,7 +9,6 @@ import com.torto.trgym.database.dto.ExerciseWithImage
 import com.torto.trgym.database.dao.StarredExerciseDao
 import com.torto.trgym.database.entities.StarredExercise
 import com.torto.trgym.database.dto.SupabaseStarredExercise
-import com.torto.trgym.utils.LocaleManager
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
@@ -27,41 +26,26 @@ import javax.inject.Singleton
 @Singleton
 class ExerciseRepository @Inject constructor(
     private val exerciseDao: ExerciseDao,
-    private val languageDao: LanguageDao,
     private val starredExerciseDao: StarredExerciseDao,
     private val supabaseClient: SupabaseClient,
     @ApplicationContext private val context: Context
 ) {
     fun allExercises(): Flow<List<ExerciseWithImage>> = flow {
-        val languageCode = LocaleManager.getStoredLanguage(context)
-        val languageId = getLanguageId(languageCode)
-        emit(exerciseDao.getExercisesWithImage(languageId).firstOrNull() ?: emptyList())
+        emit(exerciseDao.getExercisesWithImage(1).firstOrNull() ?: emptyList())
     }
 
     fun getExerciseDetail(id: Int): Flow<ExerciseDetail> = flow {
-        val languageCode = LocaleManager.getStoredLanguage(context)
-        val languageId = getLanguageId(languageCode)
-        emit(exerciseDao.getExerciseDetail(id, languageId).firstOrNull()!!)
+        emit(exerciseDao.getExerciseDetail(id, 1).firstOrNull()!!)
     }
 
     fun filteredExercisesByMuscleGroup(muscleGroupId: Int): Flow<List<ExerciseWithImage>> = flow {
-        val languageCode = LocaleManager.getStoredLanguage(context)
-        val languageId = getLanguageId(languageCode)
-        emit(exerciseDao.getExercisesFilteredByMuscleGroup(muscleGroupId, languageId).firstOrNull() ?: emptyList())
+        emit(exerciseDao.getExercisesFilteredByMuscleGroup(muscleGroupId, 1).firstOrNull() ?: emptyList())
     }.flowOn(Dispatchers.IO)
 
     fun filteredExercisesByEquipment(equipmentId: Int): Flow<List<ExerciseWithImage>> = flow {
-        val languageCode = LocaleManager.getStoredLanguage(context)
-        val languageId = getLanguageId(languageCode)
-        emit(exerciseDao.getExercisesFilteredByEquipment(equipmentId, languageId).firstOrNull() ?: emptyList())
+        emit(exerciseDao.getExercisesFilteredByEquipment(equipmentId, 1).firstOrNull() ?: emptyList())
     }.flowOn(Dispatchers.IO)
 
-    private suspend fun getLanguageId(languageCode: String): Int {
-        // Ottieni l'ID della lingua dal codice, usando l'inglese come fallback
-        return languageDao.getLanguageIdByCode(languageCode)
-            ?: languageDao.getLanguageIdByCode("en")
-            ?: 1 // Fallback all'ID 1 se non viene trovato nulla
-    }
 
     fun isExerciseStarred(exerciseId: Int): Flow<Boolean> {
         return starredExerciseDao.isExerciseStarred(exerciseId)
@@ -209,8 +193,6 @@ class ExerciseRepository @Inject constructor(
     }
 
     fun getAllStarredExercises(): Flow<List<ExerciseWithImage>> = flow {
-        val languageCode = LocaleManager.getStoredLanguage(context)
-        val languageId = getLanguageId(languageCode)
 
         // Otteniamo prima tutti gli ID degli esercizi preferiti
         val starredIds = starredExerciseDao.getAllStarredExerciseIds().firstOrNull() ?: emptyList()
@@ -218,7 +200,7 @@ class ExerciseRepository @Inject constructor(
         // Se abbiamo degli ID, recuperiamo i dettagli completi degli esercizi
         if (starredIds.isNotEmpty()) {
             // Nota: potrebbe essere necessario implementare questa funzione in ExerciseDao
-            val starredExercises = exerciseDao.getExercisesByIds(starredIds, languageId).firstOrNull() ?: emptyList()
+            val starredExercises = exerciseDao.getExercisesByIds(starredIds, 1).firstOrNull() ?: emptyList()
             emit(starredExercises)
         } else {
             emit(emptyList())
