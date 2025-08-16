@@ -449,6 +449,7 @@ class WorkoutRepository @Inject constructor(
             currentUserId ?: return@withContext
             syncUnsyncedData()
             mergeCardsFromServer()
+            mergeWorkoutSessionsFromServer()
         } catch (e: Exception) {
             Log.e("WorkoutRepository", "Error during sync of workout cards", e)
         }
@@ -506,6 +507,76 @@ class WorkoutRepository @Inject constructor(
                     Log.d("WorkoutRepository", "Synced exercise_sets item ${set.id} to Supabase")
                 } catch (e: Exception) {
                     Log.w("WorkoutRepository", "Could not sync exercise_sets item ${set.id} to Supabase", e)
+                }
+            }
+
+            // Sync workout sessions
+            workoutDao.getUnsyncedWorkoutSessions().forEach { session ->
+                try {
+                    val supabaseSession = SupabaseWorkoutSession(
+                        id = session.id,
+                        userId = userId,
+                        workoutCardId = session.workoutCardId,
+                        name = session.name,
+                        startTime = java.time.Instant.ofEpochMilli(session.startTime).toString(),
+                        endTime = session.endTime?.let { java.time.Instant.ofEpochMilli(it).toString() },
+                        isCompleted = session.isCompleted,
+                        totalDurationMs = session.totalDurationMs,
+                        notes = session.notes
+                    )
+                    supabaseClient.from("workout_sessions").upsert(listOf(supabaseSession))
+                    workoutDao.markWorkoutSessionAsSynced(session.id)
+                    Log.d("WorkoutRepository", "Synced workout_sessions item ${session.id} to Supabase")
+                } catch (e: Exception) {
+                    Log.w("WorkoutRepository", "Could not sync workout_sessions item ${session.id} to Supabase", e)
+                }
+            }
+
+            // Sync workout session exercises
+            workoutDao.getUnsyncedWorkoutSessionExercises().forEach { exercise ->
+                try {
+                    val supabaseExercise = SupabaseWorkoutSessionExercise(
+                        id = exercise.id,
+                        workoutSessionId = exercise.workoutSessionId,
+                        originalExerciseId = exercise.originalExerciseId,
+                        name = exercise.name,
+                        orderIndex = exercise.orderIndex,
+                        isCompleted = exercise.isCompleted,
+                        startTime = exercise.startTime?.let { java.time.Instant.ofEpochMilli(it).toString() },
+                        endTime = exercise.endTime?.let { java.time.Instant.ofEpochMilli(it).toString() },
+                        restTimeBetweenSets = exercise.restTimeBetweenSets,
+                        notes = exercise.notes
+                    )
+                    supabaseClient.from("workout_session_exercises").upsert(listOf(supabaseExercise))
+                    workoutDao.markSessionExerciseAsSynced(exercise.id)
+                    Log.d("WorkoutRepository", "Synced workout_session_exercises item ${exercise.id} to Supabase")
+                } catch (e: Exception) {
+                    Log.w("WorkoutRepository", "Could not sync workout_session_exercises item ${exercise.id} to Supabase", e)
+                }
+            }
+
+            // Sync workout session sets
+            workoutDao.getUnsyncedWorkoutSessionSets().forEach { set ->
+                try {
+                    val supabaseSet = SupabaseWorkoutSessionSet(
+                        id = set.id,
+                        exerciseId = set.exerciseId,
+                        setNumber = set.setNumber,
+                        targetWeightKg = set.targetWeightKg,
+                        actualWeightKg = set.actualWeightKg,
+                        targetReps = set.targetReps,
+                        actualReps = set.actualReps,
+                        isCompleted = set.isCompleted,
+                        completedAt = set.completedAt?.let { java.time.Instant.ofEpochMilli(it).toString() },
+                        restTimeMs = set.restTimeMs,
+                        rpe = set.rpe,
+                        notes = set.notes
+                    )
+                    supabaseClient.from("workout_session_sets").upsert(listOf(supabaseSet))
+                    workoutDao.markSessionSetAsSynced(set.id)
+                    Log.d("WorkoutRepository", "Synced workout_session_sets item ${set.id} to Supabase")
+                } catch (e: Exception) {
+                    Log.w("WorkoutRepository", "Could not sync workout_session_sets item ${set.id} to Supabase", e)
                 }
             }
         }
@@ -570,16 +641,16 @@ class WorkoutRepository @Inject constructor(
     suspend fun countWorkoutSessions(): Int = withContext(Dispatchers.IO) {
         try {
             val userId = currentUserId
-            if (userId == null) {
-                // Fallback to local data if user is not logged in
-                return@withContext workoutDao.countWorkoutSessions()
-            }
-            
+//            if (userId == null) {
+//                // Fallback to local data if user is not logged in
+//                return@withContext workoutDao.countWorkoutSessions()
+//            }
+
             // Count from Supabase for the logged-in user
             val response = supabaseClient.from("workout_sessions")
                 .select {
                     filter {
-                        eq("user_id", userId)
+//                        eq("user_id", userId)
                         eq("is_completed", true)
                     }
                 }
@@ -845,6 +916,197 @@ class WorkoutRepository @Inject constructor(
             }
         } catch (e: Exception) {
             Log.e("WorkoutRepository", "Error deleting workout_session_sets item ${set.id} from Supabase", e)
+        }
+    }
+
+    private suspend fun mergeWorkoutSessionsFromServer() {
+        try {
+            currentUserId?.let { userId ->
+                // Merge workout sessions
+                val localSessions = workoutDao.getLatestWorkoutSessions(1000) // Get all sessions
+                val supabaseSessions = supabaseClient.from("workout_sessions")
+                    .select { filter { eq("user_id", userId) } }
+                    .decodeList<SupabaseWorkoutSession>()
+
+                performDataMerge(
+                    local = localSessions,
+                    remote = supabaseSessions,
+                    getId = { it.id },
+                    getRemoteId = { it.id },
+                    createLocal = { remote ->
+                        WorkoutSession(
+                            id = remote.id!!,
+                            workoutCardId = remote.workoutCardId ?: "",
+                            name = remote.name,
+                            startTime = java.time.Instant.parse(remote.startTime).toEpochMilli(),
+                            endTime = remote.endTime?.let { java.time.Instant.parse(it).toEpochMilli() },
+                            isCompleted = remote.isCompleted,
+                            totalDurationMs = remote.totalDurationMs,
+                            notes = remote.notes,
+                            createdAt = System.currentTimeMillis(),
+                            updatedAt = System.currentTimeMillis(),
+                            syncedWithServer = true,
+                            pendingSync = false
+                        )
+                    },
+                    insert = { session ->
+                        workoutDao.insertWorkoutSession(session)
+                        // After inserting session, sync its exercises and sets
+                        mergeWorkoutSessionDataFromServer(session.id)
+                    },
+                    delete = workoutDao::deleteWorkoutSession,
+                    shouldUpdate = { local, remote ->
+                        local.name != remote.name || 
+                        local.isCompleted != remote.isCompleted ||
+                        local.totalDurationMs != remote.totalDurationMs ||
+                        local.notes != remote.notes
+                    },
+                    update = { local, remote ->
+                        workoutDao.updateWorkoutSession(
+                            local.copy(
+                                name = remote.name,
+                                isCompleted = remote.isCompleted,
+                                totalDurationMs = remote.totalDurationMs,
+                                notes = remote.notes,
+                                endTime = remote.endTime?.let { java.time.Instant.parse(it).toEpochMilli() },
+                                updatedAt = System.currentTimeMillis()
+                            )
+                        )
+                    }
+                )
+            }
+        } catch (e: Exception) {
+            Log.e("WorkoutRepository", "Error merging workout sessions from server", e)
+        }
+    }
+
+    private suspend fun mergeWorkoutSessionDataFromServer(sessionId: String) {
+        try {
+            // Merge workout session exercises
+            val localExercises = workoutDao.getSessionExercises(sessionId)
+            val supabaseExercises = supabaseClient.from("workout_session_exercises")
+                .select { filter { eq("workout_session_id", sessionId) } }
+                .decodeList<SupabaseWorkoutSessionExercise>()
+
+            performDataMerge(
+                local = localExercises,
+                remote = supabaseExercises,
+                getId = { it.id },
+                getRemoteId = { it.id },
+                createLocal = { remote ->
+                    WorkoutSessionExercise(
+                        id = remote.id!!,
+                        workoutSessionId = remote.workoutSessionId!!,
+                        originalExerciseId = remote.originalExerciseId,
+                        name = remote.name,
+                        orderIndex = remote.orderIndex,
+                        isCompleted = remote.isCompleted,
+                        startTime = remote.startTime?.let { java.time.Instant.parse(it).toEpochMilli() },
+                        endTime = remote.endTime?.let { java.time.Instant.parse(it).toEpochMilli() },
+                        restTimeBetweenSets = remote.restTimeBetweenSets,
+                        notes = remote.notes,
+                        createdAt = System.currentTimeMillis(),
+                        updatedAt = System.currentTimeMillis(),
+                        syncedWithServer = true,
+                        pendingSync = false
+                    )
+                },
+                insert = { exercise ->
+                    workoutDao.insertSessionExercise(exercise)
+                    // After inserting exercise, sync its sets
+                    mergeWorkoutSessionSetsFromServer(exercise.id)
+                },
+                delete = workoutDao::deleteSessionExercise,
+                shouldUpdate = { local, remote ->
+                    local.name != remote.name || 
+                    local.orderIndex != remote.orderIndex ||
+                    local.isCompleted != remote.isCompleted ||
+                    local.notes != remote.notes
+                },
+                update = { local, remote ->
+                    workoutDao.updateSessionExercise(
+                        local.copy(
+                            name = remote.name,
+                            orderIndex = remote.orderIndex,
+                            isCompleted = remote.isCompleted,
+                            startTime = remote.startTime?.let { java.time.Instant.parse(it).toEpochMilli() },
+                            endTime = remote.endTime?.let { java.time.Instant.parse(it).toEpochMilli() },
+                            restTimeBetweenSets = remote.restTimeBetweenSets,
+                            notes = remote.notes,
+                            updatedAt = System.currentTimeMillis()
+                        )
+                    )
+                }
+            )
+        } catch (e: Exception) {
+            Log.e("WorkoutRepository", "Error merging workout session exercises from server for session $sessionId", e)
+        }
+    }
+
+    private suspend fun mergeWorkoutSessionSetsFromServer(exerciseId: String) {
+        try {
+            val localSets = workoutDao.getSessionSets(exerciseId)
+            val supabaseSets = supabaseClient.from("workout_session_sets")
+                .select { filter { eq("exercise_id", exerciseId) } }
+                .decodeList<SupabaseWorkoutSessionSet>()
+
+            performDataMerge(
+                local = localSets,
+                remote = supabaseSets,
+                getId = { it.id },
+                getRemoteId = { it.id },
+                createLocal = { remote ->
+                    WorkoutSessionSet(
+                        id = remote.id!!,
+                        exerciseId = remote.exerciseId!!,
+                        setNumber = remote.setNumber,
+                        targetWeightKg = remote.targetWeightKg,
+                        actualWeightKg = remote.actualWeightKg,
+                        targetReps = remote.targetReps,
+                        actualReps = remote.actualReps,
+                        isCompleted = remote.isCompleted,
+                        completedAt = remote.completedAt?.let { java.time.Instant.parse(it).toEpochMilli() },
+                        restTimeMs = remote.restTimeMs,
+                        rpe = remote.rpe,
+                        notes = remote.notes,
+                        createdAt = System.currentTimeMillis(),
+                        updatedAt = System.currentTimeMillis(),
+                        syncedWithServer = true,
+                        pendingSync = false
+                    )
+                },
+                insert = workoutDao::insertSessionSet,
+                delete = workoutDao::deleteSessionSet,
+                shouldUpdate = { local, remote ->
+                    local.setNumber != remote.setNumber ||
+                    local.targetWeightKg != remote.targetWeightKg ||
+                    local.actualWeightKg != remote.actualWeightKg ||
+                    local.targetReps != remote.targetReps ||
+                    local.actualReps != remote.actualReps ||
+                    local.isCompleted != remote.isCompleted ||
+                    local.rpe != remote.rpe ||
+                    local.notes != remote.notes
+                },
+                update = { local, remote ->
+                    workoutDao.updateSessionSet(
+                        local.copy(
+                            setNumber = remote.setNumber,
+                            targetWeightKg = remote.targetWeightKg,
+                            actualWeightKg = remote.actualWeightKg,
+                            targetReps = remote.targetReps,
+                            actualReps = remote.actualReps,
+                            isCompleted = remote.isCompleted,
+                            completedAt = remote.completedAt?.let { java.time.Instant.parse(it).toEpochMilli() },
+                            restTimeMs = remote.restTimeMs,
+                            rpe = remote.rpe,
+                            notes = remote.notes,
+                            updatedAt = System.currentTimeMillis()
+                        )
+                    )
+                }
+            )
+        } catch (e: Exception) {
+            Log.e("WorkoutRepository", "Error merging workout session sets from server for exercise $exerciseId", e)
         }
     }
     

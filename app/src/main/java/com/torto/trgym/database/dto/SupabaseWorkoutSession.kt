@@ -9,7 +9,7 @@ data class SupabaseWorkoutSession(
     @SerialName("user_id")
     val userId: String? = null,
     @SerialName("workout_card_id")
-    val workoutCardId: String,
+    val workoutCardId: String? = null,
     val name: String,
     @SerialName("start_time")
     val startTime: String, // ISO timestamp

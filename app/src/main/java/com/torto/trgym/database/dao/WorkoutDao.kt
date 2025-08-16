@@ -220,6 +220,15 @@ interface WorkoutDao {
     @Query("SELECT * FROM exercise_sets WHERE exerciseId = :exerciseId AND pending_sync = 1")
     suspend fun getUnsyncedSetsForExercise(exerciseId: String): List<ExerciseSet>
 
+    @Query("SELECT * FROM workout_sessions WHERE pendingSync = 1")
+    suspend fun getUnsyncedWorkoutSessions(): List<WorkoutSession>
+
+    @Query("SELECT * FROM workout_session_exercises WHERE pendingSync = 1")
+    suspend fun getUnsyncedWorkoutSessionExercises(): List<WorkoutSessionExercise>
+
+    @Query("SELECT * FROM workout_session_sets WHERE pendingSync = 1")
+    suspend fun getUnsyncedWorkoutSessionSets(): List<WorkoutSessionSet>
+
     @Query("UPDATE workout_cards SET syncedWithServer = 1, pendingSync = 0 WHERE id = :cardId")
     suspend fun markWorkoutCardAsSynced(cardId: String)
 
