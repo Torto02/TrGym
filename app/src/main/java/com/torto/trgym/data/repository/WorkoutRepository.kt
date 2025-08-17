@@ -89,13 +89,22 @@ class WorkoutRepository @Inject constructor(
         }
     }
 
+    /**
+     * Sincronizza gli esercizi per una card - SOLO PUSH (upload)
+     */
     suspend fun syncExercisesForCard(cardId: String) = withContext(Dispatchers.IO) {
         try {
             currentUserId ?: return@withContext
+            
+            // SOLO upload: Carica le modifiche locali non sincronizzate su Supabase
             syncUnsyncedExercises(cardId)
-            mergeExercisesFromServer(cardId)
+            
+            Log.d("WorkoutRepository", "Push-only sync completed for exercises in card $cardId")
+            
+            // DISABILITATO: Download e merge da Supabase per evitare flash/reload della UI
+            // mergeExercisesFromServer(cardId)
         } catch (e: Exception) {
-            Log.e("WorkoutRepository", "Error syncing exercises for card $cardId", e)
+            Log.e("WorkoutRepository", "Error during push-only sync of exercises for card $cardId", e)
         }
     }
 
@@ -166,13 +175,22 @@ class WorkoutRepository @Inject constructor(
         )
     }
 
+    /**
+     * Sincronizza i set per un esercizio - SOLO PUSH (upload)
+     */
     suspend fun syncSetsForExercise(exerciseId: String) = withContext(Dispatchers.IO) {
         try {
             currentUserId ?: return@withContext
+            
+            // SOLO upload: Carica le modifiche locali non sincronizzate su Supabase
             syncUnsyncedSets(exerciseId)
-            mergeSetsFromServer(exerciseId)
+            
+            Log.d("WorkoutRepository", "Push-only sync completed for sets in exercise $exerciseId")
+            
+            // DISABILITATO: Download e merge da Supabase per evitare flash/reload della UI
+            // mergeSetsFromServer(exerciseId)
         } catch (e: Exception) {
-            Log.e("WorkoutRepository", "Error syncing sets for exercise $exerciseId", e)
+            Log.e("WorkoutRepository", "Error during push-only sync of sets for exercise $exerciseId", e)
         }
     }
     
@@ -416,14 +434,25 @@ class WorkoutRepository @Inject constructor(
     // SIMPLIFIED SYNC OPERATIONS
     // ==========================
     
+    /**
+     * Sincronizza le workout cards - SOLO PUSH (upload)
+     * Download iniziale viene fatto solo al primo accesso dell'app
+     */
     suspend fun syncWorkoutCards() = withContext(Dispatchers.IO) {
         try {
             currentUserId ?: return@withContext
+            
+            // SOLO upload: Carica le modifiche locali non sincronizzate su Supabase
             syncUnsyncedData()
-            mergeCardsFromServer()
-            mergeWorkoutSessionsFromServer()
+            
+            Log.d("WorkoutRepository", "Push-only sync completed for workout cards")
+            
+            // DISABILITATO: Download e merge da Supabase per evitare flash/reload della UI
+            // Il download viene fatto solo al primo accesso dell'app in MainActivity
+            // mergeCardsFromServer()
+            // mergeWorkoutSessionsFromServer()
         } catch (e: Exception) {
-            Log.e("WorkoutRepository", "Error during sync of workout cards", e)
+            Log.e("WorkoutRepository", "Error during push-only sync of workout cards", e)
         }
     }
 
@@ -598,8 +627,12 @@ class WorkoutRepository @Inject constructor(
     
     private suspend fun syncWorkoutDataForCard(cardId: String) {
         try {
-            syncExercisesForCard(cardId)
-            syncAllSetsForCard(cardId)
+            // DISABILITATO: Sincronizzazione completa che include download
+            // syncExercisesForCard(cardId)
+            // syncAllSetsForCard(cardId)
+            
+            // Ora viene fatto solo upload tramite syncUnsyncedData()
+            Log.d("WorkoutRepository", "Sync workout data for card $cardId - only upload enabled")
         } catch (e: Exception) {
             Log.e("WorkoutRepository", "Error syncing workout data for card $cardId", e)
         }
@@ -609,14 +642,22 @@ class WorkoutRepository @Inject constructor(
     suspend fun getSessionExercises(sessionId: String): List<WorkoutSessionExercise> = workoutDao.getSessionExercises(sessionId)
     suspend fun getSessionSets(exerciseId: String): List<WorkoutSessionSet> = workoutDao.getSessionSets(exerciseId)
 
+    /**
+     * Conta le sessioni di workout completate - USA SOLO DATI LOCALI
+     */
     suspend fun countWorkoutSessions(): Int = withContext(Dispatchers.IO) {
         try {
-
-            // Count from Supabase for the logged-in user
+            // DISABILITATO: Count da Supabase per evitare chiamate inutili
+            // Ora usa solo dati locali che vengono aggiornati al primo accesso dell'app
+            val count = workoutDao.countWorkoutSessions()
+            Log.d("WorkoutRepository", "Local workout session count: $count")
+            return@withContext count
+            
+            /*
+            // DISABILITATO: Count from Supabase
             val response = supabaseClient.from("workout_sessions")
                 .select {
                     filter {
-//                        eq("user_id", userId)
                         eq("is_completed", true)
                     }
                 }
@@ -626,10 +667,10 @@ class WorkoutRepository @Inject constructor(
             val count = response.size
             Log.d("WorkoutRepository", "Supabase workout session count: $count")
             return@withContext count
+            */
         } catch (e: Exception) {
-            Log.e("WorkoutRepository", "Error counting workout sessions from Supabase", e)
-            // Fallback to local data if there's an error
-            return@withContext workoutDao.countWorkoutSessions()
+            Log.e("WorkoutRepository", "Error counting workout sessions", e)
+            return@withContext 0
         }
     }
 
@@ -1040,6 +1081,149 @@ class WorkoutRepository @Inject constructor(
             )
         } catch (e: Exception) {
             Log.e("WorkoutRepository", "Error merging workout session sets from server for exercise $exerciseId", e)
+        }
+    }
+
+    // ==========================
+    // METODI PER DOWNLOAD INIZIALE
+    // ==========================
+    
+    /**
+     * Download iniziale delle workout cards da Supabase - chiamato solo al primo accesso
+     */
+    suspend fun downloadWorkoutCardsInitial() = withContext(Dispatchers.IO) {
+        try {
+            currentUserId ?: return@withContext
+            
+            Log.d("WorkoutRepository", "Starting initial download of workout data from Supabase")
+            
+            // Prima carica le modifiche locali pendenti
+            syncUnsyncedData()
+            
+            // Poi scarica e mergia i dati da Supabase
+            mergeCardsFromServerInitial()
+            
+            // Scarica esercizi e set per tutte le workout cards esistenti
+            val allCards = getAllWorkoutCards().firstOrNull() ?: emptyList()
+            allCards.forEach { card ->
+                downloadWorkoutDataForCardInitial(card.id)
+            }
+            
+            // Infine scarica le sessioni di workout
+            mergeWorkoutSessionsFromServer()
+            
+            Log.d("WorkoutRepository", "Initial download of workout data completed")
+        } catch (e: Exception) {
+            Log.e("WorkoutRepository", "Error during initial download of workout data", e)
+        }
+    }
+
+    /**
+     * Download iniziale degli esercizi per una card - chiamato solo al primo accesso
+     */
+    private suspend fun downloadExercisesForCardInitial(cardId: String) {
+        try {
+            currentUserId ?: return
+            
+            // Upload pending local changes first
+            syncUnsyncedExercises(cardId)
+            
+            // Download and merge from server
+            mergeExercisesFromServer(cardId)
+            
+            Log.d("WorkoutRepository", "Initial download completed for exercises in card $cardId")
+        } catch (e: Exception) {
+            Log.e("WorkoutRepository", "Error during initial download of exercises for card $cardId", e)
+        }
+    }
+
+    /**
+     * Download iniziale dei set per un esercizio - chiamato solo al primo accesso
+     */
+    private suspend fun downloadSetsForExerciseInitial(exerciseId: String) {
+        try {
+            currentUserId ?: return
+            
+            // Upload pending local changes first
+            syncUnsyncedSets(exerciseId)
+            
+            // Download and merge from server
+            mergeSetsFromServer(exerciseId)
+            
+            Log.d("WorkoutRepository", "Initial download completed for sets in exercise $exerciseId")
+        } catch (e: Exception) {
+            Log.e("WorkoutRepository", "Error during initial download of sets for exercise $exerciseId", e)
+        }
+    }
+
+    /**
+     * Versione di mergeCardsFromServer per il download iniziale che scarica anche esercizi e set
+     */
+    private suspend fun mergeCardsFromServerInitial() {
+        val localCards = getAllWorkoutCards().firstOrNull() ?: emptyList()
+        val supabaseCards = supabaseClient.from("workout_cards")
+            .select { filter { eq("user_id", currentUserId!!) } }
+            .decodeList<SupabaseWorkoutCard>()
+            
+        performDataMerge(
+            local = localCards,
+            remote = supabaseCards,
+            getId = { it.id },
+            getRemoteId = { it.id },
+            createLocal = { remote ->
+                WorkoutCard(
+                    id = remote.id!!,
+                    name = remote.name,
+                    description = remote.description,
+                    createdAt = System.currentTimeMillis(),
+                    updatedAt = System.currentTimeMillis(),
+                    syncedWithServer = true,
+                    pendingSync = false
+                )
+            },
+            insert = { card ->
+                workoutDao.insertWorkoutCard(card)
+                // DOWNLOAD INIZIALE: Scarica anche esercizi e set per la nuova card
+                downloadWorkoutDataForCardInitial(card.id)
+            },
+            delete = workoutDao::deleteWorkoutCard,
+            shouldUpdate = { local, remote ->
+                local.name != remote.name || local.description != remote.description
+            },
+            update = { local, remote ->
+                workoutDao.updateWorkoutCard(
+                    local.copy(
+                        name = remote.name,
+                        description = remote.description,
+                        updatedAt = System.currentTimeMillis()
+                    )
+                )
+            }
+        )
+    }
+
+    /**
+     * Download iniziale di esercizi e set per una workout card - chiamato solo al primo accesso
+     */
+    private suspend fun downloadWorkoutDataForCardInitial(cardId: String) {
+        try {
+            downloadExercisesForCardInitial(cardId)
+            downloadAllSetsForCardInitial(cardId)
+        } catch (e: Exception) {
+            Log.e("WorkoutRepository", "Error downloading workout data for card $cardId during initial sync", e)
+        }
+    }
+
+    /**
+     * Download iniziale di tutti i set per una workout card - chiamato solo al primo accesso
+     */
+    private suspend fun downloadAllSetsForCardInitial(cardId: String) {
+        try {
+            workoutDao.getExercisesForCardOnce(cardId).forEach { exercise ->
+                downloadSetsForExerciseInitial(exercise.id)
+            }
+        } catch (e: Exception) {
+            Log.e("WorkoutRepository", "Error downloading all sets for card $cardId during initial sync", e)
         }
     }
     

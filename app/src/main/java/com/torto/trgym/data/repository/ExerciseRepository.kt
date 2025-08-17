@@ -92,13 +92,14 @@ class ExerciseRepository @Inject constructor(
     }
 
     /**
-     * Sincronizza gli esercizi preferiti tra Room e Supabase usando merge intelligente
+     * Sincronizza gli esercizi preferiti tra Room e Supabase - SOLO PUSH (upload)
+     * Download iniziale viene fatto solo al primo accesso dell'app
      */
     suspend fun syncStarredExercises() = withContext(Dispatchers.IO) {
         try {
             val userId = supabaseClient.auth.currentUserOrNull()?.id ?: return@withContext
             
-            // Step 1: Carica le modifiche locali non sincronizzate su Supabase
+            // SOLO upload: Carica le modifiche locali non sincronizzate su Supabase
             val unsyncedLocal = starredExerciseDao.getUnsyncedStarredExercises()
             unsyncedLocal.forEach { localStarred ->
                 try {
@@ -110,6 +111,11 @@ class ExerciseRepository @Inject constructor(
                 }
             }
 
+            Log.d("ExerciseRepository", "Push-only sync completed: uploaded ${unsyncedLocal.size} local changes to Supabase")
+
+            // DISABILITATO: Download e merge da Supabase per evitare flash/reload della UI
+            // Il download viene fatto solo al primo accesso dell'app in MainActivity
+            /*
             // Step 2: Scarica i dati da Supabase
             val supabaseStarred = supabaseClient
                 .from("starred_exercises")
@@ -147,10 +153,60 @@ class ExerciseRepository @Inject constructor(
                     Log.d("ExerciseRepository", "Removed synced starred exercise $exerciseId that was deleted on server")
                 }
             }
-
-            Log.d("ExerciseRepository", "Smart sync completed: ${supabaseStarred.size} on server, ${localStarred.size} local")
+            */
         } catch (e: Exception) {
-            Log.e("ExerciseRepository", "Error during smart sync of starred exercises", e)
+            Log.e("ExerciseRepository", "Error during push-only sync of starred exercises", e)
+        }
+    }
+
+    /**
+     * Download iniziale degli esercizi preferiti da Supabase - chiamato solo al primo accesso
+     */
+    suspend fun downloadStarredExercisesInitial() = withContext(Dispatchers.IO) {
+        try {
+            val userId = supabaseClient.auth.currentUserOrNull()?.id ?: return@withContext
+            
+            // Download i dati da Supabase
+            val supabaseStarred = supabaseClient
+                .from("starred_exercises")
+                .select{ filter {
+                    eq("user_id", userId)
+                }}
+                .decodeList<SupabaseStarredExercise>()
+
+            // Ottieni i dati locali attuali
+            val localStarred = starredExerciseDao.getAllLocalStarredExercises()
+            val localIds = localStarred.map { it.exerciseId }.toSet()
+            val supabaseIds = supabaseStarred.map { it.exerciseId }.toSet()
+
+            // Merge intelligente
+            // Aggiungi elementi da Supabase che non sono presenti localmente
+            val toAddLocally = supabaseIds - localIds
+            if (toAddLocally.isNotEmpty()) {
+                val newLocalStarred = toAddLocally.map { exerciseId ->
+                    StarredExercise(
+                        exerciseId = exerciseId,
+                        syncedWithServer = true
+                    )
+                }
+                starredExerciseDao.insertStarredExercises(newLocalStarred)
+                Log.d("ExerciseRepository", "Initial download: Added ${toAddLocally.size} starred exercises from Supabase")
+            }
+
+            // Rimuovi elementi locali che non sono più su Supabase (solo se erano sincronizzati)
+            val toRemoveLocally = localIds - supabaseIds
+            toRemoveLocally.forEach { exerciseId ->
+                val localExercise = localStarred.find { it.exerciseId == exerciseId }
+                // Rimuovi solo se era già sincronizzato (evita di cancellare modifiche offline pendenti)
+                if (localExercise?.syncedWithServer == true) {
+                    starredExerciseDao.removeFromStarred(exerciseId)
+                    Log.d("ExerciseRepository", "Initial download: Removed synced starred exercise $exerciseId that was deleted on server")
+                }
+            }
+
+            Log.d("ExerciseRepository", "Initial download completed: ${supabaseStarred.size} starred exercises from server")
+        } catch (e: Exception) {
+            Log.e("ExerciseRepository", "Error during initial download of starred exercises", e)
         }
     }
 

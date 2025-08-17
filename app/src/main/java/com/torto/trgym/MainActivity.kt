@@ -101,33 +101,33 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun syncStarredExercises() {
+    private fun downloadStarredExercisesInitial() {
         lifecycleScope.launch {
             try {
-                exerciseRepo.syncStarredExercises()
+                exerciseRepo.downloadStarredExercisesInitial()
             } catch (e: Exception) {
-                Log.e("MainActivity", "Error syncing starred exercises", e)
+                Log.e("MainActivity", "Error downloading starred exercises initially", e)
             }
         }
     }
 
-    private fun syncWorkoutCards() {
+    private fun downloadWorkoutCardsInitial() {
         lifecycleScope.launch {
             try {
-                workoutRepo.syncWorkoutCards()
+                workoutRepo.downloadWorkoutCardsInitial()
             } catch (e: Exception) {
-                Log.e("MainActivity", "Error syncing workout cards", e)
+                Log.e("MainActivity", "Error downloading workout cards initially", e)
             }
         }
     }
 
-    private fun syncWorkoutSessions() {
+    private fun uploadPendingWorkoutSessions() {
         lifecycleScope.launch {
             try {
-                // Sync active and recent workout sessions
+                // Upload pending changes for active and recent workout sessions - SOLO PUSH
                 val activeSession = workoutRepo.getActiveWorkoutSession()
                 if (activeSession != null) {
-                    // Sync the active session and all its exercises and sets
+                    // Upload the active session and all its exercises and sets to Supabase
                     workoutRepo.updateWorkoutSession(activeSession)
                     
                     val exercises = workoutRepo.getSessionExercises(activeSession.id)
@@ -139,8 +139,9 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                 }
+                Log.d("MainActivity", "Upload of pending workout sessions completed")
             } catch (e: Exception) {
-                Log.e("MainActivity", "Error syncing workout sessions", e)
+                Log.e("MainActivity", "Error uploading pending workout sessions", e)
             }
         }
     }
@@ -150,9 +151,11 @@ class MainActivity : AppCompatActivity() {
             authRepository.observeAuthStatus().collect { status ->
                 when (status) {
                     is SessionStatus.Authenticated -> {
-                        syncStarredExercises()
-                        syncWorkoutCards()
-                        syncWorkoutSessions() // Added workout sessions sync
+                        // DOWNLOAD INIZIALE - fatto solo al primo accesso dell'app
+                        downloadStarredExercisesInitial()
+                        downloadWorkoutCardsInitial()
+                        uploadPendingWorkoutSessions() // Upload eventuali modifiche pendenti
+                        
                         navController.currentDestination?.id.let { current ->
                             if (current == R.id.loginFragment || current == R.id.registerFragment) {
                                 navController.navigate(R.id.homeFragment)
