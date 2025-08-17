@@ -98,7 +98,8 @@ class WorkoutRepository @Inject constructor(
             Log.e("WorkoutRepository", "Error syncing exercises for card $cardId", e)
         }
     }
-    
+
+    // MODIFICA 1: Funzione syncUnsyncedExercises
     private suspend fun syncUnsyncedExercises(cardId: String) {
         workoutDao.getUnsyncedWorkoutExercisesForCard(cardId).forEach { exercise ->
             try {
@@ -106,7 +107,7 @@ class WorkoutRepository @Inject constructor(
                     val supabaseExercise = SupabaseWorkoutExercise(
                         id = exercise.id,
                         workoutCardId = exercise.workoutCardId,
-                        // Removed exerciseId field as it's not in Supabase schema
+                        exerciseId = exercise.exerciseId, // AGGIUNTO: Include exerciseId
                         name = exercise.name,
                         orderIndex = exercise.orderIndex
                     )
@@ -119,12 +120,13 @@ class WorkoutRepository @Inject constructor(
             }
         }
     }
-    
+
+    // MODIFICA 2: Funzione mergeExercisesFromServer
     private suspend fun mergeExercisesFromServer(cardId: String) {
         val supabaseExercises = supabaseClient.from("exercises")
             .select { filter { eq("workout_card_id", cardId) } }
             .decodeList<SupabaseWorkoutExercise>()
-            
+
         val localExercises = workoutDao.getExercisesForCardOnce(cardId)
         performDataMerge(
             local = localExercises,
@@ -135,7 +137,7 @@ class WorkoutRepository @Inject constructor(
                 WorkoutExercise(
                     id = remote.id!!,
                     workoutCardId = remote.workoutCardId,
-                    exerciseId = null, // Changed to null since it's not coming from Supabase
+                    exerciseId = remote.exerciseId, // AGGIUNTO: Include exerciseId dal server
                     name = remote.name,
                     orderIndex = remote.orderIndex,
                     createdAt = System.currentTimeMillis(),
@@ -147,13 +149,16 @@ class WorkoutRepository @Inject constructor(
             insert = workoutDao::insertWorkoutExercise,
             delete = workoutDao::deleteWorkoutExercise,
             shouldUpdate = { local, remote ->
-                local.name != remote.name || local.orderIndex != remote.orderIndex
+                local.name != remote.name ||
+                        local.orderIndex != remote.orderIndex ||
+                        local.exerciseId != remote.exerciseId // AGGIUNTO: Controlla anche exerciseId
             },
             update = { local, remote ->
                 workoutDao.updateWorkoutExercise(
                     local.copy(
                         name = remote.name,
                         orderIndex = remote.orderIndex,
+                        exerciseId = remote.exerciseId, // AGGIUNTO: Aggiorna exerciseId
                         updatedAt = System.currentTimeMillis()
                     )
                 )
@@ -260,19 +265,19 @@ class WorkoutRepository @Inject constructor(
         }
     }
 
-
     fun getSessionExercisesWithSets(sessionId: String): Flow<List<WorkoutSessionExerciseDetail>> = workoutDao.getSessionExercisesWithSetsFlow(sessionId)
 
+    // MODIFICA 3: Funzione insertWorkoutExercise
     suspend fun insertWorkoutExercise(exercise: WorkoutExercise) = withContext(Dispatchers.IO) {
         val exerciseToInsert = exercise.copy(pendingSync = true, syncedWithServer = false)
         workoutDao.insertWorkoutExercise(exerciseToInsert)
-        
+
         try {
             currentUserId?.let {
                 val supabaseExercise = SupabaseWorkoutExercise(
                     id = exercise.id,
                     workoutCardId = exercise.workoutCardId,
-                    // Removed exerciseId field
+                    exerciseId = exercise.exerciseId, // AGGIUNTO: Include exerciseId
                     name = exercise.name,
                     orderIndex = exercise.orderIndex
                 )
@@ -284,25 +289,6 @@ class WorkoutRepository @Inject constructor(
         }
     }
 
-    suspend fun updateWorkoutExercise(exercise: WorkoutExercise) = withContext(Dispatchers.IO) {
-        workoutDao.updateWorkoutExercise(exercise)
-        
-        try {
-            currentUserId?.let {
-                val supabaseExercise = SupabaseWorkoutExercise(
-                    id = exercise.id,
-                    workoutCardId = exercise.workoutCardId,
-                    // Removed exerciseId field
-                    name = exercise.name,
-                    orderIndex = exercise.orderIndex
-                )
-                supabaseClient.from("exercises").upsert(listOf(supabaseExercise))
-                Log.d("WorkoutRepository", "Synced exercises item ${exercise.id} to Supabase")
-            }
-        } catch (e: Exception) {
-            Log.w("WorkoutRepository", "Could not sync exercises item ${exercise.id} to Supabase", e)
-        }
-    }
 
     suspend fun deleteWorkoutExercise(exercise: WorkoutExercise) = withContext(Dispatchers.IO) {
         workoutDao.deleteWorkoutExercise(exercise)
@@ -459,14 +445,14 @@ class WorkoutRepository @Inject constructor(
                     Log.w("WorkoutRepository", "Could not sync workout_cards item ${card.id} to Supabase", e)
                 }
             }
-            
+
             // Sync exercises
             workoutDao.getUnsyncedWorkoutExercises().forEach { exercise ->
                 try {
                     val supabaseExercise = SupabaseWorkoutExercise(
                         id = exercise.id,
                         workoutCardId = exercise.workoutCardId,
-                        // Removed exerciseId field
+                        exerciseId = exercise.exerciseId, // AGGIUNTO: Include exerciseId
                         name = exercise.name,
                         orderIndex = exercise.orderIndex
                     )
@@ -477,7 +463,7 @@ class WorkoutRepository @Inject constructor(
                     Log.w("WorkoutRepository", "Could not sync exercises item ${exercise.id} to Supabase", e)
                 }
             }
-            
+
             // Sync sets
             workoutDao.getUnsyncedExerciseSets().forEach { set ->
                 try {
@@ -622,15 +608,9 @@ class WorkoutRepository @Inject constructor(
     suspend fun getActiveWorkoutSession(): WorkoutSession? = workoutDao.getActiveWorkoutSession()
     suspend fun getSessionExercises(sessionId: String): List<WorkoutSessionExercise> = workoutDao.getSessionExercises(sessionId)
     suspend fun getSessionSets(exerciseId: String): List<WorkoutSessionSet> = workoutDao.getSessionSets(exerciseId)
-    suspend fun getLatestWorkoutSessions(limit: Int = 10): List<WorkoutSession> = workoutDao.getLatestWorkoutSessions(limit)
 
     suspend fun countWorkoutSessions(): Int = withContext(Dispatchers.IO) {
         try {
-            val userId = currentUserId
-//            if (userId == null) {
-//                // Fallback to local data if user is not logged in
-//                return@withContext workoutDao.countWorkoutSessions()
-//            }
 
             // Count from Supabase for the logged-in user
             val response = supabaseClient.from("workout_sessions")
@@ -718,7 +698,6 @@ class WorkoutRepository @Inject constructor(
         }
     }
 
-
     suspend fun insertSessionExercises(exercises: List<WorkoutSessionExercise>) = withContext(Dispatchers.IO) {
         val exercisesToInsert = exercises.map { it.copy(pendingSync = true, syncedWithServer = false) }
         workoutDao.insertSessionExercises(exercisesToInsert)
@@ -770,7 +749,6 @@ class WorkoutRepository @Inject constructor(
             Log.w("WorkoutRepository", "Could not sync workout_session_exercises item ${exercise.id} to Supabase", e)
         }
     }
-
 
     suspend fun insertSessionSets(sets: List<WorkoutSessionSet>) = withContext(Dispatchers.IO) {
         val setsToInsert = sets.map { it.copy(pendingSync = true, syncedWithServer = false) }
@@ -841,37 +819,6 @@ class WorkoutRepository @Inject constructor(
             } catch (e: Exception) {
                 Log.e("WorkoutRepository", "Error updating session set completion on Supabase", e)
             }
-        }
-    }
-
-
-
-    suspend fun insertSessionSet(set: WorkoutSessionSet) = withContext(Dispatchers.IO) {
-        val setToInsert = set.copy(pendingSync = true, syncedWithServer = false)
-        workoutDao.insertSessionSet(setToInsert)
-        
-        try {
-            currentUserId?.let {
-                val supabaseSet = SupabaseWorkoutSessionSet(
-                    id = set.id,
-                    exerciseId = set.exerciseId,
-                    setNumber = set.setNumber,
-                    targetWeightKg = set.targetWeightKg,
-                    actualWeightKg = set.actualWeightKg,
-                    targetReps = set.targetReps,
-                    actualReps = set.actualReps,
-                    isCompleted = set.isCompleted,
-                    completedAt = set.completedAt?.let { java.time.Instant.ofEpochMilli(it).toString() },
-                    restTimeMs = set.restTimeMs,
-                    rpe = set.rpe,
-                    notes = set.notes
-                )
-                supabaseClient.from("workout_session_sets").upsert(listOf(supabaseSet))
-                workoutDao.markSessionSetAsSynced(set.id)
-                Log.d("WorkoutRepository", "Synced workout_session_sets item ${set.id} to Supabase")
-            }
-        } catch (e: Exception) {
-            Log.w("WorkoutRepository", "Could not sync workout_session_sets item ${set.id} to Supabase", e)
         }
     }
 

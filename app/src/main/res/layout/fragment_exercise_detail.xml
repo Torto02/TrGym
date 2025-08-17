@@ -5,7 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingHorizontal="5dp"
+
     android:background="@color/ios_systemBackground">
 
     <!-- Immagine fissa in alto -->
@@ -31,35 +31,43 @@
             android:layout_width="25dp"
             android:layout_height="25dp"
             android:layout_gravity="end|center_vertical"
-            android:layout_marginEnd="9dp"
             android:src="@drawable/ic_star_outline"
             android:contentDescription="@string/favorite_button_desc"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:clickable="true"
             android:focusable="true"
             android:elevation="20dp"
+            android:layout_marginEnd="20dp"
             app:tint="@color/ios_secondaryLabel" />
+
+
+        <!-- Back Button a sinistra -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/backButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start|center_vertical"
+            android:clickable="true"
+            android:contentDescription="@string/backBtn"
+            android:text="@string/backBtn"
+            android:textColor="@color/primary"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:icon="@drawable/ic_ios_back"
+            android:backgroundTint="#80FFFFFF"
+            app:iconTint="@color/primary"
+            app:strokeColor="@color/lightGray"
+            app:strokeWidth="1dp"
+            app:cornerRadius="30dp"
+            app:iconGravity="start"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:paddingHorizontal="16dp" />
 
     </com.google.android.material.appbar.MaterialToolbar>
 
 
     <!-- Pulsante Indietro -->
-    <TextView
-        android:id="@+id/backButton"
-        android:layout_width="wrap_content"
-        android:layout_height="?attr/actionBarSize"
-        android:clickable="true"
-        android:contentDescription="@string/backBtn"
-        android:drawablePadding="8dp"
-        android:elevation="20dp"
-        android:focusable="true"
-        android:gravity="center_vertical"
-        android:paddingHorizontal="16dp"
-        android:text="@string/backBtn"
-        android:textColor="@color/primary"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        app:drawableStartCompat="@drawable/ic_ios_back" />
+
 
     <!-- Contenuto scrollabile -->
     <androidx.core.widget.NestedScrollView

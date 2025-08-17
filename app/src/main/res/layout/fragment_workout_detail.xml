@@ -60,32 +60,13 @@
             style="@style/Widget.Material3.Button.TextButton"
             android:paddingHorizontal="16dp"
             app:icon="@drawable/ic_edit"
+            android:layout_marginEnd="20dp"
             app:iconTint="@color/primary"
             app:iconGravity="start"
             app:iconPadding="8dp" />
 
     </com.google.android.material.appbar.MaterialToolbar>
 
-    <!-- Workout Title centrato sotto la toolbar -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/workoutTitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:text="Giorno"
-        android:textColor="@color/primary"
-        app:strokeColor="@color/lightGray"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:layout_gravity="center_horizontal|top"
-        android:paddingHorizontal="16dp"
-        android:clickable="false"
-        android:focusable="false"
-        android:elevation="0dp"
-        android:backgroundTint="#80FFFFFF"
-        app:cornerRadius="20dp"
-        style="@style/Widget.Material3.Button.TextButton"
-        tools:text="Giorno 1" />
     </LinearLayout>
 
     <!-- Contenuto scrollabile -->
@@ -100,8 +81,28 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingTop="56dp">
+            android:orientation="vertical">
+
+
+            <!-- Workout Title centrato sotto la toolbar -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/workoutTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Giorno"
+                android:textColor="@color/primary"
+                app:strokeColor="@color/lightGray"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:layout_gravity="center_horizontal|top"
+                android:paddingHorizontal="16dp"
+                android:clickable="false"
+                android:focusable="false"
+                android:elevation="0dp"
+                android:backgroundTint="#80FFFFFF"
+                app:cornerRadius="20dp"
+                style="@style/Widget.Material3.Button.TextButton"
+                tools:text="Giorno 1" />
 
             <!-- Timer durante allenamento (visibile solo durante workout) -->
             <com.google.android.material.card.MaterialCardView

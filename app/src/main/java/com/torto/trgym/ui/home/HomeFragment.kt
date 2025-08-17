@@ -209,10 +209,10 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         workoutNameText.text = session.name
         
         // Update timer if needed
-        val timerText = activeWorkoutCard.findViewById<TextView>(R.id.activeWorkoutTimer)
+
         val startTime = session.startTime
         val elapsedTime = System.currentTimeMillis() - startTime
-        timerText.text = formatElapsedTime(elapsedTime)
+
     }
 
     private fun hideActiveWorkoutBanner() {

@@ -205,8 +205,12 @@ class ActiveWorkoutSetsAdapter(
         init {
             setCompletedCheckbox.setOnCheckedChangeListener { _, isChecked ->
                 if (!isBindingData) {
-                    currentSet?.let {
-                        onSetCompletionChanged(it.id, isChecked)
+                    currentSet?.let { set ->
+                        // Use the session set ID instead of the original set ID
+                        val sessionSetId = setIdMapping[set.id]
+                        if (sessionSetId != null) {
+                            onSetCompletionChanged(sessionSetId, isChecked)
+                        }
                     }
                 }
             }
@@ -257,19 +261,22 @@ class ActiveWorkoutSetsAdapter(
                     ContextCompat.getColor(itemView.context, R.color.transparent)
             )
 
-            // Disabilita sempre gli input (non siamo in edit mode)
-            weightInput.isEnabled = false
-            repsInput.isEnabled = false
+            // Abilita gli input durante l'allenamento attivo
+            weightInput.isEnabled = true
+            repsInput.isEnabled = true
 
             isBindingData = false
         }
 
         private fun updateSetValues() {
-            currentSet?.let {
+            currentSet?.let { set ->
                 val weight = weightInput.text.toString().toDoubleOrNull()
                 val reps = repsInput.text.toString().toIntOrNull()
-                // Use the simple callback for direct session set updates
-                onSetValueChangedSimple?.invoke(it.id, weight, reps) ?: onSetValueChanged(it.id, weight, reps)
+                // Use the session set ID instead of the original set ID
+                val sessionSetId = setIdMapping[set.id]
+                if (sessionSetId != null) {
+                    onSetValueChangedSimple?.invoke(sessionSetId, weight, reps) ?: onSetValueChanged(sessionSetId, weight, reps)
+                }
             }
         }
     }

@@ -1,5 +1,6 @@
 package com.torto.trgym.viewmodel.workout
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -373,6 +374,8 @@ class ActiveWorkoutViewModel @Inject constructor(
                     totalDurationMs = _elapsedTime.value,
                     isCompleted = true
                 )
+
+                Log.d("ActiveWorkoutViewModel", "Completed workout: $updatedSession")
 
                 workoutRepository.updateWorkoutSession(updatedSession)
 

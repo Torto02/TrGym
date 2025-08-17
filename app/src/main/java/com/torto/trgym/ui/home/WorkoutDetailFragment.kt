@@ -24,6 +24,7 @@ import com.torto.trgym.database.entities.WorkoutExercise
 import com.torto.trgym.database.entities.ExerciseSet
 import com.torto.trgym.database.entities.WorkoutSession
 import com.torto.trgym.ui.dialogs.SelectExercisesDialog
+import com.torto.trgym.ui.exercises.ExerciseDetailFragmentDirections
 import com.torto.trgym.viewmodel.home.WorkoutDetailViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -114,7 +115,8 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
             // Ask user if they want to save changes before leaving edit mode
             showEditModeCancelConfirmation()
         } else {
-            findNavController().popBackStack()
+            val action = WorkoutDetailFragmentDirections.actionWorkoutDetailFragmentToHomeFragment()
+                findNavController().navigate(action)
         }
     }
 
@@ -300,16 +302,27 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
         findNavController().navigate(action)
     }
 
-    private fun showExerciseDetail(workoutExercise: WorkoutExercise) {
-        val exerciseId = workoutExercise.exerciseId
-        if (exerciseId != null) {
-            val action = WorkoutDetailFragmentDirections
-                .actionWorkoutDetailFragmentToExerciseDetailFragment(exerciseId)
-            findNavController().navigate(action)
-        } else {
-            showError("Dettagli non disponibili per esercizi personalizzati")
-        }
+//    private fun showExerciseDetail(workoutExercise: WorkoutExercise) {
+//        val exerciseId = workoutExercise.exerciseId
+//        if (exerciseId != null) {
+//            val action = WorkoutDetailFragmentDirections
+//                .actionWorkoutDetailFragmentToExerciseDetailFragment(exerciseId)
+//            findNavController().navigate(action)
+//        } else {
+//            showError("Dettagli non disponibili per esercizi personalizzati")
+//        }
+//    }
+private fun showExerciseDetail(workoutExercise: WorkoutExercise) {
+    val exerciseId = workoutExercise.exerciseId
+    if (exerciseId != null) {
+        val workoutCardId = workoutDetailViewModel.workoutCard.value?.id
+        val action = WorkoutDetailFragmentDirections
+            .actionWorkoutDetailFragmentToExerciseDetailFragment(exerciseId, workoutCardId)
+        findNavController().navigate(action)
+    } else {
+        showError("Dettagli non disponibili per esercizi personalizzati")
     }
+}
 
     // ==========================================
     // UTILITY METHODS
@@ -322,4 +335,6 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
     private fun showSuccess(message: String) {
         Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
     }
+
+
 }

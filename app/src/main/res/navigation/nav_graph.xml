@@ -64,6 +64,9 @@
         <action
             android:id="@+id/action_workoutDetailFragment_to_activeWorkoutFragment"
             app:destination="@id/activeWorkoutFragment" />
+        <action
+            android:id="@+id/action_workoutDetailFragment_to_homeFragment"
+            app:destination="@id/homeFragment" />
 
 
     </fragment>
@@ -76,9 +79,17 @@
         <argument
             android:name="exerciseId"
             app:argType="integer" />
+        <argument
+            android:name="workoutCardId"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null" />
         <action
             android:id="@+id/action_exerciseDetailFragment_to_exercisesFragment"
             app:destination="@id/exercisesFragment" />
+        <action
+            android:id="@+id/action_exerciseDetailFragment_to_workoutDetailFragment"
+            app:destination="@id/workoutDetailFragment" />
     </fragment>
 
     <!-- Free Workout Fragment (placeholder) -->
