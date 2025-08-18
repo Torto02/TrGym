@@ -21,6 +21,7 @@ import com.torto.trgym.R
 import com.torto.trgym.adapters.WorkoutExercisesAdapter
 import com.torto.trgym.database.entities.WorkoutExercise
 import com.torto.trgym.database.entities.WorkoutSession
+import android.widget.ImageView
 import com.torto.trgym.ui.dialogs.SelectExercisesDialog
 import com.torto.trgym.viewmodel.workout.WorkoutDetailViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -40,6 +41,7 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
     private val emptyStateLayout by lazy { requireView().findViewById<View>(R.id.emptyStateLayout) }
     private val startWorkoutButton by lazy { requireView().findViewById<MaterialButton>(R.id.startWorkoutButton) }
     private val addExerciseBtn by lazy { requireView().findViewById<FloatingActionButton>(R.id.addExerciseBtn) }
+    private val exercisePreviewIcon by lazy { requireView().findViewById<ImageView>(R.id.exercisePreviewIcon) }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

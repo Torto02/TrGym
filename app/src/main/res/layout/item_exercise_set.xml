@@ -72,18 +72,17 @@
         tools:checked="false" />
 
     <!-- Menu Set (elimina) -->
+
     <ImageView
         android:id="@+id/setMenu"
         android:layout_width="32dp"
         android:layout_height="32dp"
-        android:layout_marginStart="4dp"
-        android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@drawable/ic_delete"
+        android:background="@drawable/circle_button_background"
+        android:backgroundTint="@android:color/holo_red_dark"
+        app:tint="@color/white"
+        android:padding="6dp"
         android:clickable="true"
-        android:focusable="true"
-        android:padding="4dp"
-        android:src="@drawable/ic_close"
-        android:visibility="gone"
-        app:tint="@color/error"
-        tools:visibility="visible" />
+        android:focusable="true" />
 
 </LinearLayout>

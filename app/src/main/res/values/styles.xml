@@ -36,4 +36,10 @@
     </style>
 
 
+        <style name="ThemeOverlay.App.MaterialAlertDialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+            <item name="android:background">@drawable/dialog_background</item>
+        </style>
+
+
+
 </resources>

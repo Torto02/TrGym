@@ -36,7 +36,7 @@ object DatabaseModule {
             "TrGym.db"
         )
             .createFromAsset("TrGym.db")
-//            .fallbackToDestructiveMigration() // Permette la migrazione distruttiva in caso di cambiamenti nel database
+            .fallbackToDestructiveMigration() // Permette la migrazione distruttiva in caso di cambiamenti nel database
         return builder.build()
     }
 
@@ -82,6 +82,8 @@ object DatabaseModule {
         return database.workoutDao()
     }
 
-//    @Provides
-//    fun provideWorkoutSessionDao(db: AppDatabase): WorkoutSessionDao = db.workoutSessionDao()
+    @Provides
+    fun provideBodyMeasurementDao(db: AppDatabase): BodyMeasurementDao {
+        return db.bodyMeasurementDao()
+    }
 }

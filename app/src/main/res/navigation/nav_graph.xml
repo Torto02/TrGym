@@ -125,6 +125,9 @@
         <action
             android:id="@+id/action_profileFragment_to_homeFragment"
             app:destination="@id/homeFragment" />
+        <action
+            android:id="@+id/action_profileFragment_to_bodyMeasurementsFragment"
+            app:destination="@id/bodyMeasurementsFragment" />
     </fragment>
 
     <fragment
@@ -150,20 +153,6 @@
             android:id="@+id/action_activeWorkoutFragment_to_homeFragment"
             app:destination="@id/homeFragment" />
     </fragment>
-
-<!--    <fragment-->
-<!--        android:id="@+id/exerciseDetailFragment"-->
-<!--        android:name="com.torto.trgym.ui.exercises.ExerciseDetailFragment"-->
-<!--        tools:layout="@layout/fragment_exercise_detail">-->
-<!--        <argument-->
-<!--            android:name="exerciseId"-->
-<!--            app:argType="integer" />-->
-<!--        <action-->
-<!--            android:id="@+id/action_exerciseDetailFragment_to_exercisesFragment"-->
-<!--            app:destination="@id/exercisesFragment" />-->
-<!--    </fragment>-->
-
-    <!-- Aggiungi questi fragment e action al tuo nav_graph.xml esistente -->
 
     <!-- Fragment per lo storico allenamenti -->
     <fragment
@@ -194,12 +183,23 @@
             android:id="@+id/action_workoutSessionDetailFragment_to_workoutHistoryFragment"
             app:destination="@id/workoutHistoryFragment" />
     </fragment>
+    <!-- Aggiungi questi nuovi fragments -->
+    <fragment
+        android:id="@+id/bodyMeasurementsFragment"
+        android:name="com.torto.trgym.ui.bodymeasurement.BodyMeasurementsFragment"
+        android:label="Body Measurements"
+        tools:layout="@layout/fragment_body_measurements">
 
+        <action
+            android:id="@+id/action_bodyMeasurementsFragment_to_measurementDetailFragment"
+            app:destination="@id/measurementDetailFragment" />
+    </fragment>
 
-
-
-
-
+    <fragment
+        android:id="@+id/measurementDetailFragment"
+        android:name="com.torto.trgym.ui.bodymeasurement.MeasurementDetailFragment"
+        android:label="Measurement Detail"
+        tools:layout="@layout/fragment_measurement_detail" />
 
 
 </navigation>

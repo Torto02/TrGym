@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/ios_systemBackground">
+
+    <!-- Toolbar -->
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/ios_systemBackground"
+        android:elevation="2dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/textCategoryName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="start|center_vertical"
+                    android:clickable="true"
+                    android:contentDescription="@string/backBtn"
+                    android:text="@string/bodyMeasurements"
+                    android:textColor="@color/primary"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    app:icon="@drawable/ic_ios_back"
+                    android:backgroundTint="#80FFFFFF"
+                    app:iconTint="@color/primary"
+                    app:strokeColor="@color/lightGray"
+                    app:strokeWidth="1dp"
+                    app:cornerRadius="30dp"
+                    app:iconGravity="start"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:paddingHorizontal="16dp" />
+
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/btnDeleteCategory"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_delete"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:padding="4dp"
+                app:tint="@android:color/holo_red_dark" />
+
+        </LinearLayout>
+
+    </com.google.android.material.appbar.MaterialToolbar>
+
+    <!-- Contenuto principale -->
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingTop="?attr/actionBarSize"
+        android:paddingHorizontal="16dp"
+        android:paddingBottom="16dp"
+        android:clipToPadding="false">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="100dp">
+
+            <!-- Card delle Statistiche -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardStats"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="@color/white"
+                app:strokeWidth="1dp"
+                app:strokeColor="@color/lightGray">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Statistiche"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/ios_label"
+                        android:layout_marginBottom="16dp" />
+
+                    <!-- Grid delle statistiche -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <!-- Colonna sinistra -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <!-- Ultimo valore -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:layout_marginBottom="12dp">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Ultimo"
+                                    android:textSize="12sp"
+                                    android:textColor="@color/ios_secondaryLabel" />
+
+                                <TextView
+                                    android:id="@+id/textLatestValue"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="75.2 kg"
+                                    android:textSize="16sp"
+                                    android:textStyle="bold"
+                                    android:textColor="@color/primary"
+                                    tools:text="75.2 kg" />
+
+                            </LinearLayout>
+
+                            <!-- Minimo -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:layout_marginBottom="12dp">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Minimo"
+                                    android:textSize="12sp"
+                                    android:textColor="@color/ios_secondaryLabel" />
+
+                                <TextView
+                                    android:id="@+id/textMinValue"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="72.1 kg"
+                                    android:textSize="14sp"
+                                    android:textColor="@color/ios_label"
+                                    tools:text="72.1 kg" />
+
+                            </LinearLayout>
+
+                        </LinearLayout>
+
+                        <!-- Colonna destra -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <!-- Massimo -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:layout_marginBottom="12dp">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Massimo"
+                                    android:textSize="12sp"
+                                    android:textColor="@color/ios_secondaryLabel" />
+
+                                <TextView
+                                    android:id="@+id/textMaxValue"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="78.5 kg"
+                                    android:textSize="14sp"
+                                    android:textColor="@color/ios_label"
+                                    tools:text="78.5 kg" />
+
+                            </LinearLayout>
+
+                            <!-- Media -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:layout_marginBottom="12dp">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Media"
+                                    android:textSize="12sp"
+                                    android:textColor="@color/ios_secondaryLabel" />
+
+                                <TextView
+                                    android:id="@+id/textAvgValue"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="75.3 kg"
+                                    android:textSize="14sp"
+                                    android:textColor="@color/ios_label"
+                                    tools:text="75.3 kg" />
+
+                            </LinearLayout>
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                    <!-- Conteggio totale -->
+                    <TextView
+                        android:id="@+id/textCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="12 misurazioni totali"
+                        android:textSize="12sp"
+                        android:textColor="@color/ios_secondaryLabel"
+                        android:layout_marginTop="8dp"
+                        tools:text="12 misurazioni totali" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- RecyclerView per le misurazioni -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerViewMeasurements"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"
+                tools:listitem="@layout/item_measurement_detail" />
+
+            <!-- Empty View -->
+            <LinearLayout
+                android:id="@+id/emptyView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="64dp"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <ImageView
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:src="@drawable/ic_add"
+                    app:tint="@color/ios_secondaryLabel"
+                    android:layout_marginBottom="16dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Nessuna misurazione"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/ios_label"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Tocca + per aggiungere la prima misurazione"
+                    android:textSize="14sp"
+                    android:textColor="@color/ios_secondaryLabel"
+                    android:textAlignment="center"
+                    android:paddingHorizontal="32dp" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabAddMeasurement"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:contentDescription="addMeasurements"
+        android:src="@drawable/ic_add"
+        app:tint="@color/white"
+        app:backgroundTint="@color/primary"
+        android:layout_marginBottom="86dp"
+        android:layout_marginEnd="20dp"/>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

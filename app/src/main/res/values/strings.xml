@@ -39,4 +39,5 @@
     <string name="TrainingHystory">Training hystory</string>
     <string name="workout">Workouts</string>
     <string name="Calories">Burned calories</string>
+    <string name="ExerciseDetail">Exercise Details</string>
 </resources>
