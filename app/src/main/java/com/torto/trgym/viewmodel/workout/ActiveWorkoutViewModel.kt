@@ -43,10 +43,14 @@ class ActiveWorkoutViewModel @Inject constructor(
     private val _completedSets = MutableStateFlow<Map<String, Boolean>>(emptyMap())
     val completedSets: StateFlow<Map<String, Boolean>> = _completedSets.asStateFlow()
 
+    // Add a state to track set ID mapping (original to session)
+    private val _setIdMapping = MutableStateFlow<Map<String, String>>(emptyMap())
+    val setIdMapping: StateFlow<Map<String, String>> = _setIdMapping.asStateFlow()
+
     // List of session exercises and sets
     private val _sessionExercises = MutableStateFlow<List<WorkoutSessionExercise>>(emptyList())
     val sessionExercises: StateFlow<List<WorkoutSessionExercise>> = _sessionExercises.asStateFlow()
-    
+
     private val _sessionSets = MutableStateFlow<Map<String, List<WorkoutSessionSet>>>(emptyMap())
     val sessionSets: StateFlow<Map<String, List<WorkoutSessionSet>>> = _sessionSets.asStateFlow()
 
@@ -168,6 +172,7 @@ class ActiveWorkoutViewModel @Inject constructor(
 
             val setsMap = mutableMapOf<String, List<WorkoutSessionSet>>()
             val completedSetsMap = mutableMapOf<String, Boolean>()
+            val setIdMappingMap = mutableMapOf<String, String>()
 
             exercises.forEach { exercise ->
                 val sets = workoutRepository.getSessionSets(exercise.id)
@@ -176,6 +181,10 @@ class ActiveWorkoutViewModel @Inject constructor(
                 // Track completed sets
                 sets.forEach { set ->
                     completedSetsMap[set.id] = set.isCompleted
+                    // Add mapping from original ID to session set ID if available
+                    if (exercise.originalExerciseId.isNotEmpty()) {
+                        setIdMappingMap[set.id] = set.id  // Self-mapping for existing sessions
+                    }
                 }
             }
 
@@ -183,12 +192,67 @@ class ActiveWorkoutViewModel @Inject constructor(
             _sessionExercises.value = exercises
             _sessionSets.value = setsMap
             _completedSets.value = completedSetsMap
+            _setIdMapping.value = setIdMappingMap
 
             // Finally indicate that session data is loaded
             _sessionDataLoaded.value = true
         } catch (e: Exception) {
             _uiState.value = UiState.Error(e.message ?: "Errore nel caricamento della sessione")
         }
+    }
+
+    private suspend fun initializeSessionExercisesAndSets(sessionId: String) {
+        // Reset sessionDataLoaded flag
+        _sessionDataLoaded.value = false
+
+        val exercises = exercisesWithSets.value
+
+        val sessionExercises = exercises.mapIndexed { index, exerciseDetail ->
+            WorkoutSessionExercise(
+                workoutSessionId = sessionId,
+                originalExerciseId = exerciseDetail.exercise.id,
+                name = exerciseDetail.exercise.name,
+                orderIndex = index,
+                startTime = System.currentTimeMillis()
+            )
+        }
+
+        workoutRepository.insertSessionExercises(sessionExercises)
+
+        // Initialize session sets
+        val sessionSetsMap = mutableMapOf<String, List<WorkoutSessionSet>>()
+        val completedSetsMap = mutableMapOf<String, Boolean>()
+        val setIdMappingMap = mutableMapOf<String, String>()
+
+        sessionExercises.forEach { sessionExercise ->
+            val originalExercise = exercises.find { it.exercise.id == sessionExercise.originalExerciseId }
+
+            val sessionSets = originalExercise?.sets?.mapIndexed { _, set ->
+                val sessionSet = WorkoutSessionSet(
+                    exerciseId = sessionExercise.id,
+                    setNumber = set.setNumber,
+                    targetWeightKg = set.weightKg,
+                    targetReps = set.reps,
+                    isCompleted = false
+                )
+                completedSetsMap[sessionSet.id] = false
+                // Create a mapping from original set ID to session set ID
+                setIdMappingMap[set.id] = sessionSet.id
+                sessionSet
+            } ?: emptyList()
+
+            workoutRepository.insertSessionSets(sessionSets)
+            sessionSetsMap[sessionExercise.id] = sessionSets
+        }
+
+        // Update all states at once
+        _sessionExercises.value = sessionExercises
+        _sessionSets.value = sessionSetsMap
+        _completedSets.value = completedSetsMap
+        _setIdMapping.value = setIdMappingMap
+
+        // Finally indicate that session data is loaded
+        _sessionDataLoaded.value = true
     }
 
     fun startWorkout() {
@@ -214,68 +278,6 @@ class ActiveWorkoutViewModel @Inject constructor(
                 _uiState.value = UiState.Error(e.message ?: "Errore nell'avvio dell'allenamento")
             }
         }
-    }
-
-    private suspend fun initializeSessionExercisesAndSets(sessionId: String) {
-        // Reset sessionDataLoaded flag
-        _sessionDataLoaded.value = false
-
-        val exercises = exercisesWithSets.value
-
-        val sessionExercises = exercises.mapIndexed { index, exerciseDetail ->
-            WorkoutSessionExercise(
-                workoutSessionId = sessionId,
-                originalExerciseId = exerciseDetail.exercise.id,
-                name = exerciseDetail.exercise.name,
-                orderIndex = index,
-                startTime = System.currentTimeMillis()
-            )
-        }
-
-        workoutRepository.insertSessionExercises(sessionExercises)
-
-        // Initialize session sets
-        val sessionSetsMap = mutableMapOf<String, List<WorkoutSessionSet>>()
-        val completedSetsMap = mutableMapOf<String, Boolean>()
-
-        sessionExercises.forEach { sessionExercise ->
-            val originalExercise = exercises.find { it.exercise.id == sessionExercise.originalExerciseId }
-
-            val sessionSets = originalExercise?.sets?.mapIndexed { _, set ->
-                val sessionSet = WorkoutSessionSet(
-                    exerciseId = sessionExercise.id,
-                    setNumber = set.setNumber,
-                    targetWeightKg = set.weightKg,
-                    targetReps = set.reps,
-                    isCompleted = false
-                )
-                completedSetsMap[sessionSet.id] = false
-                sessionSet
-            } ?: emptyList()
-
-            workoutRepository.insertSessionSets(sessionSets)
-            sessionSetsMap[sessionExercise.id] = sessionSets
-        }
-
-        // Update all states at once
-        _sessionExercises.value = sessionExercises
-        _sessionSets.value = sessionSetsMap
-        _completedSets.value = completedSetsMap
-
-        // Finally indicate that session data is loaded
-        _sessionDataLoaded.value = true
-    }
-
-    fun pauseTimer() {
-        _timerRunning.value = false
-    }
-
-    fun resumeTimer() {
-        _timerRunning.value = true
-    }
-
-    fun updateElapsedTime(time: Long) {
-        _elapsedTime.value = time
     }
 
     fun toggleSetCompletion(setId: String, completed: Boolean) {
@@ -337,19 +339,26 @@ class ActiveWorkoutViewModel @Inject constructor(
             try {
                 val session = _activeSession.value ?: return@launch
 
+                Log.d("ActiveWorkoutViewModel", "Completing workout: $session")
+
                 // Filter and keep only completed sets
                 val completedSetsIds = _completedSets.value.filter { it.value }.keys
                 val exercisesWithCompletedSets = mutableSetOf<String>()
+
+                Log.d("ActiveWorkoutViewModel", "Completed sets: $completedSetsIds")
+                Log.d("ActiveWorkoutViewModel", "Completed sets map: ${_completedSets.value}")
 
                 // Delete uncompleted sets and track exercises with completed sets
                 _sessionSets.value.forEach { (exerciseId, sets) ->
                     sets.forEach { set ->
                         if (set.id !in completedSetsIds) {
+                            Log.d("ActiveWorkoutViewModel", "Deleting uncompleted set: $set")
                             // Delete uncompleted set
                             workoutRepository.deleteSessionSet(set)
                         } else {
                             // Track this exercise as having completed sets
                             exercisesWithCompletedSets.add(exerciseId)
+                            Log.d("ActiveWorkoutViewModel", "Keeping completed set: $set")
                         }
                     }
                 }

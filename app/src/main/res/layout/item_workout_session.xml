@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/workoutSessionCard"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="12dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="2dp"
+    app:cardBackgroundColor="@color/white"
+    app:strokeWidth="1dp"
+    app:strokeColor="@color/lightGray"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Header con nome e status -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:id="@+id/workoutName"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Allenamento Push"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/ios_label"
+                tools:text="Allenamento Push" />
+
+            <TextView
+                android:id="@+id/workoutStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Completato"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="@color/primary"
+                android:background="@drawable/ic_email"
+                android:backgroundTint="#E8F5E8"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp"
+                tools:text="Completato" />
+
+        </LinearLayout>
+
+        <!-- Data e ora -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="4dp">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:src="@drawable/ic_email"
+                app:tint="@color/ios_secondaryLabel"
+                android:layout_marginEnd="6dp"
+                android:layout_gravity="center_vertical" />
+
+            <TextView
+                android:id="@+id/workoutDate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="15 Gen 2024 - 18:30"
+                android:textSize="14sp"
+                android:textColor="@color/ios_secondaryLabel"
+                tools:text="15 Gen 2024 - 18:30" />
+
+        </LinearLayout>
+
+        <!-- Durata -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:src="@drawable/ic_timer"
+                app:tint="@color/ios_secondaryLabel"
+                android:layout_marginEnd="6dp"
+                android:layout_gravity="center_vertical" />
+
+            <TextView
+                android:id="@+id/workoutDuration"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="1h 23m"
+                android:textSize="14sp"
+                android:textColor="@color/ios_secondaryLabel"
+                tools:text="1h 23m" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

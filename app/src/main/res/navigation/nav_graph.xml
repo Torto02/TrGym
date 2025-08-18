@@ -50,7 +50,7 @@
     <!-- Workout Detail Fragment -->
     <fragment
         android:id="@+id/workoutDetailFragment"
-        android:name="com.torto.trgym.ui.home.WorkoutDetailFragment"
+        android:name="com.torto.trgym.ui.workout.WorkoutDetailFragment"
         tools:layout="@layout/fragment_workout_detail">
 
         <argument
@@ -67,6 +67,8 @@
         <action
             android:id="@+id/action_workoutDetailFragment_to_homeFragment"
             app:destination="@id/homeFragment" />
+        <!-- Aggiungi questa action al workoutDetailFragment esistente se non c'è già -->
+
 
 
     </fragment>
@@ -116,6 +118,13 @@
         <action
             android:id="@+id/action_profileFragment_to_loginFragment"
             app:destination="@id/loginFragment" />
+        <!-- Aggiungi queste action al profileFragment esistente -->
+        <action
+            android:id="@+id/action_profileFragment_to_workoutHistoryFragment"
+            app:destination="@id/workoutHistoryFragment" />
+        <action
+            android:id="@+id/action_profileFragment_to_homeFragment"
+            app:destination="@id/homeFragment" />
     </fragment>
 
     <fragment
@@ -153,6 +162,44 @@
 <!--            android:id="@+id/action_exerciseDetailFragment_to_exercisesFragment"-->
 <!--            app:destination="@id/exercisesFragment" />-->
 <!--    </fragment>-->
+
+    <!-- Aggiungi questi fragment e action al tuo nav_graph.xml esistente -->
+
+    <!-- Fragment per lo storico allenamenti -->
+    <fragment
+        android:id="@+id/workoutHistoryFragment"
+        android:name="com.torto.trgym.ui.workout.WorkoutHistoryFragment"
+        android:label="Storico Allenamenti"
+        tools:layout="@layout/fragment_workout_history">
+
+        <action
+            android:id="@+id/action_workoutHistoryFragment_to_workoutSessionDetailFragment"
+            app:destination="@id/workoutSessionDetailFragment" />
+        <action
+            android:id="@+id/action_workoutHistoryFragment_to_profileFragment"
+            app:destination="@id/profileFragment" />
+    </fragment>
+
+    <!-- Fragment per i dettagli della sessione -->
+    <fragment
+        android:id="@+id/workoutSessionDetailFragment"
+        android:name="com.torto.trgym.ui.workout.WorkoutSessionDetailFragment"
+        android:label="Dettaglio Allenamento"
+        tools:layout="@layout/fragment_workout_session_detail">
+
+        <argument
+            android:name="sessionId"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_workoutSessionDetailFragment_to_workoutHistoryFragment"
+            app:destination="@id/workoutHistoryFragment" />
+    </fragment>
+
+
+
+
+
+
 
 
 </navigation>

@@ -283,6 +283,7 @@ class WorkoutRepository @Inject constructor(
         }
     }
 
+
     fun getSessionExercisesWithSets(sessionId: String): Flow<List<WorkoutSessionExerciseDetail>> = workoutDao.getSessionExercisesWithSetsFlow(sessionId)
 
     // MODIFICA 3: Funzione insertWorkoutExercise
@@ -454,6 +455,13 @@ class WorkoutRepository @Inject constructor(
         } catch (e: Exception) {
             Log.e("WorkoutRepository", "Error during push-only sync of workout cards", e)
         }
+    }
+
+
+// Aggiungi questo metodo al WorkoutRepository.kt esistente
+
+    suspend fun getLatestWorkoutSessions(limit: Int): List<WorkoutSession> = withContext(Dispatchers.IO) {
+        workoutDao.getLatestWorkoutSessions(limit)
     }
 
     private suspend fun syncUnsyncedData() {

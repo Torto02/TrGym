@@ -20,6 +20,7 @@ import com.torto.trgym.R
 import com.torto.trgym.adapters.ActiveWorkoutExercisesAdapter
 import com.torto.trgym.viewmodel.workout.ActiveWorkoutViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 
@@ -136,6 +137,22 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.completedSets.collect { completedSets ->
+                    // Don't update yet - wait for both completedSets and setIdMapping
+                    // The update will happen in the combined collector below
+                }
+            }
+        }
+
+        // Add a new collector for the setIdMapping
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                // Collect both completedSets and setIdMapping together
+                viewModel.completedSets.combine(viewModel.setIdMapping) { completedSets, setIdMapping ->
+                    Pair(completedSets, setIdMapping)
+                }.collect { (completedSets, setIdMapping) ->
+                    // First update the ID mapping
+                    exercisesAdapter.updateSetIdMapping(setIdMapping)
+                    // Then update the completed sets
                     exercisesAdapter.updateCompletedSets(completedSets)
                 }
             }
@@ -181,7 +198,7 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
     private fun showExitConfirmationDialog() {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Uscire dall'allenamento?")
-            .setMessage("L'allenamento rimarrà attivo. Per completarlo o annullarlo torna a questa schermata.")
+            .setMessage("L'allenamento rimarrÃ  attivo. Per completarlo o annullarlo torna a questa schermata.")
             .setPositiveButton("Esci") { _, _ ->
                 findNavController().navigate(ActiveWorkoutFragmentDirections.actionActiveWorkoutFragmentToHomeFragment())
             }

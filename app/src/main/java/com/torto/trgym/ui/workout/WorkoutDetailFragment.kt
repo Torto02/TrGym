@@ -1,7 +1,6 @@
-package com.torto.trgym.ui.home
+package com.torto.trgym.ui.workout
 
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
@@ -21,14 +20,11 @@ import com.google.android.material.textfield.TextInputEditText
 import com.torto.trgym.R
 import com.torto.trgym.adapters.WorkoutExercisesAdapter
 import com.torto.trgym.database.entities.WorkoutExercise
-import com.torto.trgym.database.entities.ExerciseSet
 import com.torto.trgym.database.entities.WorkoutSession
 import com.torto.trgym.ui.dialogs.SelectExercisesDialog
-import com.torto.trgym.ui.exercises.ExerciseDetailFragmentDirections
-import com.torto.trgym.viewmodel.home.WorkoutDetailViewModel
+import com.torto.trgym.viewmodel.workout.WorkoutDetailViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-
 
 @AndroidEntryPoint
 class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
@@ -84,7 +80,12 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
             },
             onAddSetClick = workoutDetailViewModel::addSetToExercise,
             onSetChanged = workoutDetailViewModel::updateExerciseSet,
-            onDeleteExercise = { exercise -> showDeleteConfirmation("Elimina esercizio", "Sei sicuro di voler eliminare \"${exercise.name}\"?") { workoutDetailViewModel.deleteExercise(exercise) } },
+            onDeleteExercise = { exercise ->
+                showDeleteConfirmation(
+                    "Elimina esercizio",
+                    "Sei sicuro di voler eliminare \"${exercise.name}\"?"
+                ) { workoutDetailViewModel.deleteExercise(exercise) }
+            },
             onDeleteSet = workoutDetailViewModel::deleteExerciseSet
         )
 

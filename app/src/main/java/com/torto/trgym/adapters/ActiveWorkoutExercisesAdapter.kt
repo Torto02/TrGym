@@ -41,6 +41,7 @@ class ActiveWorkoutExercisesAdapter(
     fun updateSetIdMapping(mapping: Map<String, String>) {
         setIdMapping.clear()
         setIdMapping.putAll(mapping)
+        // No need to call notifyDataSetChanged() here as it will be called by updateCompletedSets
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ExerciseViewHolder {
@@ -116,8 +117,10 @@ class ActiveWorkoutExercisesAdapter(
             if (setsAdapter == null) {
                 setsAdapter = ActiveWorkoutSetsAdapter(
                     onSetCompletionChanged = { setId, isCompleted ->
-                        // The ID is already the session set ID when in session mode
-                        onSetCompletionChanged(setId, isCompleted)
+                        // The setId passed here is the original set ID, but we need to use
+                        // the session set ID for completion tracking
+                        val sessionSetId = setIdMapping[setId] ?: setId
+                        onSetCompletionChanged(sessionSetId, isCompleted)
                     },
                     onSetValueChanged = { setId, weight, reps ->
                         // Legacy callback - not used in session mode
@@ -206,11 +209,9 @@ class ActiveWorkoutSetsAdapter(
             setCompletedCheckbox.setOnCheckedChangeListener { _, isChecked ->
                 if (!isBindingData) {
                     currentSet?.let { set ->
-                        // Use the session set ID instead of the original set ID
-                        val sessionSetId = setIdMapping[set.id]
-                        if (sessionSetId != null) {
-                            onSetCompletionChanged(sessionSetId, isChecked)
-                        }
+                        // Use the session set ID invece of the original set ID
+                        val sessionSetId = setIdMapping[set.id] ?: set.id
+                        onSetCompletionChanged(sessionSetId, isChecked)
                     }
                 }
             }
@@ -249,15 +250,15 @@ class ActiveWorkoutSetsAdapter(
             setCompletedCheckbox.visibility = View.VISIBLE
 
             // Get session set completion state - ensure it defaults to unchecked
-            val sessionSetId = setIdMapping[set.id]
-            val isCompleted = sessionSetId?.let { completedSets[it] } ?: false
+            val sessionSetId = setIdMapping[set.id] ?: set.id
+            val isCompleted = completedSets[sessionSetId] ?: false
             setCompletedCheckbox.isChecked = isCompleted
 
             // Highlight the entire row if completed
             itemView.background.setTint(
-                if (isCompleted) 
+                if (isCompleted)
                     ContextCompat.getColor(itemView.context, R.color.completed_set_background)
-                else 
+                else
                     ContextCompat.getColor(itemView.context, R.color.transparent)
             )
 
