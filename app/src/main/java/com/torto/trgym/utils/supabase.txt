@@ -1,7 +1,7 @@
 -- WARNING: This schema is for context only and is not meant to be run.
 -- Table order and constraints may not be valid for execution.
 
- TABLE public.exercise_sets (
+TABLE public.exercise_sets (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   exercise_id uuid,
   set_number integer NOT NULL,
@@ -11,16 +11,17 @@
   CONSTRAINT exercise_sets_pkey PRIMARY KEY (id),
   CONSTRAINT exercise_sets_exercise_id_fkey FOREIGN KEY (exercise_id) REFERENCES public.exercises(id)
 );
- TABLE public.exercises (
+TABLE public.exercises (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   workout_card_id uuid,
   name character varying NOT NULL,
   order_index integer NOT NULL,
   created_at timestamp with time zone DEFAULT now(),
+  exercise_id integer,
   CONSTRAINT exercises_pkey PRIMARY KEY (id),
   CONSTRAINT exercises_workout_card_id_fkey FOREIGN KEY (workout_card_id) REFERENCES public.workout_cards(id)
 );
- TABLE public.starred_exercises (
+TABLE public.starred_exercises (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   user_id uuid,
   exercise_id integer NOT NULL,
@@ -53,7 +54,7 @@ TABLE public.workout_session_exercises (
   CONSTRAINT workout_session_exercises_original_exercise_id_fkey FOREIGN KEY (original_exercise_id) REFERENCES public.exercises(id),
   CONSTRAINT workout_session_exercises_workout_session_id_fkey FOREIGN KEY (workout_session_id) REFERENCES public.workout_sessions(id)
 );
- TABLE public.workout_session_sets (
+TABLE public.workout_session_sets (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   exercise_id uuid NOT NULL,
   set_number integer NOT NULL,
