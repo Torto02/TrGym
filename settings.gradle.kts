@@ -21,3 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "TrGym"
 include(":app")
+include(":TrGymWearOs")

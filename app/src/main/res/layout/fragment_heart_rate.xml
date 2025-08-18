@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/ios_systemBackground"
+    android:padding="16dp">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
+        app:navigationIcon="@drawable/ic_ios_back"
+        app:title="Monitoraggio Battito"
+        app:titleTextColor="@color/primary"
+        app:titleTextAppearance="@style/TextAppearance.Material3.TitleLarge"
+        app:navigationIconTint="@color/primary"/>
+
+    <TextView
+        android:id="@+id/tvStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Pronto per iniziare il monitoraggio"
+        android:textAlignment="center"
+        android:textColor="@color/ios_secondaryLabel"
+        android:textSize="14sp"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@id/toolbar"/>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/heartRateContainer"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        app:layout_constraintTop_toBottomOf="@id/tvStatus"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <com.google.android.material.progressindicator.CircularProgressIndicator
+            android:id="@+id/progressIndicator"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            app:indicatorColor="@color/primary"
+            app:trackColor="@color/lightGray"
+            app:indicatorSize="200dp"
+            app:trackThickness="8dp"
+            app:indicatorDirectionCircular="clockwise"
+            android:progress="0"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+
+        <ImageView
+            android:id="@+id/ivHeart"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/ic_email"
+            app:layout_constraintTop_toTopOf="@id/progressIndicator"
+            app:layout_constraintStart_toStartOf="@id/progressIndicator"
+            app:layout_constraintEnd_toEndOf="@id/progressIndicator"
+            app:layout_constraintBottom_toTopOf="@id/tvHeartRate"/>
+
+        <TextView
+            android:id="@+id/tvHeartRate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="--"
+            android:textSize="48sp"
+            android:textStyle="bold"
+            android:textColor="@color/primary"
+            app:layout_constraintTop_toBottomOf="@id/ivHeart"
+            app:layout_constraintStart_toStartOf="@id/progressIndicator"
+            app:layout_constraintEnd_toEndOf="@id/progressIndicator"
+            app:layout_constraintBottom_toBottomOf="@id/progressIndicator"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="BPM"
+            android:textSize="14sp"
+            android:textColor="@color/ios_secondaryLabel"
+            app:layout_constraintTop_toBottomOf="@id/tvHeartRate"
+            app:layout_constraintStart_toStartOf="@id/progressIndicator"
+            app:layout_constraintEnd_toEndOf="@id/progressIndicator"/>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/caloriesCard"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/heartRateContainer"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="32dp"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="2dp"
+        app:cardBackgroundColor="@color/white">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="16dp">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Calorie Bruciate"
+                    android:textSize="16sp"
+                    android:textColor="@color/ios_label"/>
+
+                <TextView
+                    android:id="@+id/tvCaloriesBurned"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/primary"/>
+            </LinearLayout>
+
+            <ImageView
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:src="@drawable/ic_play"
+                android:layout_gravity="center_vertical"
+                app:tint="#F44336"/>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <LinearLayout
+        android:id="@+id/measurementsContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="24dp"
+        app:layout_constraintTop_toBottomOf="@id/caloriesCard">
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            android:hint="Peso (kg)"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etWeight"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="numberDecimal"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:hint="Altezza (cm)"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etHeight"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="numberDecimal"/>
+        </com.google.android.material.textfield.TextInputLayout>
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btnStartStop"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Avvia Monitoraggio"
+        android:textAllCaps="false"
+        android:textSize="16sp"
+        android:padding="12dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="16dp"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

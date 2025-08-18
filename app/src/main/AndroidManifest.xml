@@ -5,7 +5,6 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
-
     <!-- Permessi per notifiche e foreground service -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_HEALTH" />
@@ -14,13 +13,12 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.BODY_SENSORS" />
 
-    <!-- Permessi per future implementazioni smartwatch (commentati per ora) -->
-    <!--
-    <uses-permission android:name="android.permission.BODY_SENSORS" />
+    <!-- Permessi per integrazione smartwatch -->
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
-    -->
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
 
     <application
         android:name=".TrGymApplication"
@@ -32,25 +30,29 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.TrGym">
+
+        <!-- Aggiungiamo la nuova activity per Heart Rate Monitor -->
+        <activity
+            android:name=".ui.heartrate.HeartRateActivity"
+            android:exported="false"
+            android:label="Monitoraggio Battito"
+            android:theme="@style/Theme.TrGym" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
-
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-
                 <data
                     android:scheme="com.torto.trgym"
                     android:host="login-callback" />
             </intent-filter>
         </activity>
     </application>
-
 </manifest>

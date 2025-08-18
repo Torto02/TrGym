@@ -128,6 +128,10 @@
         <action
             android:id="@+id/action_profileFragment_to_bodyMeasurementsFragment"
             app:destination="@id/bodyMeasurementsFragment" />
+        <action
+            android:id="@+id/action_profileFragment_to_heartRateFragment"
+            app:destination="@id/heartRateFragment" />
+
     </fragment>
 
     <fragment
@@ -201,5 +205,14 @@
         android:label="Measurement Detail"
         tools:layout="@layout/fragment_measurement_detail" />
 
+    <!-- Aggiungiamo questo all'interno del navigation graph esistente -->
+    <fragment
+        android:id="@+id/heartRateFragment"
+        android:name="com.torto.trgym.ui.heartrate.HeartRateFragment"
+        android:label="Monitoraggio Battito"
+        tools:layout="@layout/fragment_heart_rate" />
+
+
+    <!-- Aggiungiamo l'azione di navigazione dal profilo -->
 
 </navigation>

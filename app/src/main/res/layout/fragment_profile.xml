@@ -348,6 +348,53 @@
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
+                <!-- Dopo il cardBodyMeasurements e prima di btnResync, aggiungiamo: -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardHeartRateMonitor"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="1dp"
+                    app:cardBackgroundColor="@color/white"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="@color/lightGray"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:padding="16dp"
+                        android:gravity="center_vertical">
+
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_play"
+                            app:tint="#F44336" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Monitoraggio Battito Cardiaco"
+                            android:textSize="16sp"
+                            android:layout_marginStart="16dp"
+                            android:textColor="@color/ios_label" />
+
+                        <ImageView
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:src="@drawable/ic_ios_back"
+                            android:rotation="180"
+                            app:tint="@color/ios_secondaryLabel" />
+
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
                 <!-- Impostazioni -->
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/btnResync"
