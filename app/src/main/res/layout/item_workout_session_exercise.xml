@@ -41,11 +41,10 @@
                 android:id="@+id/exerciseStatus"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Completato"
+                android:text="Completed"
                 android:textSize="12sp"
                 android:textStyle="bold"
                 android:textColor="@color/primary"
-                android:background="@drawable/ic_email"
                 android:backgroundTint="#E8F5E8"
                 android:paddingHorizontal="8dp"
                 android:paddingVertical="4dp"
@@ -55,52 +54,46 @@
 
         <!-- Header per i set -->
         <LinearLayout
+            android:id="@+id/setsHeaderLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
+            android:paddingHorizontal="8dp"
             android:paddingVertical="8dp"
-            android:paddingHorizontal="12dp"
-            android:background="@drawable/ic_email"
-            android:backgroundTint="@color/ios_systemGray6"
-            android:layout_marginBottom="8dp">
+            android:layout_marginBottom="4dp"
+            android:background="@color/ios_systemGray6"
+            app:layout_constraintTop_toBottomOf="@id/exerciseInfo">
 
             <TextView
-                android:layout_width="60dp"
+                android:layout_width="40dp"
                 android:layout_height="wrap_content"
-                android:text="Set"
+                android:text="Serie"
+                android:textColor="@color/ios_secondaryLabel"
                 android:textSize="12sp"
                 android:textStyle="bold"
-                android:textColor="@color/ios_secondaryLabel"
                 android:gravity="center" />
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Target"
+                android:text="Peso (kg)"
+                android:textColor="@color/ios_secondaryLabel"
                 android:textSize="12sp"
                 android:textStyle="bold"
-                android:textColor="@color/ios_secondaryLabel"
                 android:gravity="center" />
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Eseguito"
+                android:text="Reps"
+                android:textColor="@color/ios_secondaryLabel"
                 android:textSize="12sp"
                 android:textStyle="bold"
-                android:textColor="@color/ios_secondaryLabel"
                 android:gravity="center" />
 
-            <TextView
-                android:layout_width="30dp"
-                android:layout_height="wrap_content"
-                android:text="✓"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:textColor="@color/ios_secondaryLabel"
-                android:gravity="center" />
+
 
         </LinearLayout>
 

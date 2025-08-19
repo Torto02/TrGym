@@ -50,14 +50,10 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     }
 
     private fun setupViews(view: View) {
-        val freeWorkoutCard = view.findViewById<MaterialCardView>(R.id.freeWorkoutCard)
         val addWorkoutCardBtn = view.findViewById<com.google.android.material.button.MaterialButton>(R.id.addWorkoutCardBtn)
         activeWorkoutCard = view.findViewById(R.id.activeWorkoutCard)
 
-        freeWorkoutCard.setOnClickListener {
-            // Naviga alla schermata di allenamento libero
-            findNavController().navigate(R.id.action_home_to_freeWorkout)
-        }
+
 
         addWorkoutCardBtn.setOnClickListener {
             showCreateWorkoutCardDialog()
@@ -160,13 +156,10 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     private fun showWorkoutCardMenu(workoutCard: com.torto.trgym.database.entities.WorkoutCard) {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(workoutCard.name)
-            .setItems(arrayOf("Modifica", "Elimina")) { _, which ->
+            .setItems(arrayOf("Elimina")) { _, which ->
                 when (which) {
+
                     0 -> {
-                        // Modifica scheda
-                        // TODO: Implementare modifica
-                    }
-                    1 -> {
                         // Elimina scheda
                         showDeleteConfirmationDialog(workoutCard)
                     }

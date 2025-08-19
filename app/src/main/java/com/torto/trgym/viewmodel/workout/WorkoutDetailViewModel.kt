@@ -279,7 +279,8 @@ class WorkoutDetailViewModel @Inject constructor(
                 exerciseId = exercise.id,
                 name = exercise.title.trim(),
                 orderIndex = nextOrderIndex++,
-                updatedAt = System.currentTimeMillis()
+                updatedAt = System.currentTimeMillis(),
+                imagePath = exercise.imagePath
             )
         }
 

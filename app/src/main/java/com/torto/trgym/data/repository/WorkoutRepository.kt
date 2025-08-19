@@ -136,6 +136,7 @@ class WorkoutRepository @Inject constructor(
         val supabaseExercises = supabaseClient.from("exercises")
             .select { filter { eq("workout_card_id", cardId) } }
             .decodeList<SupabaseWorkoutExercise>()
+        Log.d("WorkoutRepository", "Fetched $supabaseExercises")
 
         val localExercises = workoutDao.getExercisesForCardOnce(cardId)
         performDataMerge(
@@ -153,7 +154,8 @@ class WorkoutRepository @Inject constructor(
                     createdAt = System.currentTimeMillis(),
                     updatedAt = System.currentTimeMillis(),
                     syncedWithServer = true,
-                    pendingSync = false
+                    pendingSync = false,
+                    imagePath = remote.imagePath // AGGIUNTO: Include imagePath
                 )
             },
             insert = workoutDao::insertWorkoutExercise,
@@ -161,7 +163,8 @@ class WorkoutRepository @Inject constructor(
             shouldUpdate = { local, remote ->
                 local.name != remote.name ||
                         local.orderIndex != remote.orderIndex ||
-                        local.exerciseId != remote.exerciseId // AGGIUNTO: Controlla anche exerciseId
+                        local.exerciseId != remote.exerciseId ||
+                           local.imagePath != remote.imagePath// AGGIUNTO: Controlla anche exerciseId
             },
             update = { local, remote ->
                 workoutDao.updateWorkoutExercise(
@@ -169,7 +172,8 @@ class WorkoutRepository @Inject constructor(
                         name = remote.name,
                         orderIndex = remote.orderIndex,
                         exerciseId = remote.exerciseId, // AGGIUNTO: Aggiorna exerciseId
-                        updatedAt = System.currentTimeMillis()
+                        updatedAt = System.currentTimeMillis(),
+                        imagePath = remote.imagePath // AGGIUNTO: Aggiorna imagePath
                     )
                 )
             }
@@ -309,7 +313,8 @@ class WorkoutRepository @Inject constructor(
                     workoutCardId = exercise.workoutCardId,
                     exerciseId = exercise.exerciseId, // AGGIUNTO: Include exerciseId
                     name = exercise.name,
-                    orderIndex = exercise.orderIndex
+                    orderIndex = exercise.orderIndex,
+                    imagePath = exercise.imagePath,
                 )
                 supabaseClient.from("exercises").upsert(listOf(supabaseExercise))
                 Log.d("WorkoutRepository", "Synced exercises item ${exercise.id} to Supabase")
@@ -442,34 +447,6 @@ class WorkoutRepository @Inject constructor(
             }
     }
 
-    // ==========================
-    // SIMPLIFIED SYNC OPERATIONS
-    // ==========================
-    
-    /**
-     * Sincronizza le workout cards - SOLO PUSH (upload)
-     * Download iniziale viene fatto solo al primo accesso dell'app
-     */
-    suspend fun syncWorkoutCards() = withContext(Dispatchers.IO) {
-        try {
-            currentUserId ?: return@withContext
-            
-            // SOLO upload: Carica le modifiche locali non sincronizzate su Supabase
-            syncUnsyncedData()
-            
-            Log.d("WorkoutRepository", "Push-only sync completed for workout cards")
-            
-            // DISABILITATO: Download e merge da Supabase per evitare flash/reload della UI
-            // Il download viene fatto solo al primo accesso dell'app in MainActivity
-            // mergeCardsFromServer()
-            // mergeWorkoutSessionsFromServer()
-        } catch (e: Exception) {
-            Log.e("WorkoutRepository", "Error during push-only sync of workout cards", e)
-        }
-    }
-
-
-// Aggiungi questo metodo al WorkoutRepository.kt esistente
 
     suspend fun getLatestWorkoutSessions(limit: Int): List<WorkoutSession> = withContext(Dispatchers.IO) {
         workoutDao.getLatestWorkoutSessions(limit)

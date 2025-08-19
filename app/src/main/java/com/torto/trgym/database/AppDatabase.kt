@@ -10,7 +10,7 @@ import com.torto.trgym.database.entities.*
         Language::class, Muscle::class, MuscleGroup::class, MuscleGroupI18n::class,
         MuscleI18n::class, ExerciseStep::class, StarredExercise::class,
         WorkoutCard::class, WorkoutExercise::class, ExerciseSet::class, WorkoutSession::class, WorkoutSessionExercise::class, WorkoutSessionSet::class, BodyMeasurement::class],
-    version = 1, // Incrementata per la nuova tabella ,
+    version = 2, // Incrementata per la nuova tabella ,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

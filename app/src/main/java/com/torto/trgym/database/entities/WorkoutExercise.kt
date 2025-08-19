@@ -29,6 +29,7 @@ data class WorkoutExercise(
     val name: String,
     val orderIndex: Int,
     val createdAt: Long = System.currentTimeMillis(),
+    val imagePath: String? = null,
     val syncedWithServer: Boolean = false,
     val pendingSync: Boolean = false,
     val updatedAt: Long

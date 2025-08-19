@@ -24,39 +24,22 @@ class WorkoutSessionSetAdapter : ListAdapter<WorkoutSessionSet, WorkoutSessionSe
 
     inner class SetViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val setNumber: TextView = itemView.findViewById(R.id.setNumber)
-        private val targetWeight: TextView = itemView.findViewById(R.id.targetWeight)
-        private val actualWeight: TextView = itemView.findViewById(R.id.actualWeight)
-        private val targetReps: TextView = itemView.findViewById(R.id.targetReps)
-        private val actualReps: TextView = itemView.findViewById(R.id.actualReps)
-        private val setStatus: TextView = itemView.findViewById(R.id.setStatus)
+        private val weigth: TextView = itemView.findViewById(R.id.weight)
+        private val reps: TextView = itemView.findViewById(R.id.reps)
 
         fun bind(set: WorkoutSessionSet) {
-            setNumber.text = "Set ${set.setNumber}"
+            setNumber.text = "${set.setNumber}"
 
             // Target values
-            targetWeight.text = set.targetWeightKg?.let { "${it}kg" } ?: "-"
-            targetReps.text = set.targetReps?.toString() ?: "-"
+            weigth.text = set.targetWeightKg?.let { "${it}kg" } ?: "-"
+            reps.text = set.targetReps?.toString() ?: "-"
 
             // Actual values
-            actualWeight.text = set.actualWeightKg?.let { "${it}kg" } ?: "-"
-            actualReps.text = set.actualReps?.toString() ?: "-"
+
+
 
             // Status indicator
-            if (set.isCompleted) {
-                setStatus.text = "✓"
-                setStatus.setTextColor(itemView.context.getColor(R.color.primary))
 
-                // Highlight actual values if completed
-                actualWeight.setTextColor(itemView.context.getColor(R.color.ios_label))
-                actualReps.setTextColor(itemView.context.getColor(R.color.ios_label))
-            } else {
-                setStatus.text = "○"
-                setStatus.setTextColor(itemView.context.getColor(R.color.ios_secondaryLabel))
-
-                // Dim actual values if not completed
-                actualWeight.setTextColor(itemView.context.getColor(R.color.ios_secondaryLabel))
-                actualReps.setTextColor(itemView.context.getColor(R.color.ios_secondaryLabel))
-            }
         }
     }
 

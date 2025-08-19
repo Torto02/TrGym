@@ -57,22 +57,53 @@ class ExerciseDragCallback(
     override fun onSelectedChanged(viewHolder: RecyclerView.ViewHolder?, actionState: Int) {
         super.onSelectedChanged(viewHolder, actionState)
 
-        if (actionState == ItemTouchHelper.ACTION_STATE_DRAG) {
-            // Evidenzia l'elemento durante il drag
-            viewHolder?.itemView?.alpha = 0.8f
-            viewHolder?.itemView?.scaleX = 1.05f
-            viewHolder?.itemView?.scaleY = 1.05f
-            viewHolder?.itemView?.elevation = 8f
+        when (actionState) {
+            ItemTouchHelper.ACTION_STATE_DRAG -> {
+                // Evidenzia l'elemento durante il drag
+                viewHolder?.itemView?.let { view ->
+                    view.alpha = 0.8f
+                    view.scaleX = 1.02f
+                    view.scaleY = 1.02f
+                    view.elevation = 8f
+                    // Aggiungi un leggero shadow per maggiore visibilità
+                    view.translationZ = 4f
+                }
+            }
         }
     }
 
     override fun clearView(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) {
         super.clearView(recyclerView, viewHolder)
 
-        // Ripristina lo stato normale
-        viewHolder.itemView.alpha = 1.0f
-        viewHolder.itemView.scaleX = 1.0f
-        viewHolder.itemView.scaleY = 1.0f
-        viewHolder.itemView.elevation = 2f
+        // Ripristina completamente lo stato normale
+        viewHolder.itemView.let { view ->
+            view.alpha = 1.0f
+            view.scaleX = 1.0f
+            view.scaleY = 1.0f
+            view.elevation = 2f
+            view.translationZ = 0f
+            view.translationX = 0f
+            view.translationY = 0f
+        }
+
+        // Forza l'invalidazione del ViewHolder per evitare artefatti visivi
+        viewHolder.itemView.invalidate()
+
+        // Piccolo delay per assicurarsi che le animazioni siano completate
+        viewHolder.itemView.post {
+            recyclerView.invalidateItemDecorations()
+        }
+    }
+
+    override fun interpolateOutOfBoundsScroll(
+        recyclerView: RecyclerView,
+        viewSize: Int,
+        viewSizeOutOfBounds: Int,
+        totalSize: Int,
+        msSinceStartScroll: Long
+    ): Int {
+        // Scroll più fluido durante il drag
+        val direction = Math.signum(viewSizeOutOfBounds.toFloat()).toInt()
+        return (viewSize * 0.1f * direction).toInt()
     }
 }

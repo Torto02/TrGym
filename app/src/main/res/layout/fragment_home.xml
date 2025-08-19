@@ -7,32 +7,73 @@
     android:layout_height="match_parent"
     android:background="@color/ios_systemBackground">
 
-    <!-- Toolbar -->
-    <com.google.android.material.appbar.MaterialToolbar
-        android:id="@+id/toolbar"
+    <!-- Header moderno con gradiente -->
+    <LinearLayout
+        android:id="@+id/headerLayout"
         android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="@color/ios_systemBackground"
-        android:elevation="0dp">
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:elevation="4000dp"
+        android:paddingBottom="16dp">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Home"
-            android:textColor="@color/primary"
-            android:textSize="28sp"
-            android:textStyle="bold"
-            android:layout_gravity="start|center_vertical"
-            android:paddingStart="16dp" />
+        <!-- Toolbar -->
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:elevation="500dp"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@android:color/white">
 
-    </com.google.android.material.appbar.MaterialToolbar>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingEnd="16dp">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:paddingStart="20dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Buongiorno"
+                        android:textColor="@color/primary"
+                        android:textSize="14sp"
+                        android:alpha="0.9" />
+
+                    <TextView
+                        android:id="@+id/welcomeText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Atleta"
+                        android:textColor="@color/primary"
+                        android:textSize="24sp"
+                        android:textStyle="bold"
+                        tools:text="Marco" />
+
+                </LinearLayout>
+
+
+
+            </LinearLayout>
+
+        </com.google.android.material.appbar.MaterialToolbar>
+
+
+
+    </LinearLayout>
 
     <!-- Contenuto scrollabile -->
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingTop="?attr/actionBarSize"
-        android:paddingHorizontal="16dp"
+        android:layout_marginTop="?attr/actionBarSize"
+        android:paddingHorizontal="20dp"
         android:paddingBottom="32dp"
         android:clipToPadding="false">
 
@@ -40,72 +81,176 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingTop="24dp">
+            android:paddingTop="40dp">
 
-            <!-- Pulsante Avvia Allenamento Libero -->
+            <!-- Active Workout Card - Rinnovato -->
             <com.google.android.material.card.MaterialCardView
-                android:id="@+id/freeWorkoutCard"
+                android:id="@+id/activeWorkoutCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="32dp"
+                android:layout_marginBottom="24dp"
                 app:cardCornerRadius="20dp"
-                app:cardElevation="2dp"
+                app:cardElevation="6dp"
                 app:cardBackgroundColor="@color/primary"
                 android:clickable="true"
                 android:focusable="true"
-                android:foreground="?attr/selectableItemBackground">
+                android:foreground="?attr/selectableItemBackground"
+                android:visibility="gone"
+                tools:visibility="visible">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:padding="20dp"
-                    android:gravity="center_vertical">
+                    android:orientation="vertical"
+                    android:padding="24dp">
 
-                    <ImageView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_marginEnd="16dp"
-                        app:tint="@color/white" />
-
-                    <TextView
-                        android:layout_width="0dp"
+                    <!-- Header del workout attivo -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Avvia allenamento libero"
-                        android:textColor="@color/white"
-                        android:textSize="18sp"
-                        android:textStyle="bold" />
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="16dp">
+
+                        <LinearLayout
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:gravity="center"
+                            android:layout_marginEnd="16dp">
+
+                            <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:src="@drawable/ic_play"
+                                app:tint="@color/primary" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="ALLENAMENTO IN CORSO"
+                                android:textColor="@color/white"
+                                android:textSize="11sp"
+                                android:textStyle="bold"
+                                android:letterSpacing="0.1"
+                                android:alpha="0.9" />
+
+                            <TextView
+                                android:id="@+id/activeWorkoutName"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Scheda allenamento"
+                                android:textColor="@color/white"
+                                android:textSize="20sp"
+                                android:textStyle="bold"
+                                android:layout_marginTop="4dp"
+                                tools:text="Push Day" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:gravity="center_horizontal">
+
+                            <TextView
+                                android:id="@+id/activeWorkoutTime"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="23:45"
+                                android:textColor="@color/white"
+                                android:textSize="18sp"
+                                android:textStyle="bold"
+                                tools:text="23:45" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="minuti"
+                                android:textColor="@color/white"
+                                android:textSize="10sp"
+                                android:alpha="0.8" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+
+                    <!-- Action button -->
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/continueWorkoutBtn"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Continua allenamento"
+                        android:textColor="@color/primary"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        app:backgroundTint="@color/white"
+                        app:cornerRadius="16dp"
+                        app:icon="@drawable/ic_play"
+                        app:iconGravity="textStart"
+                        app:iconTint="@color/primary"
+                        style="@style/Widget.Material3.Button" />
 
                 </LinearLayout>
+
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Sezione Schede di Allenamento -->
+            <!-- Sezione schede migliorata -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:layout_marginBottom="16dp">
+                android:layout_marginBottom="20dp">
 
-                <TextView
+                <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Le tue schede"
-                    android:textColor="@color/ios_label"
-                    android:textSize="22sp"
-                    android:textStyle="bold" />
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Le tue schede"
+                        android:textColor="@color/ios_label"
+                        android:textSize="24sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/workoutCardsSubtitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="3 schede disponibili"
+                        android:textColor="@color/ios_secondaryLabel"
+                        android:textSize="14sp"
+                        android:layout_marginTop="2dp"
+                        tools:text="3 schede disponibili" />
+
+                </LinearLayout>
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/addWorkoutCardBtn"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Aggiungi scheda"
+                    android:text="Aggiungi"
                     android:textColor="@color/white"
                     android:textSize="14sp"
+                    android:textStyle="bold"
                     app:backgroundTint="@color/primary"
-                    app:cornerRadius="16dp"
+                    app:cornerRadius="20dp"
+                    app:icon="@drawable/ic_add"
+                    app:iconGravity="textStart"
+                    app:iconTint="@color/white"
                     style="@style/Widget.Material3.Button" />
 
             </LinearLayout>
@@ -116,111 +261,71 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:nestedScrollingEnabled="false"
+                android:clipToPadding="false"
                 tools:listitem="@layout/item_workout_card" />
 
-            <!-- Messaggio quando non ci sono schede -->
+            <!-- Empty state migliorato -->
             <LinearLayout
                 android:id="@+id/emptyStateLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:gravity="center"
-                android:paddingVertical="48dp"
+                android:paddingVertical="60dp"
+                android:paddingHorizontal="40dp"
                 android:visibility="gone">
 
-                <ImageView
-                    android:layout_width="64dp"
-                    android:layout_height="64dp"
-                    android:layout_marginBottom="16dp"
-                    android:src="@drawable/ic_fitness_center" />
+                <LinearLayout
+                    android:layout_width="120dp"
+                    android:layout_height="120dp"
+                    android:gravity="center"
+                    android:layout_marginBottom="24dp">
+
+                    <ImageView
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:src="@drawable/ic_fitness_center"
+                        app:tint="@color/primary" />
+
+                </LinearLayout>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Nessuna scheda creata"
-                    android:textColor="@color/ios_secondaryLabel"
-                    android:textSize="18sp"
+                    android:text="Inizia il tuo percorso"
+                    android:textColor="@color/ios_label"
+                    android:textSize="22sp"
                     android:textStyle="bold"
+                    android:gravity="center"
                     android:layout_marginBottom="8dp" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Inizia creando la tua prima scheda di allenamento"
-                    android:textSize="14sp"
-                    android:gravity="center" />
+                    android:text="Crea la tua prima scheda di allenamento personalizzata e inizia a raggiungere i tuoi obiettivi"
+                    android:textColor="@color/ios_secondaryLabel"
+                    android:textSize="16sp"
+                    android:gravity="center"
+                    android:lineSpacingExtra="4dp"
+                    android:layout_marginBottom="32dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/createFirstWorkoutBtn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Crea prima scheda"
+                    android:textColor="@color/white"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    app:backgroundTint="@color/primary"
+                    app:cornerRadius="20dp"
+                    app:icon="@drawable/ic_add"
+                    app:iconGravity="textStart"
+                    app:iconTint="@color/white"
+                    android:paddingHorizontal="24dp"
+                    style="@style/Widget.Material3.Button" />
 
             </LinearLayout>
-
-            <!-- Active Workout Card -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/activeWorkoutCard"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="4dp"
-                app:cardBackgroundColor="#0CC31C"
-                android:clickable="true"
-                android:focusable="true"
-                android:visibility="gone">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:padding="16dp"
-                    android:gravity="center_vertical">
-
-                    <ImageView
-                        android:layout_width="36dp"
-                        android:layout_height="36dp"
-                        android:src="@drawable/ic_fitness_center"
-                        app:tint="@color/white"
-                        android:layout_marginEnd="16dp" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Allenamento in corso"
-                            android:textColor="@color/white"
-                            android:textSize="12sp"
-                            android:alpha="0.8" />
-
-                        <TextView
-                            android:id="@+id/activeWorkoutName"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Scheda allenamento"
-                            android:textColor="@color/white"
-                            android:textSize="18sp"
-                            android:textStyle="bold"
-                            android:layout_marginTop="2dp"
-                            tools:text="Giorno 1" />
-
-
-
-                    </LinearLayout>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Continua"
-                        android:textColor="@color/white"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
-                        android:drawablePadding="8dp"
-                        app:drawableEndCompat="@drawable/ic_play"
-                        app:drawableTint="@color/white" />
-
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
 
         </LinearLayout>
 

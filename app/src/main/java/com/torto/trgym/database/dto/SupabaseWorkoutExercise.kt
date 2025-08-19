@@ -14,5 +14,7 @@ data class SupabaseWorkoutExercise(
     @SerialName("order_index")
     val orderIndex: Int,
     @SerialName("created_at")
-    val createdAt: String? = null
+    val createdAt: String? = null,
+    @SerialName("image_path")
+    val imagePath: String? = null,
 )

@@ -11,16 +11,8 @@ TABLE public.exercise_sets (
   CONSTRAINT exercise_sets_pkey PRIMARY KEY (id),
   CONSTRAINT exercise_sets_exercise_id_fkey FOREIGN KEY (exercise_id) REFERENCES public.exercises(id)
 );
-TABLE public.exercises (
-  id uuid NOT NULL DEFAULT gen_random_uuid(),
-  workout_card_id uuid,
-  name character varying NOT NULL,
-  order_index integer NOT NULL,
-  created_at timestamp with time zone DEFAULT now(),
-  exercise_id integer,
-  CONSTRAINT exercises_pkey PRIMARY KEY (id),
-  CONSTRAINT exercises_workout_card_id_fkey FOREIGN KEY (workout_card_id) REFERENCES public.workout_cards(id)
-);
+
+
 TABLE public.starred_exercises (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   user_id uuid,

@@ -12,7 +12,7 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="@color/ios_systemBackground"
+        android:background="@color/transparent"
         android:elevation="2dp">
 
         <!-- Back Button -->

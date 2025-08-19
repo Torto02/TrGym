@@ -130,43 +130,7 @@
 
 
 
-                <com.google.android.material.card.MaterialCardView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="6dp"
-                    app:cardCornerRadius="26dp"
-                    app:cardElevation="2dp"
-                    android:layout_margin="5dp"
-                    app:cardBackgroundColor="#F00D0D"
-                    app:strokeColor="@color/white">
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="16dp"
-                        android:gravity="center">
-
-                        <TextView
-                            android:id="@+id/totalCalories"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="2.1k"
-                            android:textSize="24sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/white"
-                            tools:text="2.1k" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/Calories"
-                            android:textSize="12sp"
-                            android:textColor="@color/white" />
-
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
 
             </LinearLayout>
 

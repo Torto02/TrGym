@@ -56,7 +56,6 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
         emptyStateLayout = view.findViewById(R.id.emptyStateLayout)
         completeWorkoutButton = view.findViewById(R.id.completeWorkoutButton)
         cancelWorkoutButton = view.findViewById(R.id.cancelWorkoutButton)
-        pauseResumeButton = view.findViewById(R.id.pauseResumeButton)
     }
 
     private fun setupRecyclerView() {

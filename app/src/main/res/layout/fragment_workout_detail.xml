@@ -104,72 +104,7 @@
                 style="@style/Widget.Material3.Button.TextButton"
                 tools:text="Giorno 1" />
 
-            <!-- Timer durante allenamento (visibile solo durante workout) -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/timerCard"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:visibility="gone"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="2dp"
-                app:cardBackgroundColor="@color/primary"
-                tools:visibility="visible">
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:padding="20dp"
-                    android:gravity="center_vertical">
-
-                    <ImageView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_marginEnd="16dp"
-                        android:src="@drawable/ic_timer"
-                        app:tint="@color/white" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Tempo allenamento"
-                            android:textColor="@color/white"
-                            android:textSize="14sp"
-                            android:alpha="0.8" />
-
-                        <TextView
-                            android:id="@+id/timerText"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="00:00:00"
-                            android:textColor="@color/white"
-                            android:textSize="24sp"
-                            android:textStyle="bold"
-                            tools:text="01:23:45" />
-
-                    </LinearLayout>
-
-                    <!-- Pulsante Pausa/Resume -->
-                    <ImageView
-                        android:id="@+id/pauseResumeButton"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:background="?attr/selectableItemBackgroundBorderless"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:padding="8dp"
-                        android:src="@drawable/ic_pause"
-                        app:tint="@color/white" />
-
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
 
             <!-- Lista esercizi -->
             <androidx.recyclerview.widget.RecyclerView

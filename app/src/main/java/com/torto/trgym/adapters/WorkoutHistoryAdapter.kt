@@ -1,5 +1,6 @@
 package com.torto.trgym.adapters
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,6 +11,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.card.MaterialCardView
 import com.torto.trgym.R
 import com.torto.trgym.database.entities.WorkoutSession
+import com.torto.trgym.database.entities.WorkoutSessionExercise
+import com.torto.trgym.database.entities.WorkoutSessionSet
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -33,17 +36,22 @@ class WorkoutHistoryAdapter(
         private val workoutDate: TextView = itemView.findViewById(R.id.workoutDate)
         private val workoutDuration: TextView = itemView.findViewById(R.id.workoutDuration)
         private val workoutStatus: TextView = itemView.findViewById(R.id.workoutStatus)
+        private val workoutVolume: TextView = itemView.findViewById(R.id.workoutVolume)
 
 
         fun bind(workoutSession: WorkoutSession) {
             workoutName.text = workoutSession.name
 
-            // Format date
-            val dateFormat = SimpleDateFormat("dd MMM yyyy - HH:mm", Locale.getDefault())
+            // Mostra solo giorno e mese
+            val dateFormat = SimpleDateFormat("dd MMM", Locale.getDefault())
             workoutDate.text = dateFormat.format(Date(workoutSession.startTime))
 
-            // Format duration
-            workoutDuration.text = (workoutSession.endTime?.minus(workoutSession.startTime)).toString()
+// Mostra durata in ore e minuti
+            val durationMs = workoutSession.endTime?.minus(workoutSession.startTime) ?: 0L
+            Log.d("WorkoutHistoryAdapter", "Duration in milliseconds: $durationMs")
+            workoutDuration.text = formatDuration(durationMs)
+
+            // Funzione di formattazione
 
             // Status
             workoutStatus.text = if (workoutSession.isCompleted) {
@@ -60,24 +68,26 @@ class WorkoutHistoryAdapter(
             }
             workoutStatus.setTextColor(statusColor)
 
+            workoutVolume.text = "${calculateTotalVolume(workoutSession)} kg"
+
             cardView.setOnClickListener {
                 onWorkoutClick(workoutSession)
             }
         }
 
         private fun formatDuration(durationMs: Long): String {
-            val totalSeconds = durationMs / 1000
-            val hours = totalSeconds / 3600
-            val minutes = (totalSeconds % 3600) / 60
-            val seconds = totalSeconds % 60
-
-            return if (hours > 0) {
-                String.format("%02d:%02d:%02d", hours, minutes, seconds)
-            } else {
-                String.format("%02d:%02d", minutes, seconds)
-            }
+            val totalMinutes = durationMs / 1000 / 60
+            return "$totalMinutes min"
         }
+
     }
+
+    // Supponendo che WorkoutSession abbia una lista di esercizi con il campo weight
+    private fun calculateTotalVolume(workoutSession: WorkoutSession): Int {
+//        return workoutSession.exercises?.sumOf { it.weight } ?: 0
+        return 0
+    }
+
 
     private class WorkoutSessionDiffCallback : DiffUtil.ItemCallback<WorkoutSession>() {
         override fun areItemsTheSame(oldItem: WorkoutSession, newItem: WorkoutSession): Boolean {
