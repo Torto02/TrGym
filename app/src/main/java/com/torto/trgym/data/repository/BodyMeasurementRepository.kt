@@ -214,10 +214,10 @@ class BodyMeasurementRepository @Inject constructor(
                         name = remote.name,
                         value = remote.value,
                         unit = remote.unit,
-                        measurementDate = java.time.Instant.parse(remote.measurement_date).toEpochMilli(),
+                        measurementDate = Instant.parse(remote.measurement_date).toEpochMilli(),
                         notes = remote.notes,
-                        createdAt = remote.created_at?.let { java.time.Instant.parse(it).toEpochMilli() } ?: System.currentTimeMillis(),
-                        updatedAt = remote.updated_at?.let { java.time.Instant.parse(it).toEpochMilli() } ?: System.currentTimeMillis(),
+                        createdAt = remote.created_at?.let { Instant.parse(it).toEpochMilli() } ?: System.currentTimeMillis(),
+                        updatedAt = remote.updated_at?.let { Instant.parse(it).toEpochMilli() } ?: System.currentTimeMillis(),
                         syncedWithServer = true,
                         pendingSync = false
                     )

@@ -1,3 +1,4 @@
+
 package com.torto.trgym.ui.workout
 
 import android.os.Bundle
@@ -95,7 +96,7 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
             },
             onDeleteSet = workoutDetailViewModel::deleteExerciseSet,
 
-        )
+            )
 
         exercisesRecyclerView.apply {
             adapter = exercisesAdapter
@@ -121,7 +122,7 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
 
     private fun setupClickListeners() {
         backButton.setOnClickListener { handleBackPress() }
-        editButton.setOnClickListener { workoutDetailViewModel.toggleEditMode() }
+        editButton.setOnClickListener { handleEditButtonClick() }
         startWorkoutButton.setOnClickListener { checkAndStartWorkout() }
         addExerciseBtn.setOnClickListener { showSelectExercisesDialog() }
 
@@ -134,18 +135,78 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
         }
     }
 
+    private fun handleEditButtonClick() {
+        if (workoutDetailViewModel.isEditMode.value) {
+            // Trying to exit edit mode - validate first
+            val validationResult = workoutDetailViewModel.validateForExitEditMode()
+            if (!validationResult.isValid) {
+                // Show validation error message
+                val errorMessage = "Inserisci i valori mancanti per peso e ripetizioni"
+                showValidationError(errorMessage, validationResult.errors)
+                return
+            }
+        }
+        // Proceed with toggle if validation passed or entering edit mode
+        workoutDetailViewModel.toggleEditMode()
+    }
+
+    private fun showValidationError(title: String, errors: List<String>) {
+        val detailedMessage = if (errors.size == 1) {
+            errors.first()
+        } else {
+            errors.joinToString("\n• ", "• ")
+        }
+
+        MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_App_MaterialAlertDialog)
+            .setTitle(title)
+            .setMessage(detailedMessage)
+            .setPositiveButton("OK", null)
+            .setIcon(R.drawable.ic_partial_complete)
+            .show()
+
+        // Also show a toast for quick feedback
+        Toast.makeText(requireContext(), title, Toast.LENGTH_LONG).show()
+    }
+
     private fun handleBackPress() {
         if (workoutDetailViewModel.isEditMode.value) {
-            // Ask user if they want to save changes before leaving edit mode
-            showEditModeCancelConfirmation()
+            // Validate before leaving edit mode
+            val validationResult = workoutDetailViewModel.validateForExitEditMode()
+            if (!validationResult.isValid) {
+                // Show validation error
+                showValidationErrorWithBackPress(validationResult.errors)
+            } else {
+                // Ask user if they want to save changes before leaving edit mode
+                showEditModeCancelConfirmation()
+            }
         } else {
             val action = WorkoutDetailFragmentDirections.actionWorkoutDetailFragmentToHomeFragment()
             findNavController().navigate(action)
         }
     }
 
+    private fun showValidationErrorWithBackPress(errors: List<String>) {
+        val detailedMessage = if (errors.size == 1) {
+            errors.first()
+        } else {
+            errors.joinToString("\n• ", "• ")
+        }
+
+        MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_App_MaterialAlertDialog)
+            .setTitle("Valori mancanti")
+            .setMessage("Prima di uscire dalla modalità modifica:\n\n$detailedMessage")
+            .setPositiveButton("Completa i valori", null)
+            .setNegativeButton("Annulla modifiche") { _, _ ->
+                // Force exit edit mode without validation
+                workoutDetailViewModel.cancelEditMode()
+                findNavController().popBackStack()
+            }
+            .setIcon(R.drawable.ic_partial_complete)
+            .show()
+    }
+
     private fun showEditModeCancelConfirmation() {
-        MaterialAlertDialogBuilder(requireContext())
+        MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_App_MaterialAlertDialog)
             .setTitle("Uscire dalla modalità modifica?")
             .setMessage("Hai delle modifiche non salvate. Vuoi salvarle prima di uscire?")
             .setPositiveButton("Salva") { _, _ ->
@@ -163,7 +224,7 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
     }
 
     // ==========================================
-    // VIEWMODEL OBSERVATION WITH DRAG SUPPORT
+    // VIEWMODEL OBSERVATION WITH VALIDATION SUPPORT
     // ==========================================
 
     private fun observeViewModel() {
@@ -207,6 +268,16 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
         workoutDetailViewModel.uiState.collect { state ->
             when (state) {
                 is WorkoutDetailViewModel.UiState.Error -> showError(state.message)
+                is WorkoutDetailViewModel.UiState.ValidationError -> {
+                    // Handle validation errors from ViewModel
+                    val errors = state.message.split("\n").filter { it.isNotBlank() }
+                    if (errors.size > 1) {
+                        // First line is the title, rest are details
+                        showValidationError(errors.first(), errors.drop(1))
+                    } else {
+                        showValidationError("Inserisci i valori mancanti", errors)
+                    }
+                }
                 else -> { /* Handle loading/success states if needed */ }
             }
         }
@@ -257,9 +328,8 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
         }
     }
 
-
     private fun showDeleteConfirmation(title: String, message: String, onConfirm: () -> Unit) {
-        MaterialAlertDialogBuilder(requireContext())
+        MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_App_MaterialAlertDialog)
             .setTitle(title)
             .setMessage(message)
             .setPositiveButton("Elimina") { _, _ -> onConfirm() }
@@ -290,7 +360,7 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
         nameInput.setText(currentCard?.name ?: "")
         descriptionInput.setText(currentCard?.description ?: "")
 
-        MaterialAlertDialogBuilder(requireContext())
+        MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_App_MaterialAlertDialog)
             .setTitle("Modifica scheda")
             .setView(dialogView)
             .setPositiveButton("Salva") { _, _ ->
@@ -328,7 +398,7 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
     }
 
     private fun showActiveSessionDialog(activeSession: WorkoutSession) {
-        MaterialAlertDialogBuilder(requireContext())
+        MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_App_MaterialAlertDialog)
             .setTitle("Allenamento in corso")
             .setMessage("Hai già un allenamento in corso. Vuoi continuare quello esistente o annullarlo?")
             .setPositiveButton("Continua") { _, _ ->

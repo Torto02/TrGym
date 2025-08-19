@@ -40,6 +40,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     private lateinit var minutes: TextView
     private lateinit var activeWorkoutStatus: TextView
     private lateinit var workoutCardsSubtitle: TextView
+    private lateinit var createFirstWorkoutBtn: MaterialButton
 
     @Inject
     lateinit var workoutDao: WorkoutDao  // Aggiungo l'iniezione di WorkoutDao
@@ -59,7 +60,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     }
 
     private fun setupViews(view: View) {
-        val addWorkoutCardBtn = view.findViewById<com.google.android.material.button.MaterialButton>(R.id.addWorkoutCardBtn)
+        val addWorkoutCardBtn = view.findViewById<MaterialButton>(R.id.addWorkoutCardBtn)
         activeWorkoutCard = view.findViewById(R.id.activeWorkoutCard)
 
 
@@ -68,6 +69,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         minutes = view.findViewById(R.id.minutes)
         activeWorkoutStatus = view.findViewById(R.id.activeWorkoutStatus)
         workoutCardsSubtitle = view.findViewById(R.id.workoutCardsSubtitle)
+        createFirstWorkoutBtn = view.findViewById(R.id.createFirstWorkoutBtn)
 
 
         addWorkoutCardBtn.setOnClickListener {
@@ -142,6 +144,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             if (isEmpty) {
                 emptyStateLayout.visibility = View.VISIBLE
                 recyclerView.visibility = View.GONE
+                createFirstWorkoutBtn.setOnClickListener { showCreateWorkoutCardDialog() }
             } else {
                 emptyStateLayout.visibility = View.GONE
                 recyclerView.visibility = View.VISIBLE
@@ -154,7 +157,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         val nameEditText = dialogView.findViewById<TextInputEditText>(R.id.workoutNameEditText)
         val descriptionEditText = dialogView.findViewById<TextInputEditText>(R.id.workoutDescriptionEditText)
 
-        MaterialAlertDialogBuilder(requireContext())
+        MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_App_MaterialAlertDialog)
             .setTitle("Crea nuova scheda")
             .setView(dialogView)
             .setPositiveButton("Crea") { _, _ ->
@@ -172,7 +175,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     }
 
     private fun showWorkoutCardMenu(workoutCard: com.torto.trgym.database.entities.WorkoutCard) {
-        MaterialAlertDialogBuilder(requireContext())
+        MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_App_MaterialAlertDialog)
             .setTitle(workoutCard.name)
             .setItems(arrayOf("Elimina")) { _, which ->
                 when (which) {
@@ -187,7 +190,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     }
 
     private fun showDeleteConfirmationDialog(workoutCard: com.torto.trgym.database.entities.WorkoutCard) {
-        MaterialAlertDialogBuilder(requireContext())
+        MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_App_MaterialAlertDialog)
             .setTitle("Elimina scheda")
             .setMessage("Sei sicuro di voler eliminare \"${workoutCard.name}\"? Questa azione non può essere annullata.")
             .setPositiveButton("Elimina") { _, _ ->

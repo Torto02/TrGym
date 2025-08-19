@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import javax.inject.Inject
+import kotlin.collections.addAll
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
@@ -98,6 +99,48 @@ class WorkoutDetailViewModel @Inject constructor(
     }
 
     // ==========================================
+    // VALIDATION METHODS
+    // ==========================================
+
+    /**
+     * Verifica se ci sono set con valori mancanti (peso o ripetizioni nulli/vuoti)
+     * @return Una lista di stringi che descrivono i problemi trovati
+     */
+    private fun validateSets(): List<String> {
+        val validationErrors = mutableListOf<String>()
+        val currentExercises = _localExercisesWithSets.value
+
+        for (exerciseDetail in currentExercises) {
+            val exercise = exerciseDetail.exercise
+            val sets = exerciseDetail.sets
+
+            val invalidSets = sets.filter { set ->
+                set.weightKg == null || set.reps == null || set.reps == 0
+            }
+
+            if (invalidSets.isNotEmpty()) {
+                val setNumbers = invalidSets.joinToString(", ") { "Set ${it.setNumber}" }
+                validationErrors.add("${exercise.name}: $setNumbers mancano peso o ripetizioni")
+            }
+        }
+
+        return validationErrors
+    }
+
+    /**
+     * Verifica se è possibile uscire dalla modalità edit
+     * @return ValidationResult che indica se la validazione è passata e eventuali errori
+     */
+    fun validateForExitEditMode(): ValidationResult {
+        if (!_isEditMode.value) {
+            return ValidationResult(true, emptyList())
+        }
+
+        val validationErrors = validateSets()
+        return ValidationResult(validationErrors.isEmpty(), validationErrors)
+    }
+
+    // ==========================================
     // INITIALIZATION AND DATA LOADING
     // ==========================================
 
@@ -159,7 +202,17 @@ class WorkoutDetailViewModel @Inject constructor(
     fun toggleEditMode() {
         viewModelScope.launch {
             if (_isEditMode.value) {
-                // Exiting edit mode - commit all pending changes
+                // Exiting edit mode - validate first
+                val validationResult = validateForExitEditMode()
+                if (!validationResult.isValid) {
+                    // Validation failed - emit error state
+                    val errorMessage = "Inserisci i valori mancanti per peso e ripetizioni:\n" +
+                            validationResult.errors.joinToString("\n")
+                    _uiState.value = UiState.ValidationError(errorMessage)
+                    return@launch
+                }
+
+                // Validation passed - commit all pending changes
                 try {
                     Log.d("WorkoutDetailViewModel", "Saving pending changes...")
                     savePendingChanges()
@@ -167,6 +220,7 @@ class WorkoutDetailViewModel @Inject constructor(
                     // Attendi che le modifiche siano salvate prima di reinizializzare
                     delay(100)
                     initializeLocalCache()
+                    _uiState.value = UiState.Success
                     Log.d("WorkoutDetailViewModel", "Edit mode exited successfully")
                 } catch (e: Exception) {
                     Log.e("WorkoutDetailViewModel", "Error exiting edit mode", e)
@@ -177,6 +231,7 @@ class WorkoutDetailViewModel @Inject constructor(
                 clearPendingChanges()
                 initializeLocalCache() // Refresh local cache from DB
                 _isEditMode.value = true
+                _uiState.value = UiState.Success
                 Log.d("WorkoutDetailViewModel", "Edit mode entered")
             }
         }
@@ -188,6 +243,7 @@ class WorkoutDetailViewModel @Inject constructor(
                 clearPendingChanges()
                 initializeLocalCache() // Reset local cache to DB state
                 _isEditMode.value = false
+                _uiState.value = UiState.Success
                 Log.d("WorkoutDetailViewModel", "Edit mode cancelled")
             }
         }
@@ -284,14 +340,27 @@ class WorkoutDetailViewModel @Inject constructor(
             )
         }
 
-        // Add to pending changes
-        pendingAddedExercises.addAll(newExercises)
+        val newSets = newExercises.map { newExercise ->
+            ExerciseSet(
+                exerciseId = newExercise.id,
+                setNumber = 1,
+                weightKg = null,
+                reps = null,
+                updatedAt = System.currentTimeMillis()
+            )
+        }
 
-        // Update local cache for UI
-        val newDetails = newExercises.map { WorkoutExerciseDetail(it, emptyList()) }
+        // Aggiorna pending changes
+        pendingAddedExercises.addAll(newExercises)
+        pendingAddedSets.addAll(newSets)
+
+        // Aggiorna la cache locale per la UI
+        val newDetails = newExercises.mapIndexed { index, exercise ->
+            WorkoutExerciseDetail(exercise, listOf(newSets[index]))
+        }
         _localExercisesWithSets.value = _localExercisesWithSets.value + newDetails
 
-        Log.d("WorkoutDetailViewModel", "Added ${newExercises.size} exercises")
+        Log.d("WorkoutDetailViewModel", "Added ${newExercises.size} exercises with empty set")
     }
 
     fun deleteExercise(exercise: WorkoutExercise) {
@@ -441,6 +510,8 @@ class WorkoutDetailViewModel @Inject constructor(
 
         Log.d("WorkoutDetailViewModel", "Updated set: ${set.id}")
     }
+    var onConfirmDeleteLastSet: ((ExerciseSet, WorkoutExercise) -> Unit)? = null
+
 
     fun deleteExerciseSet(set: ExerciseSet) {
         if (!_isEditMode.value) return
@@ -519,12 +590,18 @@ class WorkoutDetailViewModel @Inject constructor(
     suspend fun cancelActiveSession(session: WorkoutSession) = workoutRepository.deleteWorkoutSession(session)
 
     // ==========================================
-    // UI STATE
+    // UI STATE AND DATA CLASSES
     // ==========================================
 
     sealed interface UiState {
         object Loading : UiState
         object Success : UiState
         data class Error(val message: String) : UiState
+        data class ValidationError(val message: String) : UiState
     }
+
+    data class ValidationResult(
+        val isValid: Boolean,
+        val errors: List<String>
+    )
 }

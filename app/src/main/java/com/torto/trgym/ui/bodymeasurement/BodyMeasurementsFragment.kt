@@ -49,7 +49,13 @@ class BodyMeasurementsFragment : Fragment() {
         setupRecyclerView()
         setupClickListeners()
         observeViewModel()
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.synchSupabase()
+        }
     }
+
+
 
     private fun setupViews(view: View) {
         recyclerView = view.findViewById(R.id.recyclerViewMeasurements)
@@ -161,7 +167,7 @@ class BodyMeasurementsFragment : Fragment() {
 
         unitTextView.text = unit
 
-        MaterialAlertDialogBuilder(requireContext())
+        MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_App_MaterialAlertDialog)
             .setTitle("Aggiungi Misurazione")
             .setMessage("Aggiungi un nuovo valore per: $categoryName")
             .setView(dialogView)

@@ -224,7 +224,7 @@
                 android:clipToPadding="false"
                 tools:listitem="@layout/item_workout_card" />
 
-            <!-- Empty state migliorato -->
+
             <LinearLayout
                 android:id="@+id/emptyStateLayout"
                 android:layout_width="match_parent"
@@ -252,7 +252,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Inizia il tuo percorso"
+                    android:text="Start your journey"
                     android:textColor="@color/ios_label"
                     android:textSize="22sp"
                     android:textStyle="bold"
@@ -262,7 +262,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Crea la tua prima scheda di allenamento personalizzata e inizia a raggiungere i tuoi obiettivi"
+                    android:text="Create your first personalized training plan and start achieving your goals."
                     android:textColor="@color/ios_secondaryLabel"
                     android:textSize="16sp"
                     android:gravity="center"
@@ -273,7 +273,7 @@
                     android:id="@+id/createFirstWorkoutBtn"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Crea prima scheda"
+                    android:text="Create first workout"
                     android:textColor="@color/white"
                     android:textSize="16sp"
                     android:textStyle="bold"

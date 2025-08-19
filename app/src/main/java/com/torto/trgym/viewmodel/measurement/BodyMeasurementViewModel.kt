@@ -29,6 +29,12 @@ class BodyMeasurementViewModel @Inject constructor(
         loadMeasurementCategories()
     }
 
+    suspend fun synchSupabase(){
+        repository.syncUnsyncedMeasurements()
+        repository.downloadMeasurementsFromSupabase()
+
+    }
+
     private fun loadMeasurementCategories() {
         viewModelScope.launch {
             try {

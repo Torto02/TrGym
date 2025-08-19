@@ -173,7 +173,7 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
     }
 
     private fun showCompleteWorkoutConfirmation() {
-        MaterialAlertDialogBuilder(requireContext())
+        MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_App_MaterialAlertDialog)
             .setTitle("Completa allenamento")
             .setMessage("Sei sicuro di voler concludere l'allenamento? Verranno salvati tutti i set completati.")
             .setPositiveButton("Completa") { _, _ ->
@@ -184,7 +184,7 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
     }
 
     private fun showCancelWorkoutConfirmation() {
-        MaterialAlertDialogBuilder(requireContext())
+        MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_App_MaterialAlertDialog)
             .setTitle("Annulla allenamento")
             .setMessage("Sei sicuro di voler annullare l'allenamento? Tutti i progressi andranno persi.")
             .setPositiveButton("Annulla allenamento") { _, _ ->
@@ -195,7 +195,7 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
     }
 
     private fun showExitConfirmationDialog() {
-        MaterialAlertDialogBuilder(requireContext())
+        MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_App_MaterialAlertDialog)
             .setTitle("Uscire dall'allenamento?")
             .setMessage("L'allenamento rimarrÃ  attivo. Per completarlo o annullarlo torna a questa schermata.")
             .setPositiveButton("Esci") { _, _ ->

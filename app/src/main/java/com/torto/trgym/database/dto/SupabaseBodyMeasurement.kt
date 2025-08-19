@@ -1,7 +1,9 @@
 package com.torto.trgym.database.dto
 
+import kotlinx.serialization.Serializable
 
 
+@Serializable
 data class SupabaseBodyMeasurement(
     val id: String? = null,
     val user_id: String, // Snake case per Supabase

@@ -53,7 +53,7 @@ class SelectExercisesDialog : DialogFragment() {
         setupViews(view)
         setupRecyclerView(view)
         observeViewModel()
-        return MaterialAlertDialogBuilder(requireContext())
+        return MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_App_MaterialAlertDialog)
             .setView(view)
             .create()
     }

@@ -29,6 +29,7 @@ class ProfileViewModel @Inject constructor(
     private fun fetchUserProfile() {
         viewModelScope.launch {
             try {
+
                 val user = authRepository.getCurrentUser()
 
                 if (user == null) {

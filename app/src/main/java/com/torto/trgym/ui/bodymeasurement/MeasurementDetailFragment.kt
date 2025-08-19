@@ -78,6 +78,8 @@ class MeasurementDetailFragment : Fragment() {
             // Carica i dati per questa categoria
             loadMeasurementsForCategory(categoryName)
             loadStatsForCategory(categoryName)
+
+
         } else {
             Log.e("MeasurementDetailFragment", "No category name provided in arguments")
             findNavController().navigateUp()
@@ -101,6 +103,7 @@ class MeasurementDetailFragment : Fragment() {
     }
 
     private fun setupRecyclerView() {
+
         adapter = MeasurementDetailAdapter(
             onEditClick = { measurement ->
                 showEditMeasurementDialog(measurement)
@@ -183,7 +186,7 @@ class MeasurementDetailFragment : Fragment() {
 
         unitTextView.text = unit
 
-        MaterialAlertDialogBuilder(requireContext())
+        MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_App_MaterialAlertDialog)
             .setTitle("Aggiungi Misurazione")
             .setMessage("Aggiungi un nuovo valore per: $categoryName")
             .setView(dialogView)
@@ -222,7 +225,7 @@ class MeasurementDetailFragment : Fragment() {
         notesEditText.setText(measurement.notes ?: "")
         unitTextView.text = measurement.unit
 
-        MaterialAlertDialogBuilder(requireContext())
+        MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_App_MaterialAlertDialog)
             .setTitle("Modifica Misurazione")
             .setView(dialogView)
             .setPositiveButton("Salva") { _, _ ->
@@ -248,7 +251,7 @@ class MeasurementDetailFragment : Fragment() {
     }
 
     private fun showDeleteConfirmationDialog(measurement: BodyMeasurement) {
-        MaterialAlertDialogBuilder(requireContext())
+        MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_App_MaterialAlertDialog)
             .setTitle("Elimina Misurazione")
             .setMessage("Sei sicuro di voler eliminare questa misurazione?")
             .setPositiveButton("Elimina") { _, _ ->
@@ -262,7 +265,7 @@ class MeasurementDetailFragment : Fragment() {
     }
 
     private fun showDeleteCategoryDialog(categoryName: String) {
-        MaterialAlertDialogBuilder(requireContext())
+        MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_App_MaterialAlertDialog)
             .setTitle("Elimina Categoria")
             .setMessage("Sei sicuro di voler eliminare tutte le misurazioni per '$categoryName'? Questa azione non può essere annullata.")
             .setPositiveButton("Elimina Tutto") { _, _ ->

@@ -1,125 +1,143 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="10dp"
-    android:background="@color/white">
+    xmlns:tools="http://schemas.android.com/tools"
+    android:backgroundTint="@color/transparent">
 
-    <!-- Titolo -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Seleziona esercizi"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:gravity="center"
-        android:layout_marginBottom="16dp" />
-
-    <!-- Filtri (uguale a fragment_exercises) -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginBottom="8dp">
-
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/btnFilterAll"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginEnd="4dp"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="2dp"
-            app:strokeWidth="1dp"
-            app:strokeColor="@color/stroke_color">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="All"
-                android:textColor="@color/white"
-                android:background="@color/primary"
-                android:textAlignment="center"
-                android:padding="8dp"
-                android:textSize="12sp" />
-
-        </com.google.android.material.card.MaterialCardView>
-
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/btnFilterMuscles"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="2"
-            android:layout_marginHorizontal="4dp"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="2dp"
-            app:strokeWidth="1dp"
-            app:strokeColor="@color/stroke_color">
-
-            <TextView
-                android:id="@+id/selectedMuscle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="All muscles"
-                android:background="@color/white"
-                android:elevation="10dp"
-                android:textAlignment="center"
-                android:padding="8dp"
-                android:textSize="12sp" />
-
-        </com.google.android.material.card.MaterialCardView>
-
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/btnFilterEquipment"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="2"
-            android:layout_marginStart="4dp"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="2dp"
-            app:strokeWidth="1dp"
-            app:strokeColor="@color/stroke_color">
-
-            <TextView
-                android:id="@+id/selectedEquipment"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="All equipment"
-                android:textAlignment="center"
-                android:padding="8dp"
-                android:background="@color/white"
-                android:textSize="12sp" />
-
-        </com.google.android.material.card.MaterialCardView>
-
-        <ImageView
-            android:id="@+id/starButton"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:layout_marginStart="8dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Filter by favorites"
-            android:padding="6dp"
-            android:src="@drawable/ic_star_outline" />
-
-    </LinearLayout>
-
-    <!-- RecyclerView per gli esercizi -->
+    <!-- RecyclerView per gli esercizi a tutto schermo -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvExercises"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:layout_marginBottom="16dp" />
+        android:layout_height="match_parent"
+        android:paddingTop="120dp"
+        android:paddingBottom="80dp"
+        android:clipToPadding="false"
+        tools:listitem="@layout/exercise_item" />
 
-    <!-- Pulsanti -->
+    <!-- Contenitore elementi in overlay sopra -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_gravity="top"
+        android:padding="10dp"
+        android:elevation="10dp">
+
+        <!-- Titolo -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Select Exercises"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:layout_marginBottom="16dp"
+            android:textColor="@color/primary"
+            android:background="#96FFFFFF"
+            android:padding="8dp" />
+
+        <!-- Filtri -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:background="@color/transparent"
+            android:layout_marginBottom="8dp">
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/btnFilterAll"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="12dp"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="0dp"
+                android:background="@color/transparent"
+                app:strokeWidth="0dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="20dp"
+                    android:paddingVertical="10dp"
+                    android:text="@string/all_exercises"
+                    android:textColor="@color/white"
+                    android:background="#3151E7"
+                    android:textStyle="bold"
+                    android:textSize="15sp" />
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/btnFilterMuscles"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="12dp"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="0dp"
+                app:strokeWidth="1dp"
+                app:strokeColor="#E5E5EA"
+                android:backgroundTint="#D9FFFFFF">
+
+                <TextView
+                    android:id="@+id/selectedMuscle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="20dp"
+                    android:paddingVertical="10dp"
+                    android:text="@string/all_muscles"
+                    android:textColor="@color/ios_label"
+                    android:textSize="15sp" />
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/btnFilterEquipment"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="0dp"
+                app:strokeWidth="1dp"
+                app:strokeColor="#E5E5EA"
+                android:backgroundTint="#D9FFFFFF">
+
+                <TextView
+                    android:id="@+id/selectedEquipment"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="20dp"
+                    android:paddingVertical="10dp"
+                    android:text="@string/all_equipment"
+                    android:textColor="@color/ios_label"
+                    android:textSize="15sp"/>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <ImageView
+                android:id="@+id/starButton"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_marginStart="8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:backgroundTint="#D9FFFFFF"
+                android:contentDescription="Filter by favorites"
+                android:padding="6dp"
+                android:src="@drawable/ic_star_outline" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Pulsanti in overlay in basso -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="end">
+        android:gravity="end"
+        android:layout_gravity="bottom"
+        android:padding="10dp"
+        android:elevation="10dp">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnCancel"
@@ -143,4 +161,4 @@
 
     </LinearLayout>
 
-</LinearLayout>
+</FrameLayout>
