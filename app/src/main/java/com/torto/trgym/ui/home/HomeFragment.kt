@@ -13,6 +13,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
@@ -22,6 +23,9 @@ import com.torto.trgym.database.dao.WorkoutDao
 import com.torto.trgym.database.entities.WorkoutSession
 import com.torto.trgym.viewmodel.home.HomeViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -31,6 +35,11 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     private val viewModel: HomeViewModel by viewModels()
     private lateinit var workoutCardsAdapter: WorkoutCardsAdapter
     private lateinit var activeWorkoutCard: MaterialCardView
+    private lateinit var activeWorkoutTime: TextView
+    private lateinit var continueWorkoutBtn: MaterialButton
+    private lateinit var minutes: TextView
+    private lateinit var activeWorkoutStatus: TextView
+    private lateinit var workoutCardsSubtitle: TextView
 
     @Inject
     lateinit var workoutDao: WorkoutDao  // Aggiungo l'iniezione di WorkoutDao
@@ -54,11 +63,17 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         activeWorkoutCard = view.findViewById(R.id.activeWorkoutCard)
 
 
+        activeWorkoutTime = view.findViewById(R.id.activeWorkoutTime)
+        continueWorkoutBtn = view.findViewById(R.id.continueWorkoutBtn)
+        minutes = view.findViewById(R.id.minutes)
+        activeWorkoutStatus = view.findViewById(R.id.activeWorkoutStatus)
+        workoutCardsSubtitle = view.findViewById(R.id.workoutCardsSubtitle)
+
 
         addWorkoutCardBtn.setOnClickListener {
             showCreateWorkoutCardDialog()
         }
-        
+
         activeWorkoutCard.setOnClickListener {
             navigateToActiveWorkout()
         }
@@ -89,6 +104,9 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.workoutCards.collect { workoutCards ->
                     workoutCardsAdapter.submitList(workoutCards)
+
+                    workoutCardsSubtitle.text = "${workoutCards.size} workout cards"
+                    updateEmptyState(workoutCards.isEmpty())
                     updateEmptyState(workoutCards.isEmpty())
                 }
             }
@@ -194,22 +212,33 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         }
     }
 
+    private var timerJob: Job? = null
+
     private fun showActiveWorkoutBanner(session: WorkoutSession) {
         activeWorkoutCard.visibility = View.VISIBLE
-        
-        // Update workout name in the banner
         val workoutNameText = activeWorkoutCard.findViewById<TextView>(R.id.activeWorkoutName)
         workoutNameText.text = session.name
-        
-        // Update timer if needed
 
-        val startTime = session.startTime
-        val elapsedTime = System.currentTimeMillis() - startTime
-
+        timerJob?.cancel()
+        timerJob = viewLifecycleOwner.lifecycleScope.launch {
+            while (isActive) {
+                val startTime = session.startTime
+                val elapsedTime = System.currentTimeMillis() - startTime
+                activeWorkoutTime.text = formatElapsedTime(elapsedTime)
+                delay(1000)
+            }
+        }
     }
 
     private fun hideActiveWorkoutBanner() {
-        activeWorkoutCard.visibility = View.GONE
+        timerJob?.cancel()
+        activeWorkoutCard.visibility = View.VISIBLE
+        val workoutNameText = activeWorkoutCard.findViewById<TextView>(R.id.activeWorkoutName)
+        workoutNameText.text = "Nessun allenamento in corso \nApri una scheda per avviare un allenamento"
+        activeWorkoutTime.visibility = View.GONE
+        continueWorkoutBtn.visibility = View.GONE
+        minutes.visibility= View.GONE
+        activeWorkoutStatus.visibility = View.GONE
     }
 
     private fun navigateToActiveWorkout() {
@@ -223,10 +252,11 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         }
     }
 
+
     private fun formatElapsedTime(elapsedMillis: Long): String {
-        val hours = java.util.concurrent.TimeUnit.MILLISECONDS.toHours(elapsedMillis)
-        val minutes = java.util.concurrent.TimeUnit.MILLISECONDS.toMinutes(elapsedMillis) % 60
-        val seconds = java.util.concurrent.TimeUnit.MILLISECONDS.toSeconds(elapsedMillis) % 60
-        return String.format("%02d:%02d:%02d", hours, minutes, seconds)
+        val totalSeconds = elapsedMillis / 1000
+        val minutes = totalSeconds / 60
+        val seconds = totalSeconds % 60
+        return String.format("%02d:%02d", minutes, seconds)
     }
 }

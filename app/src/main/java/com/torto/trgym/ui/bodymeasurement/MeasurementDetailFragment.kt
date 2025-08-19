@@ -22,6 +22,7 @@ import com.google.android.material.textfield.TextInputEditText
 import com.torto.trgym.R
 import com.torto.trgym.database.entities.BodyMeasurement
 import com.torto.trgym.database.dto.MeasurementStats
+import com.torto.trgym.ui.exercises.ExerciseDetailFragmentDirections
 import com.torto.trgym.viewmodel.bodymeasurement.BodyMeasurementViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -125,8 +126,12 @@ class MeasurementDetailFragment : Fragment() {
 
         // Back button
         view?.findViewById<ImageView>(R.id.btnBack)?.setOnClickListener {
-            findNavController().navigateUp()
+            val action = MeasurementDetailFragmentDirections.actionMeasurementDetailFragmentToBodyMeasurementsFragment()
+            findNavController().navigate(action)
         }
+
+
+
 
         // Delete category button
         view?.findViewById<ImageView>(R.id.btnDeleteCategory)?.setOnClickListener {

@@ -25,6 +25,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="horizontal"
+                android:elevation="1dp"
                 android:gravity="center_vertical">
 
                 <com.google.android.material.button.MaterialButton

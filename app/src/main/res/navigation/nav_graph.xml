@@ -38,9 +38,6 @@
             app:destination="@id/workoutDetailFragment" />
 
         <action
-            android:id="@+id/action_home_to_freeWorkout"
-            app:destination="@id/freeWorkoutFragment" />
-        <action
             android:id="@+id/action_homeFragment_to_activeWorkoutFragment"
             app:destination="@id/activeWorkoutFragment"
 
@@ -95,8 +92,6 @@
     </fragment>
 
     <!-- Free Workout Fragment (placeholder) -->
-    <fragment
-        android:id="@+id/freeWorkoutFragment" />
 
 
     <fragment
@@ -193,13 +188,20 @@
         <action
             android:id="@+id/action_bodyMeasurementsFragment_to_measurementDetailFragment"
             app:destination="@id/measurementDetailFragment" />
+        <action
+            android:id="@+id/action_bodyMeasurementsFragment_to_profileFragment"
+            app:destination="@id/profileFragment" />
     </fragment>
 
     <fragment
         android:id="@+id/measurementDetailFragment"
         android:name="com.torto.trgym.ui.bodymeasurement.MeasurementDetailFragment"
         android:label="Measurement Detail"
-        tools:layout="@layout/fragment_measurement_detail" />
+        tools:layout="@layout/fragment_measurement_detail" >
+        <action
+            android:id="@+id/action_measurementDetailFragment_to_bodyMeasurementsFragment"
+            app:destination="@id/bodyMeasurementsFragment" />
+    </fragment>
 
 
 </navigation>
