@@ -147,6 +147,9 @@ interface WorkoutDao {
     suspend fun insertSessionExercise(exercise: WorkoutSessionExercise): Long
 
     @Update
+    suspend fun update(workoutExercise: WorkoutExercise)
+
+    @Update
     suspend fun updateSessionExercise(exercise: WorkoutSessionExercise)
     
     @Delete

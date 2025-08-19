@@ -1,6 +1,7 @@
 package com.torto.trgym.data.repository
 
 import android.util.Log
+import androidx.room.Update
 import com.torto.trgym.database.dao.WorkoutDao
 import com.torto.trgym.database.dto.WorkoutSessionExerciseDetail
 import com.torto.trgym.database.dto.SupabaseWorkoutCard
@@ -214,7 +215,16 @@ class WorkoutRepository @Inject constructor(
             }
         }
     }
-    
+
+    // Assicurati che il WorkoutRepository abbia questo metodo:
+
+
+
+    suspend fun updateWorkoutExercise(workoutExercise: WorkoutExercise) {
+        workoutDao.update(workoutExercise)
+    }
+
+
     private suspend fun mergeSetsFromServer(exerciseId: String) {
         val supabaseSets = supabaseClient.from("exercise_sets")
             .select { filter { eq("exercise_id", exerciseId) } }
@@ -282,6 +292,7 @@ class WorkoutRepository @Inject constructor(
             Log.e("WorkoutRepository", "Error syncing all sets for card $cardId", e)
         }
     }
+// Assicurati che il WorkoutRepository abbia questo metodo:
 
 
     fun getSessionExercisesWithSets(sessionId: String): Flow<List<WorkoutSessionExerciseDetail>> = workoutDao.getSessionExercisesWithSetsFlow(sessionId)

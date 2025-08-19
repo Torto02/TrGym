@@ -34,6 +34,7 @@ class WorkoutHistoryAdapter(
         private val workoutDuration: TextView = itemView.findViewById(R.id.workoutDuration)
         private val workoutStatus: TextView = itemView.findViewById(R.id.workoutStatus)
 
+
         fun bind(workoutSession: WorkoutSession) {
             workoutName.text = workoutSession.name
 
@@ -42,11 +43,7 @@ class WorkoutHistoryAdapter(
             workoutDate.text = dateFormat.format(Date(workoutSession.startTime))
 
             // Format duration
-            workoutDuration.text = if (workoutSession.totalDurationMs != null) {
-                formatDuration(workoutSession.totalDurationMs)
-            } else {
-                "Durata non disponibile"
-            }
+            workoutDuration.text = (workoutSession.endTime?.minus(workoutSession.startTime)).toString()
 
             // Status
             workoutStatus.text = if (workoutSession.isCompleted) {
