@@ -1,50 +1,92 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.torto.trgym.wear">
 
     <uses-feature android:name="android.hardware.type.watch" />
 
     <!-- Permissions -->
     <uses-permission android:name="android.permission.BODY_SENSORS" />
+    <uses-permission android:name="android.permission.BODY_SENSORS_BACKGROUND" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Query per verificare se l'app companion è installata -->
+    <queries>
+        <package android:name="com.torto.trgym" />
+    </queries>
 
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@android:style/Theme.DeviceDefault">
+        android:theme="@android:style/Theme.DeviceDefault"
+        tools:targetApi="34">
 
         <uses-library
             android:name="com.google.android.wearable"
             android:required="true" />
 
+        <!-- Indica che può funzionare sia standalone che companion -->
         <meta-data
             android:name="com.google.android.wearable.standalone"
             android:value="false" />
 
+        <!-- Activity principale -->
         <activity
-            android:name=".presentation.WearHeartRateActivity"
+            android:name=".WearHeartRateActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:taskAffinity="">
+            android:launchMode="singleTop"
+            android:taskAffinity=""
+            android:keepScreenOn="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <!-- Intent filter per essere lanciata dal servizio -->
+            <intent-filter>
+                <action android:name="com.torto.trgym.wear.START_MONITORING" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
         </activity>
 
         <!-- Servizio per ricevere messaggi anche in background -->
-        <service android:name=".presentation.WearHeartRateService" android:exported="false">
+        <service
+            android:name=".WearHeartRateService"
+            android:exported="true"
+            android:permission="com.google.android.gms.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <!-- Filtro per messaggi Wear OS -->
+                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
+                <data android:scheme="wear" android:host="*" />
+            </intent-filter>
+
+            <!-- Filtri specifici per i path dei messaggi -->
             <intent-filter>
                 <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
                 <data android:scheme="wear" android:host="*" android:pathPrefix="/start_heart_rate_monitoring" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
                 <data android:scheme="wear" android:host="*" android:pathPrefix="/stop_heart_rate_monitoring" />
             </intent-filter>
+
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
+                <data android:scheme="wear" android:host="*" android:pathPrefix="/ping" />
+            </intent-filter>
         </service>
+
+
     </application>
+
 </manifest>

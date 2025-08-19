@@ -21,13 +21,25 @@ import com.torto.trgym.R
 import com.torto.trgym.viewmodel.profile.ProfileViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-// Aggiungi queste importazioni all'inizio del file
-
 
 @AndroidEntryPoint
 class ProfileFragment : Fragment(R.layout.fragment_profile) {
 
     private val viewModel: ProfileViewModel by viewModels()
+
+    // Rileva se siamo in emulatore
+    private val isEmulator: Boolean by lazy {
+        (Build.FINGERPRINT.startsWith("generic")
+                || Build.FINGERPRINT.startsWith("unknown")
+                || Build.MODEL.contains("google_sdk")
+                || Build.MODEL.contains("Emulator")
+                || Build.MODEL.contains("Android SDK built for x86")
+                || Build.MANUFACTURER.contains("Genymotion")
+                || Build.HARDWARE.contains("ranchu")
+                || Build.HARDWARE.contains("goldfish")
+                || Build.PRODUCT.contains("sdk")
+                || Build.PRODUCT.contains("emulator"))
+    }
 
     override fun onResume() {
         super.onResume()
@@ -43,6 +55,8 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         val resyncCard = view.findViewById<MaterialCardView>(R.id.btnResync)
         val bodyMeasurementsCard = view.findViewById<MaterialCardView>(R.id.cardBodyMeasurements)
         val heartRateMonitorCard = view.findViewById<MaterialCardView>(R.id.cardHeartRateMonitor)
+
+        Log.d("ProfileFragment", "Ambiente rilevato: ${if (isEmulator) "Emulatore" else "Dispositivo fisico"}")
 
         setupClickListeners(logoutCard, workoutHistoryCard, resyncCard, bodyMeasurementsCard, heartRateMonitorCard)
         observeUiState(emailTv, textName, totalWorkouts, logoutCard, workoutHistoryCard, resyncCard, bodyMeasurementsCard, heartRateMonitorCard)
@@ -60,7 +74,14 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         }
 
         heartRateMonitorCard.setOnClickListener {
-            checkAndRequestHeartRatePermissions()
+            if (isEmulator) {
+                // In emulatore, vai direttamente al fragment senza controllo permessi
+                Log.d("ProfileFragment", "Emulatore rilevato - skip controllo permessi")
+                navigateToHeartRateMonitor()
+            } else {
+                // Su dispositivo fisico, controlla i permessi
+                checkAndRequestHeartRatePermissions()
+            }
         }
 
         workoutHistoryCard.setOnClickListener {
@@ -68,7 +89,6 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         }
 
         resyncCard.setOnClickListener {
-            // Avvia la sincronizzazione completa
             viewModel.syncWithSupabase()
         }
 
@@ -92,36 +112,33 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                 viewModel.uiState.collect { state ->
                     when (state) {
                         is ProfileViewModel.ProfileUiState.Loading -> {
-                            setCardsEnabled(false, logoutCard, workoutHistoryCard, resyncCard, bodyMeasurementsCard)
-                            // Potresti mostrare un loading spinner qui
+                            setCardsEnabled(false, logoutCard, workoutHistoryCard, resyncCard, bodyMeasurementsCard, heartRateMonitorCard)
                         }
 
                         is ProfileViewModel.ProfileUiState.Syncing -> {
-                            setCardsEnabled(false, logoutCard, workoutHistoryCard, resyncCard, bodyMeasurementsCard)
+                            setCardsEnabled(false, logoutCard, workoutHistoryCard, resyncCard, bodyMeasurementsCard, heartRateMonitorCard)
                             Toast.makeText(requireContext(), "Sincronizzazione in corso...", Toast.LENGTH_SHORT).show()
                         }
 
                         is ProfileViewModel.ProfileUiState.Data -> {
-                            setCardsEnabled(true, logoutCard, workoutHistoryCard, resyncCard, bodyMeasurementsCard)
+                            setCardsEnabled(true, logoutCard, workoutHistoryCard, resyncCard, bodyMeasurementsCard, heartRateMonitorCard)
                             updateProfileData(emailTv, textName, totalWorkouts, state.profileData)
                         }
 
                         is ProfileViewModel.ProfileUiState.SyncCompleted -> {
-                            setCardsEnabled(true, logoutCard, workoutHistoryCard, resyncCard, bodyMeasurementsCard)
+                            setCardsEnabled(true, logoutCard, workoutHistoryCard, resyncCard, bodyMeasurementsCard, heartRateMonitorCard)
                             updateProfileData(emailTv, textName, totalWorkouts, state.profileData)
                             Toast.makeText(requireContext(), "Sincronizzazione completata!", Toast.LENGTH_SHORT).show()
 
-                            // Simula la riapertura dell'app navigando alla home
-                            // Aggiungi un piccolo delay per far vedere il messaggio di completamento
                             view?.postDelayed({
                                 if (isAdded && findNavController().currentDestination?.id == R.id.profileFragment) {
                                     findNavController().navigate(R.id.action_profileFragment_to_homeFragment)
                                 }
-                            }, 1500) // 1.5 secondi di delay
+                            }, 1500)
                         }
 
                         is ProfileViewModel.ProfileUiState.Error -> {
-                            setCardsEnabled(true, logoutCard, workoutHistoryCard, resyncCard, bodyMeasurementsCard)
+                            setCardsEnabled(true, logoutCard, workoutHistoryCard, resyncCard, bodyMeasurementsCard, heartRateMonitorCard)
                             Toast.makeText(requireContext(), state.message, Toast.LENGTH_LONG).show()
                         }
 
@@ -140,31 +157,32 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         }
     }
 
-
     private fun checkAndRequestHeartRatePermissions() {
         val permissionsToRequest = mutableListOf<String>()
 
-        // Body Sensors
+        // Body Sensors - sempre necessario
         if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.BODY_SENSORS) != PackageManager.PERMISSION_GRANTED) {
             permissionsToRequest.add(Manifest.permission.BODY_SENSORS)
         }
 
-        // Bluetooth permissions based on Android version
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            // Android 12+ (API 31+)
-            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                permissionsToRequest.add(Manifest.permission.BLUETOOTH_CONNECT)
-            }
-            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
-                permissionsToRequest.add(Manifest.permission.BLUETOOTH_SCAN)
-            }
-        } else {
-            // Android 11 and below
-            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.BLUETOOTH) != PackageManager.PERMISSION_GRANTED) {
-                permissionsToRequest.add(Manifest.permission.BLUETOOTH)
-            }
-            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.BLUETOOTH_ADMIN) != PackageManager.PERMISSION_GRANTED) {
-                permissionsToRequest.add(Manifest.permission.BLUETOOTH_ADMIN)
+        // Bluetooth permissions solo per dispositivi fisici
+        if (!isEmulator) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                // Android 12+ (API 31+)
+                if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                    permissionsToRequest.add(Manifest.permission.BLUETOOTH_CONNECT)
+                }
+                if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+                    permissionsToRequest.add(Manifest.permission.BLUETOOTH_SCAN)
+                }
+            } else {
+                // Android 11 and below
+                if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.BLUETOOTH) != PackageManager.PERMISSION_GRANTED) {
+                    permissionsToRequest.add(Manifest.permission.BLUETOOTH)
+                }
+                if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.BLUETOOTH_ADMIN) != PackageManager.PERMISSION_GRANTED) {
+                    permissionsToRequest.add(Manifest.permission.BLUETOOTH_ADMIN)
+                }
             }
         }
 
@@ -177,26 +195,52 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         }
     }
 
-
     private val requestPermissionsLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
         val allGranted = permissions.entries.all { it.value }
+
+        Log.d("ProfileFragment", "Risultato permessi: $permissions")
+
         if (allGranted) {
             navigateToHeartRateMonitor()
         } else {
-            Toast.makeText(
-                requireContext(),
-                "Permessi necessari per il monitoraggio del battito cardiaco",
-                Toast.LENGTH_LONG
-            ).show()
+            // In emulatore, procedi comunque se mancano solo i permessi Bluetooth
+            if (isEmulator) {
+                val deniedPermissions = permissions.filter { !it.value }.keys
+                val onlyBluetoothDenied = deniedPermissions.all {
+                    it.contains("BLUETOOTH", ignoreCase = true)
+                }
+
+                if (onlyBluetoothDenied) {
+                    Log.d("ProfileFragment", "Solo permessi Bluetooth negati in emulatore, procedo comunque")
+                    Toast.makeText(
+                        requireContext(),
+                        "Procedo senza Bluetooth (modalità emulatore)",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    navigateToHeartRateMonitor()
+                } else {
+                    Toast.makeText(
+                        requireContext(),
+                        "Permesso BODY_SENSORS necessario",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            } else {
+                Toast.makeText(
+                    requireContext(),
+                    "Permessi necessari per il monitoraggio del battito cardiaco",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
         }
     }
 
     private fun navigateToHeartRateMonitor() {
+        Log.d("ProfileFragment", "Navigazione a HeartRateFragment")
         findNavController().navigate(R.id.action_profileFragment_to_heartRateFragment)
     }
-
 
     private fun setCardsEnabled(
         enabled: Boolean,
