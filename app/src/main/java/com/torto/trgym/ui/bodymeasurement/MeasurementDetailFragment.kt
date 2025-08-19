@@ -8,9 +8,7 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -22,8 +20,7 @@ import com.google.android.material.textfield.TextInputEditText
 import com.torto.trgym.R
 import com.torto.trgym.database.entities.BodyMeasurement
 import com.torto.trgym.database.dto.MeasurementStats
-import com.torto.trgym.ui.exercises.ExerciseDetailFragmentDirections
-import com.torto.trgym.viewmodel.bodymeasurement.BodyMeasurementViewModel
+import com.torto.trgym.viewmodel.measurement.BodyMeasurementViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -137,22 +134,6 @@ class MeasurementDetailFragment : Fragment() {
         view?.findViewById<ImageView>(R.id.btnDeleteCategory)?.setOnClickListener {
             currentCategoryName?.let { categoryName ->
                 showDeleteCategoryDialog(categoryName)
-            }
-        }
-    }
-
-    private fun observeViewModel() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                // Osserva la categoria selezionata
-                viewModel.selectedMeasurementName.collect { categoryName ->
-                    if (categoryName != null && categoryName != currentCategoryName) {
-                        currentCategoryName = categoryName
-                        categoryNameTextView.text = categoryName
-                        loadMeasurementsForCategory(categoryName)
-                        loadStatsForCategory(categoryName)
-                    }
-                }
             }
         }
     }

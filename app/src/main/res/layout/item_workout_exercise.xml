@@ -106,16 +106,22 @@
 
         </LinearLayout>
 
-        <!-- Header serie (visibile solo quando ci sono serie) -->
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:backgroundTint="@color/white"
+        app:cardCornerRadius="10dp">
+
         <LinearLayout
             android:id="@+id/setsHeaderLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:paddingHorizontal="8dp"
-            android:paddingVertical="8dp"
+            android:paddingTop="5dp"
             android:layout_marginBottom="4dp"
-            android:background="@color/ios_systemGray6"
+            android:background="@color/transparent"
+            app:cornerRadius="12dp"
             app:layout_constraintTop_toBottomOf="@id/exerciseInfo">
 
             <TextView
@@ -149,7 +155,10 @@
 
 
 
+
         </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>
 
         <!-- Lista serie -->
         <androidx.recyclerview.widget.RecyclerView

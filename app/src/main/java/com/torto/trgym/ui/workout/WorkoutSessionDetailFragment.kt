@@ -5,6 +5,7 @@ import android.util.Log
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.addCallback
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -16,7 +17,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.torto.trgym.R
 import com.torto.trgym.adapters.WorkoutSessionExerciseAdapter
-import com.torto.trgym.ui.exercises.ExerciseDetailFragmentDirections
 import com.torto.trgym.viewmodel.workout.WorkoutSessionDetailViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -39,6 +39,15 @@ class WorkoutSessionDetailFragment : Fragment(R.layout.fragment_workout_session_
     private val exercisesRecyclerView by lazy { requireView().findViewById<RecyclerView>(R.id.exercisesRecyclerView) }
     private val emptyStateLayout by lazy { requireView().findViewById<View>(R.id.emptyStateLayout) }
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        requireActivity().onBackPressedDispatcher.addCallback(this) {
+            val action = WorkoutSessionDetailFragmentDirections
+                .actionWorkoutSessionDetailFragmentToWorkoutHistoryFragment()
+            findNavController().navigate(action)
+        }
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupUI()
@@ -52,6 +61,7 @@ class WorkoutSessionDetailFragment : Fragment(R.layout.fragment_workout_session_
         setupRecyclerView()
         setupClickListeners()
     }
+
 
     private fun setupRecyclerView() {
         exercisesAdapter = WorkoutSessionExerciseAdapter()
@@ -91,12 +101,9 @@ class WorkoutSessionDetailFragment : Fragment(R.layout.fragment_workout_session_
                 val dateFormat = SimpleDateFormat("EEEE, dd MMMM yyyy 'alle' HH:mm", Locale.getDefault())
                 workoutDate.text = dateFormat.format(Date(it.startTime))
 
+                val durationMs = it.endTime?.minus(it.startTime) ?: 0L
                 // Format duration
-                workoutDuration.text = if (it.totalDurationMs != null) {
-                    formatDuration(it.totalDurationMs)
-                } else {
-                    "Durata non disponibile"
-                }
+                workoutDuration.text = formatDuration(durationMs)
 
                 // Notes
                 if (!it.notes.isNullOrBlank()) {
@@ -114,6 +121,13 @@ class WorkoutSessionDetailFragment : Fragment(R.layout.fragment_workout_session_
             exercisesAdapter.submitList(exercises)
             updateEmptyState(exercises.isEmpty())
         }
+    }
+    private fun formatDuration(durationMs: Long): String {
+        val totalSeconds = durationMs / 1000
+        val minutes = totalSeconds / 60
+        val seconds = totalSeconds % 60
+
+        return String.format("%02d:%02d minuti", minutes, seconds)
     }
 
     private suspend fun observeUiState() {
@@ -134,19 +148,6 @@ class WorkoutSessionDetailFragment : Fragment(R.layout.fragment_workout_session_
         } else {
             emptyStateLayout.visibility = View.GONE
             exercisesRecyclerView.visibility = View.VISIBLE
-        }
-    }
-
-    private fun formatDuration(durationMs: Long): String {
-        val totalSeconds = durationMs / 1000
-        val hours = totalSeconds / 3600
-        val minutes = (totalSeconds % 3600) / 60
-        val seconds = totalSeconds % 60
-
-        return if (hours > 0) {
-            String.format("Durata: %02d:%02d:%02d", hours, minutes, seconds)
-        } else {
-            String.format("Durata: %02d:%02d", minutes, seconds)
         }
     }
 

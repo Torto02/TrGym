@@ -36,7 +36,6 @@ class WorkoutHistoryAdapter(
         private val workoutDate: TextView = itemView.findViewById(R.id.workoutDate)
         private val workoutDuration: TextView = itemView.findViewById(R.id.workoutDuration)
         private val workoutStatus: TextView = itemView.findViewById(R.id.workoutStatus)
-        private val workoutVolume: TextView = itemView.findViewById(R.id.workoutVolume)
 
 
         fun bind(workoutSession: WorkoutSession) {
@@ -46,9 +45,7 @@ class WorkoutHistoryAdapter(
             val dateFormat = SimpleDateFormat("dd MMM", Locale.getDefault())
             workoutDate.text = dateFormat.format(Date(workoutSession.startTime))
 
-// Mostra durata in ore e minuti
             val durationMs = workoutSession.endTime?.minus(workoutSession.startTime) ?: 0L
-            Log.d("WorkoutHistoryAdapter", "Duration in milliseconds: $durationMs")
             workoutDuration.text = formatDuration(durationMs)
 
             // Funzione di formattazione
@@ -68,7 +65,6 @@ class WorkoutHistoryAdapter(
             }
             workoutStatus.setTextColor(statusColor)
 
-            workoutVolume.text = "${calculateTotalVolume(workoutSession)} kg"
 
             cardView.setOnClickListener {
                 onWorkoutClick(workoutSession)
@@ -76,17 +72,16 @@ class WorkoutHistoryAdapter(
         }
 
         private fun formatDuration(durationMs: Long): String {
-            val totalMinutes = durationMs / 1000 / 60
-            return "$totalMinutes min"
+            val totalSeconds = durationMs / 1000
+            val minutes = totalSeconds / 60
+            val seconds = totalSeconds % 60
+
+            return String.format("%02d:%02d minuti", minutes, seconds)
         }
 
     }
 
-    // Supponendo che WorkoutSession abbia una lista di esercizi con il campo weight
-    private fun calculateTotalVolume(workoutSession: WorkoutSession): Int {
-//        return workoutSession.exercises?.sumOf { it.weight } ?: 0
-        return 0
-    }
+
 
 
     private class WorkoutSessionDiffCallback : DiffUtil.ItemCallback<WorkoutSession>() {

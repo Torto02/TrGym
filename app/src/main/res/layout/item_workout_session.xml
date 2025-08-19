@@ -49,15 +49,7 @@
                     android:layout_marginBottom="4dp"
                     tools:text="Allenamento Push" />
 
-                <TextView
-                    android:id="@+id/exerciseCount"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="5 esercizi • 18 serie"
-                    android:textSize="13sp"
-                    android:textColor="@color/ios_secondaryLabel"
-                    android:alpha="0.8"
-                    tools:text="5 esercizi • 18 serie" />
+
 
             </LinearLayout>
 
@@ -102,7 +94,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:gravity="center_horizontal">
 
             <!-- Data e ora -->
             <LinearLayout
@@ -115,29 +107,29 @@
                 <LinearLayout
                     android:layout_width="32dp"
                     android:layout_height="32dp"
-                    android:gravity="center"
-                    android:layout_marginEnd="10dp">
+                    android:gravity="center">
 
                     <ImageView
                         android:layout_width="16dp"
                         android:layout_height="16dp"
-                        app:tint="@color/primary" />
+                        android:src="@drawable/ic_calendar"/>
 
                 </LinearLayout>
 
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    android:orientation="horizontal">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Data"
-                        android:textSize="10sp"
+                        android:textSize="14sp"
                         android:textStyle="bold"
                         android:letterSpacing="0.05"
-                        android:alpha="0.7" />
+                        android:alpha="0.7"
+                        android:layout_marginEnd="10dp" />
 
                     <TextView
                         android:id="@+id/workoutDate"
@@ -164,8 +156,7 @@
                 <LinearLayout
                     android:layout_width="32dp"
                     android:layout_height="32dp"
-                    android:gravity="center"
-                    android:layout_marginEnd="10dp">
+                    android:gravity="center">
 
                     <ImageView
                         android:layout_width="16dp"
@@ -178,17 +169,17 @@
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    android:orientation="horizontal">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Durata"
-                        android:textSize="10sp"
-
+                        android:textSize="14sp"
                         android:textStyle="bold"
                         android:letterSpacing="0.05"
-                        android:alpha="0.7" />
+                        android:alpha="0.7"
+                        android:layout_marginEnd="10dp"/>
 
                     <TextView
                         android:id="@+id/workoutDuration"
@@ -202,54 +193,6 @@
 
                 </LinearLayout>
 
-            </LinearLayout>
-
-            <!-- Volume totale -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
-
-                <LinearLayout
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:gravity="center"
-                    android:layout_marginEnd="10dp">
-
-                    <ImageView
-                        android:layout_width="16dp"
-                        android:layout_height="16dp"
-                        app:tint="@color/primary" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Volume"
-                        android:textSize="10sp"
-                        android:textStyle="bold"
-                        android:letterSpacing="0.05"
-                        android:alpha="0.7" />
-
-                    <TextView
-                        android:id="@+id/workoutVolume"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="2.1k kg"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/ios_label"
-                        tools:text="2.1k kg" />
-
-                </LinearLayout>
 
             </LinearLayout>
 

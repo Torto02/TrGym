@@ -45,9 +45,6 @@ class WorkoutHistoryViewModel @Inject constructor(
         }
     }
 
-    fun refreshHistory() {
-        loadWorkoutHistory()
-    }
 
     sealed interface UiState {
         object Loading : UiState

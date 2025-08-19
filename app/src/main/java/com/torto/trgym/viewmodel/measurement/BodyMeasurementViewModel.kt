@@ -1,4 +1,4 @@
-package com.torto.trgym.viewmodel.bodymeasurement
+package com.torto.trgym.viewmodel.measurement
 
 import android.util.Log
 import androidx.lifecycle.ViewModel

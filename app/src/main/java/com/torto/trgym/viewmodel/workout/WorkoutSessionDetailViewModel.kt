@@ -72,6 +72,7 @@ class WorkoutSessionDetailViewModel @Inject constructor(
         }
     }
 
+
     sealed interface UiState {
         object Loading : UiState
         object Success : UiState

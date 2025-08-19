@@ -116,6 +116,8 @@
                         android:orientation="horizontal"
                         android:layout_marginBottom="8dp">
 
+
+
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
@@ -132,6 +134,7 @@
                             android:textSize="16sp"
                             android:textColor="@color/ios_secondaryLabel"
                             tools:text="Durata: 1h 23m" />
+
 
                     </LinearLayout>
 

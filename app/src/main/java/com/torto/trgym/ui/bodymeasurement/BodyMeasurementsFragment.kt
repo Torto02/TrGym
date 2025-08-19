@@ -19,7 +19,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.textfield.TextInputEditText
 import com.torto.trgym.R
-import com.torto.trgym.viewmodel.bodymeasurement.BodyMeasurementViewModel
+import com.torto.trgym.viewmodel.measurement.BodyMeasurementViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat

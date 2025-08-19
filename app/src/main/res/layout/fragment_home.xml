@@ -63,9 +63,10 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="24dp"
                 app:cardCornerRadius="20dp"
-                app:cardElevation="6dp"
+                app:cardElevation="1dp"
                 app:cardBackgroundColor="@color/primary"
                 android:clickable="true"
+                app:strokeColor="@color/primary"
                 android:focusable="true"
                 android:foreground="?attr/selectableItemBackground"
                 android:visibility="gone"
@@ -84,8 +85,6 @@
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
                         android:layout_marginBottom="16dp">
-
-
 
                         <LinearLayout
                             android:layout_width="0dp"
