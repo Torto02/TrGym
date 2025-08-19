@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.torto.trgym.R
@@ -17,6 +18,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.Collections
 
 
 class WorkoutCardsAdapter(
@@ -24,6 +26,21 @@ class WorkoutCardsAdapter(
     private val onCardClick: (WorkoutCard) -> Unit,
     private val onMenuClick: (WorkoutCard) -> Unit
 ) : ListAdapter<WorkoutCard, WorkoutCardsAdapter.ViewHolder>(DiffCallback) {
+
+    private val items = mutableListOf<WorkoutCard>()
+
+    override fun submitList(list: List<WorkoutCard>?) {
+        super.submitList(list?.toList())
+        items.clear()
+        list?.let { items.addAll(it) }
+    }
+
+    fun onItemMove(fromPosition: Int, toPosition: Int) {
+        Collections.swap(items, fromPosition, toPosition)
+//        notifyItemMoved(fromPosition, toPosition)
+    }
+
+    fun getItems(): List<WorkoutCard> = items.toList()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)

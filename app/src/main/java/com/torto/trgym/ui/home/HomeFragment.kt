@@ -11,6 +11,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.card.MaterialCardView
@@ -50,14 +51,9 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     }
 
     private fun setupViews(view: View) {
-        val freeWorkoutCard = view.findViewById<MaterialCardView>(R.id.freeWorkoutCard)
         val addWorkoutCardBtn = view.findViewById<com.google.android.material.button.MaterialButton>(R.id.addWorkoutCardBtn)
         activeWorkoutCard = view.findViewById(R.id.activeWorkoutCard)
 
-        freeWorkoutCard.setOnClickListener {
-            // Naviga alla schermata di allenamento libero
-            findNavController().navigate(R.id.action_home_to_freeWorkout)
-        }
 
         addWorkoutCardBtn.setOnClickListener {
             showCreateWorkoutCardDialog()
@@ -86,6 +82,31 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             adapter = workoutCardsAdapter
             layoutManager = LinearLayoutManager(requireContext())
         }
+
+        val callback = object : ItemTouchHelper.SimpleCallback(
+            ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0
+        ) {
+            override fun onMove(
+                rv: RecyclerView,
+                vh: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
+            ): Boolean {
+                workoutCardsAdapter.onItemMove(vh.adapterPosition, target.adapterPosition)
+                return true
+            }
+            override fun onSwiped(vh: RecyclerView.ViewHolder, dir: Int) = Unit
+
+            override fun clearView(rv: RecyclerView, vh: RecyclerView.ViewHolder) {
+                super.clearView(rv, vh)
+                // qui il drag è finito, salviamo l'ordine definitivo
+                val reordered = workoutCardsAdapter.getItems()
+                    .mapIndexed { idx, card ->
+                        card.copy(orderIndex = idx, updatedAt = System.currentTimeMillis())
+                    }
+                viewModel.reorderWorkoutCards(reordered)
+            }
+        }
+        ItemTouchHelper(callback).attachToRecyclerView(recyclerView)
     }
 
     private fun observeViewModel() {
@@ -164,7 +185,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
                 when (which) {
                     0 -> {
                         // Modifica scheda
-                        // TODO: Implementare modifica
+                        showEditWorkoutCardDialog(workoutCard)
                     }
                     1 -> {
                         // Elimina scheda
@@ -172,6 +193,29 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
                     }
                 }
             }
+            .show()
+    }
+
+    private fun showEditWorkoutCardDialog(workoutCard: com.torto.trgym.database.entities.WorkoutCard) {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_create_workout_card, null)
+        val nameEt = dialogView.findViewById<TextInputEditText>(R.id.workoutNameEditText)
+        val descEt = dialogView.findViewById<TextInputEditText>(R.id.workoutDescriptionEditText)
+        nameEt.setText(workoutCard.name)
+        descEt.setText(workoutCard.description)
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Modifica scheda")
+            .setView(dialogView)
+            .setPositiveButton("Salva") { _, _ ->
+                val name = nameEt.text.toString().trim()
+                val desc = descEt.text.toString().trim().ifEmpty { null }
+                if (name.isNotEmpty()) {
+                    viewModel.updateWorkoutCard(workoutCard, name, desc)
+                } else {
+                    Toast.makeText(requireContext(), "Nome non può essere vuoto", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Annulla", null)
             .show()
     }
 
@@ -210,9 +254,6 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         
         // Update timer if needed
 
-        val startTime = session.startTime
-        val elapsedTime = System.currentTimeMillis() - startTime
-
     }
 
     private fun hideActiveWorkoutBanner() {
@@ -230,10 +271,5 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         }
     }
 
-    private fun formatElapsedTime(elapsedMillis: Long): String {
-        val hours = java.util.concurrent.TimeUnit.MILLISECONDS.toHours(elapsedMillis)
-        val minutes = java.util.concurrent.TimeUnit.MILLISECONDS.toMinutes(elapsedMillis) % 60
-        val seconds = java.util.concurrent.TimeUnit.MILLISECONDS.toSeconds(elapsedMillis) % 60
-        return String.format("%02d:%02d:%02d", hours, minutes, seconds)
-    }
+
 }

@@ -89,6 +89,27 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    fun updateWorkoutCard(original: WorkoutCard, name: String, description: String?) {
+        viewModelScope.launch {
+            try {
+                val updatedCard = original.copy(
+                    name = name,
+                    description = description,
+                    updatedAt = System.currentTimeMillis()
+                )
+                workoutRepository.updateWorkoutCard(updatedCard)
+            } catch (e: Exception) {
+                _uiState.value = UiState.Error(e.message ?: "Errore nell'aggiornamento della scheda")
+            }
+        }
+    }
+
+    fun reorderWorkoutCards(cards: List<WorkoutCard>) {
+        viewModelScope.launch {
+            cards.forEach { workoutRepository.updateWorkoutCard(it) }
+        }
+    }
+
     suspend fun getActiveWorkoutSession(): WorkoutSession? {
         return workoutRepository.getActiveWorkoutSession()
     }

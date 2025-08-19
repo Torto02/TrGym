@@ -38,9 +38,6 @@
             app:destination="@id/workoutDetailFragment" />
 
         <action
-            android:id="@+id/action_home_to_freeWorkout"
-            app:destination="@id/freeWorkoutFragment" />
-        <action
             android:id="@+id/action_homeFragment_to_activeWorkoutFragment"
             app:destination="@id/activeWorkoutFragment"
 
@@ -93,11 +90,6 @@
             android:id="@+id/action_exerciseDetailFragment_to_workoutDetailFragment"
             app:destination="@id/workoutDetailFragment" />
     </fragment>
-
-    <!-- Free Workout Fragment (placeholder) -->
-    <fragment
-        android:id="@+id/freeWorkoutFragment" />
-
 
     <fragment
         android:id="@+id/registerFragment"

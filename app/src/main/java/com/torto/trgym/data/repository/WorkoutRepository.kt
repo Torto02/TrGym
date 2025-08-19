@@ -55,23 +55,8 @@ class WorkoutRepository @Inject constructor(
         }
     }
 
-    suspend fun updateWorkoutCard(workoutCard: WorkoutCard) = withContext(Dispatchers.IO) {
+    suspend fun updateWorkoutCard(workoutCard: WorkoutCard) {
         workoutDao.updateWorkoutCard(workoutCard)
-        
-        try {
-            currentUserId?.let { userId ->
-                val supabaseCard = SupabaseWorkoutCard(
-                    id = workoutCard.id,
-                    userId = userId,
-                    name = workoutCard.name,
-                    description = workoutCard.description
-                )
-                supabaseClient.from("workout_cards").upsert(listOf(supabaseCard))
-                Log.d("WorkoutRepository", "Synced workout_cards item ${workoutCard.id} to Supabase")
-            }
-        } catch (e: Exception) {
-            Log.w("WorkoutRepository", "Could not sync workout_cards item ${workoutCard.id} to Supabase", e)
-        }
     }
 
     suspend fun deleteWorkoutCard(workoutCard: WorkoutCard) = withContext(Dispatchers.IO) {

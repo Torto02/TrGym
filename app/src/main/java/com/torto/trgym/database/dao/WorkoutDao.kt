@@ -14,7 +14,7 @@ interface WorkoutDao {
     // WORKOUT CARD OPERATIONS
     // ==========================================
     
-    @Query("SELECT * FROM workout_cards ORDER BY updatedAt DESC")
+    @Query("SELECT * FROM workout_cards ORDER BY orderIndex ASC")
     fun getAllWorkoutCards(): Flow<List<WorkoutCard>>
 
     @Query("SELECT * FROM workout_cards WHERE id = :cardId")
