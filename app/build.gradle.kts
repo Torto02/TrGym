@@ -59,6 +59,7 @@ dependencies {
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
     implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.play.services.fitness)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -98,14 +99,15 @@ dependencies {
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0") // Or other formats if needed
 
-//    // Wear OS
-//    implementation("androidx.wear:wear:1.3.0")
-//    implementation("com.google.android.gms:play-services-wearable:18.0.0")
-//    // Health Connect
-//    implementation("androidx.health.connect:connect-client:1.1.0-alpha07")
-//    // Google Fit
-//    implementation("com.google.android.gms:play-services-fitness:21.1.0")
-//    implementation("com.google.android.gms:play-services-auth:20.7.0")
-//    // Bluetooth per connessioni dirette
-//    implementation("androidx.bluetooth:bluetooth-le:1.0.0-alpha02")
+    // Wear OS e Health Services
+    implementation("androidx.wear:wear:1.3.0")
+    implementation("com.google.android.gms:play-services-wearable:18.1.0")
+    implementation("androidx.health:health-services-client:1.1.0-alpha03")
+    // Google Fit per dati storici e sincronizzazione
+    implementation("com.google.android.gms:play-services-fitness:21.1.0")
+    implementation("com.google.android.gms:play-services-auth:21.0.0")
+    // Guava per ListenableFuture
+    implementation("com.google.guava:guava:31.1-android")
+    // Coroutines extensions per Google Play Services
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
 }

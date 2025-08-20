@@ -14,13 +14,18 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.BODY_SENSORS" />
 
-    <!-- Permessi per future implementazioni smartwatch (commentati per ora) -->
-    <!--
-    <uses-permission android:name="android.permission.BODY_SENSORS" />
+    <!-- Permessi per WearOS e Health Services -->
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
-    -->
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    
+    <!-- Permessi per Google Fit -->
+    <uses-permission android:name="com.google.android.gms.permission.ACTIVITY_RECOGNITION" />
+    
+    <!-- Feature per sensori (non specifichiamo WearOS per evitare conflitti) -->
+    <uses-feature android:name="android.hardware.sensor.heartrate" android:required="false" />
 
     <application
         android:name=".TrGymApplication"
