@@ -12,6 +12,7 @@
     <color name="ios_secondaryLabel">#8E8E93</color>
     <color name="ios_systemBlue_light">#E3F2FD</color>
     <color name="shimmer_placeholder">#DDDDDD</color>
+    <color name="black_overlay">#80000000</color>
 
     <!-- Aggiungi questi colori al tuo file colors.xml -->
 

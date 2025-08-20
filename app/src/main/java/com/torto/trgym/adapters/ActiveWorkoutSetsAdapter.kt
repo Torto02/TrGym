@@ -1,7 +1,5 @@
 package com.torto.trgym.adapters
 
-import android.text.Editable
-import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,9 +15,6 @@ import com.torto.trgym.database.entities.ExerciseSet
 
 class ActiveWorkoutSetsAdapter(
     private val onSetCompletionChanged: (String, Boolean) -> Unit,
-    private val onSetValueChanged: (String, Double?, Int?) -> Unit,
-    private val onSetMenuClicked: ((String) -> Unit)? = null,
-    private val onSetValueChangedSimple: ((String, Double?, Int?) -> Unit)? = null
 ) : ListAdapter<ExerciseSet, ActiveWorkoutSetsAdapter.SetViewHolder>(SetDiffCallback()) {
 
     private val completedSets = mutableMapOf<String, Boolean>()
@@ -164,17 +159,7 @@ class ActiveWorkoutSetsAdapter(
             currentSet = set
         }
 
-        private fun updateSetValues() {
-            currentSet?.let { set ->
-                val weight = weightInput.text.toString().toDoubleOrNull()
-                val reps = repsInput.text.toString().toIntOrNull()
-                // Use the session set ID instead of the original set ID
-                val sessionSetId = setIdMapping[set.id]
-                if (sessionSetId != null) {
-                    onSetValueChangedSimple?.invoke(sessionSetId, weight, reps) ?: onSetValueChanged(sessionSetId, weight, reps)
-                }
-            }
-        }
+
     }
 
     class SetDiffCallback : DiffUtil.ItemCallback<ExerciseSet>() {

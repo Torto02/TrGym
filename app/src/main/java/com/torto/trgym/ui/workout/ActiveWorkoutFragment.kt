@@ -38,6 +38,8 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
     private lateinit var completeWorkoutButton: MaterialButton
     private lateinit var cancelWorkoutButton: MaterialButton
     private lateinit var pauseResumeButton: ImageView
+    private lateinit var loadingOverlay: View
+    private lateinit var loadingText: TextView
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -56,6 +58,8 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
         emptyStateLayout = view.findViewById(R.id.emptyStateLayout)
         completeWorkoutButton = view.findViewById(R.id.completeWorkoutButton)
         cancelWorkoutButton = view.findViewById(R.id.cancelWorkoutButton)
+        loadingOverlay = view.findViewById(R.id.loadingOverlay)
+        loadingText = view.findViewById(R.id.loadingText)
     }
 
     private fun setupRecyclerView() {
@@ -114,18 +118,31 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
                 viewModel.uiState.collect { state ->
                     when (state) {
                         is ActiveWorkoutViewModel.UiState.Error -> {
+                            hideLoading()
                             Toast.makeText(requireContext(), state.message, Toast.LENGTH_LONG).show()
                         }
                         is ActiveWorkoutViewModel.UiState.ReadyToStart -> {
+                            hideLoading()
                             startWorkout()
                         }
+                        is ActiveWorkoutViewModel.UiState.CompletingWorkout -> {
+                            showLoading("Completamento allenamento...")
+                        }
+                        is ActiveWorkoutViewModel.UiState.CancellingWorkout -> {
+                            showLoading("Annullamento allenamento...")
+                        }
                         is ActiveWorkoutViewModel.UiState.WorkoutCompleted -> {
+                            hideLoading()
                             Toast.makeText(requireContext(), "Allenamento completato!", Toast.LENGTH_SHORT).show()
                             findNavController().navigate(ActiveWorkoutFragmentDirections.actionActiveWorkoutFragmentToHomeFragment())
                         }
                         is ActiveWorkoutViewModel.UiState.WorkoutCancelled -> {
+                            hideLoading()
                             Toast.makeText(requireContext(), "Allenamento annullato", Toast.LENGTH_SHORT).show()
                             findNavController().navigate(ActiveWorkoutFragmentDirections.actionActiveWorkoutFragmentToHomeFragment())
+                        }
+                        is ActiveWorkoutViewModel.UiState.WorkoutInProgress -> {
+                            hideLoading()
                         }
                         else -> { /* Handle other states if needed */ }
                     }
@@ -178,6 +195,15 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
 
     private fun startWorkout() {
         viewModel.startWorkout()
+    }
+
+    private fun showLoading(message: String) {
+        loadingText.text = message
+        loadingOverlay.visibility = View.VISIBLE
+    }
+
+    private fun hideLoading() {
+        loadingOverlay.visibility = View.GONE
     }
 
     private fun showCompleteWorkoutConfirmation() {

@@ -179,17 +179,6 @@ class ActiveWorkoutExercisesAdapter(
                         onSetCompletionChanged(sessionSetId, isCompleted)
                         // Reset the flag after a short delay
                         setsRecyclerView.post { suppressUpdates = false }
-                    },
-                    onSetValueChanged = { setId, weight, reps ->
-                        // Legacy callback - not used in session mode
-                    },
-                    onSetMenuClicked = { setId ->
-                        // The ID is already the session set ID when in session mode
-                        onSetMenuClicked?.invoke(setId)
-                    },
-                    onSetValueChangedSimple = { setId, weight, reps ->
-                        // Direct callback for session mode
-                        onSetValueChangedSimple?.invoke(setId, weight, reps)
                     }
                 )
                 setsRecyclerView.adapter = setsAdapter

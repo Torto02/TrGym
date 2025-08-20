@@ -341,6 +341,7 @@ class ActiveWorkoutViewModel @Inject constructor(
     fun completeWorkout() {
         viewModelScope.launch {
             try {
+                _uiState.value = UiState.CompletingWorkout
                 val session = _activeSession.value ?: return@launch
 
                 Log.d("ActiveWorkoutViewModel", "Completing workout: $session")
@@ -403,6 +404,7 @@ class ActiveWorkoutViewModel @Inject constructor(
     fun cancelWorkout() {
         viewModelScope.launch {
             try {
+                _uiState.value = UiState.CancellingWorkout
                 val session = _activeSession.value ?: return@launch
 
                 // Delete the session and all related data
@@ -421,6 +423,8 @@ class ActiveWorkoutViewModel @Inject constructor(
         object Loading : UiState
         object ReadyToStart : UiState
         object WorkoutInProgress : UiState
+        object CompletingWorkout : UiState
+        object CancellingWorkout : UiState
         object WorkoutCompleted : UiState
         object WorkoutCancelled : UiState
         data class Error(val message: String) : UiState
