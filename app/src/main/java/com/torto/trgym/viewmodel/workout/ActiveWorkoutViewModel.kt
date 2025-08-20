@@ -59,41 +59,45 @@ class ActiveWorkoutViewModel @Inject constructor(
 
     // Exercises with sets
     @OptIn(ExperimentalCoroutinesApi::class)
-    val exercisesWithSets: StateFlow<List<WorkoutExerciseDetail>> = _activeSession
-        .flatMapLatest { activeSession ->
-            if (activeSession != null && _sessionDataLoaded.value) {
-                // Active session - load workout session exercises/sets
-                workoutRepository.getSessionExercisesWithSets(activeSession.id)
-                    .map { sessionDetails ->
-                        sessionDetails.map { detail ->
-                            convertSessionToWorkoutDetail(detail)
-                        }
+    val exercisesWithSets: StateFlow<List<WorkoutExerciseDetail>> = combine(
+        _activeSession,
+        _sessionDataLoaded
+    ) { activeSession, sessionDataLoaded ->
+        Pair(activeSession, sessionDataLoaded)
+    }.flatMapLatest { (activeSession, sessionDataLoaded) ->
+        if (activeSession != null && sessionDataLoaded) {
+            // Active session with data loaded - load workout session exercises/sets
+            workoutRepository.getSessionExercisesWithSets(activeSession.id)
+                .map { sessionDetails ->
+                    sessionDetails.map { detail ->
+                        convertSessionToWorkoutDetail(detail)
                     }
-            } else {
-                // No active session or data not loaded - use original card data
-                workoutRepository.getExercisesForCard(workoutCardId)
-                    .flatMapLatest { exercises ->
-                        if (exercises.isEmpty()) {
-                            flowOf(emptyList())
-                        } else {
-                            // Create a flow of WorkoutExerciseDetail for each exercise
-                            val exerciseFlows = exercises.map { exercise ->
-                                workoutRepository.getSetsForExercise(exercise.id)
-                                    .map { sets -> WorkoutExerciseDetail(exercise, sets) }
-                            }
+                }
+        } else {
+            // No active session or data not loaded - use original card data
+            workoutRepository.getExercisesForCard(workoutCardId)
+                .flatMapLatest { exercises ->
+                    if (exercises.isEmpty()) {
+                        flowOf(emptyList())
+                    } else {
+                        // Create a flow of WorkoutExerciseDetail for each exercise
+                        val exerciseFlows = exercises.map { exercise ->
+                            workoutRepository.getSetsForExercise(exercise.id)
+                                .map { sets -> WorkoutExerciseDetail(exercise, sets) }
+                        }
 
-                            // Combine all the flows into a single list flow
-                            combine(exerciseFlows) { exerciseDetails ->
-                                exerciseDetails.toList().sortedBy { it.exercise.orderIndex }
-                            }
+                        // Combine all the flows into a single list flow
+                        combine(exerciseFlows) { exerciseDetails ->
+                            exerciseDetails.toList().sortedBy { it.exercise.orderIndex }
                         }
                     }
-            }
-        }.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList()
-        )
+                }
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
 
     // Helper function to convert session detail to workout detail
     private fun convertSessionToWorkoutDetail(detail: WorkoutSessionExerciseDetail): WorkoutExerciseDetail {

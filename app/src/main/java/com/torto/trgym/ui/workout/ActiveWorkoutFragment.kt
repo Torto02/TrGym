@@ -133,6 +133,14 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
             }
         }
 
+        // Check current state immediately in case we missed the ReadyToStart transition
+        viewLifecycleOwner.lifecycleScope.launch {
+            val currentState = viewModel.uiState.value
+            if (currentState is ActiveWorkoutViewModel.UiState.ReadyToStart) {
+                startWorkout()
+            }
+        }
+
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.completedSets.collect { completedSets ->

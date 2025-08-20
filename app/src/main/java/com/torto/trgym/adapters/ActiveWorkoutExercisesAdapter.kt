@@ -2,6 +2,7 @@ package com.torto.trgym.adapters
 
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,6 +13,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import coil.load
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.checkbox.MaterialCheckBox
 import com.torto.trgym.R
@@ -31,11 +33,39 @@ class ActiveWorkoutExercisesAdapter(
 
     // Map to associate original ExerciseSet IDs with WorkoutSessionSet IDs
     private val setIdMapping = mutableMapOf<String, String>()
+    
+    // Flag to prevent unnecessary refreshes during user interactions
+    private var suppressUpdates = false
 
     fun updateCompletedSets(setCompletionMap: Map<String, Boolean>) {
+        if (suppressUpdates) return // Skip updates during user interactions
+        
+        val oldCompletedSets = completedSets.toMap()
         completedSets.clear()
         completedSets.putAll(setCompletionMap)
-        notifyDataSetChanged()
+        
+        // Only update items where completion status actually changed
+        if (oldCompletedSets != completedSets) {
+            notifyDataSetChanged() // For exercises adapter, it's safer to refresh all since it affects nested adapters
+        }
+    }
+    
+    fun updateCompletedSetDirectly(sessionSetId: String, isCompleted: Boolean) {
+        // Update local state without triggering refresh
+        completedSets[sessionSetId] = isCompleted
+        
+        // Update the specific sets adapter if needed
+        for (i in 0 until itemCount) {
+            val holder = currentList[i]
+            // Find the exercise that contains this set
+            if (holder.sets.any { set -> 
+                val mappedId = setIdMapping[set.id] ?: set.id
+                mappedId == sessionSetId 
+            }) {
+                notifyItemChanged(i, "completion_update")
+                break
+            }
+        }
     }
 
     fun updateSetIdMapping(mapping: Map<String, String>) {
@@ -53,6 +83,15 @@ class ActiveWorkoutExercisesAdapter(
     override fun onBindViewHolder(holder: ExerciseViewHolder, position: Int) {
         holder.bind(getItem(position))
     }
+    
+    override fun onBindViewHolder(holder: ExerciseViewHolder, position: Int, payloads: MutableList<Any>) {
+        if (payloads.isNotEmpty() && payloads[0] == "completion_update") {
+            // Only update completion-related UI elements
+            holder.updateCompletionInfo(getItem(position))
+        } else {
+            super.onBindViewHolder(holder, position, payloads)
+        }
+    }
 
     inner class ExerciseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val exerciseName: TextView = itemView.findViewById(R.id.exerciseName)
@@ -61,8 +100,8 @@ class ActiveWorkoutExercisesAdapter(
         private val setsHeaderLayout: View = itemView.findViewById(R.id.setsHeaderLayout)
         private val setsRecyclerView: RecyclerView = itemView.findViewById(R.id.setsRecyclerView)
         private val addSetButton: MaterialButton = itemView.findViewById(R.id.addSetButton)
-        private val exerciseStatusIcon: ImageView = itemView.findViewById(R.id.exerciseStatusIcon)
         private val dragHandle: ImageView = itemView.findViewById(R.id.dragHandle)
+        private val exercisePreview: ImageView = itemView.findViewById(R.id.exercisePreviewIcon)
 
         private var setsAdapter: ActiveWorkoutSetsAdapter? = null
 
@@ -86,7 +125,6 @@ class ActiveWorkoutExercisesAdapter(
             exerciseMenu.visibility = View.GONE
             addSetButton.visibility = View.GONE
             dragHandle.visibility = View.GONE
-            exerciseStatusIcon.visibility = View.VISIBLE
 
             exerciseName.text = exercise.name
 
@@ -102,13 +140,25 @@ class ActiveWorkoutExercisesAdapter(
 
             // Update status icon based on completion
             val isExerciseCompleted = totalSets > 0 && completedSetsCount == totalSets
-            exerciseStatusIcon.setImageResource(
-                when {
-                    isExerciseCompleted -> R.drawable.ic_check_circle
-                    completedSetsCount > 0 -> R.drawable.ic_partial_complete
-                    else -> R.drawable.ic_play
+
+
+
+            val defaultRes = R.drawable.ic_fitness_center
+
+            val imagePath = exercise.imagePath
+            Log.d("imagePath", "Image path: $imagePath")
+            if (!imagePath.isNullOrBlank()) {
+                val assetUri = "file:///android_asset/images/$imagePath"
+                exercisePreview.load(assetUri) {
+                    crossfade(true)
+                    error(defaultRes)
+                    placeholder(defaultRes)
                 }
-            )
+            } else {
+                exercisePreview.load(defaultRes) {
+                    crossfade(true)
+                }
+            }
 
             // Show/hide sets header based on whether we have sets
             setsHeaderLayout.visibility = if (sets.isNotEmpty()) View.VISIBLE else View.GONE
@@ -120,7 +170,15 @@ class ActiveWorkoutExercisesAdapter(
                         // The setId passed here is the original set ID, but we need to use
                         // the session set ID for completion tracking
                         val sessionSetId = setIdMapping[setId] ?: setId
+                        
+                        // Update completion state directly in the parent adapter
+                        this@ActiveWorkoutExercisesAdapter.updateCompletedSetDirectly(sessionSetId, isCompleted)
+                        
+                        // Notify the ViewModel but suppress flow updates temporarily
+                        suppressUpdates = true
                         onSetCompletionChanged(sessionSetId, isCompleted)
+                        // Reset the flag after a short delay
+                        setsRecyclerView.post { suppressUpdates = false }
                     },
                     onSetValueChanged = { setId, weight, reps ->
                         // Legacy callback - not used in session mode
@@ -137,8 +195,27 @@ class ActiveWorkoutExercisesAdapter(
                 setsRecyclerView.adapter = setsAdapter
             }
 
+            setsAdapter?.submitList(sets) {
+                // Update completion status only after the list is updated
+                setsAdapter?.updateCompletedSets(completedSets, setIdMapping)
+            }
+        }
+        
+        fun updateCompletionInfo(exerciseDetail: WorkoutExerciseDetail) {
+            val sets = exerciseDetail.sets
+            
+            // Calculate exercise completion status
+            val totalSets = sets.size
+            val completedSetsCount = sets.count { set ->
+                val sessionSetId = setIdMapping[set.id]
+                sessionSetId != null && completedSets[sessionSetId] == true
+            }
+
+            // Update exercise info text
+            exerciseInfo.text = "$completedSetsCount/$totalSets serie"
+            
+            // Update the sets adapter with new completion state
             setsAdapter?.updateCompletedSets(completedSets, setIdMapping)
-            setsAdapter?.submitList(sets)
         }
     }
 
