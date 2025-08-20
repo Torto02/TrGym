@@ -95,9 +95,4 @@ class SelectExercisesAdapter(
         return currentList.filter { selectedExercises.contains(it.id) }
     }
 
-    fun clearSelection() {
-        selectedExercises.clear()
-        notifyDataSetChanged()
-        onSelectionChanged(0)
-    }
 }

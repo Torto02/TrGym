@@ -18,63 +18,78 @@ import com.torto.trgym.data.repository.ExerciseRepository
 import com.torto.trgym.data.repository.WorkoutRepository
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.jan.supabase.auth.status.SessionStatus
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import androidx.activity.viewModels
 import com.torto.trgym.viewmodel.exercises.ExercisesViewModel
 
+/**
+ * MainActivity serves as the entry point of the application after the splash screen.
+ * It handles navigation, authentication status observation, and data synchronization.
+ */
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
-    // Inietto AuthRepository tramite Hilt
+    // Injected repositories for authentication, exercises, and workouts
     @Inject lateinit var authRepository: AuthRepository
     @Inject lateinit var exerciseRepo: ExerciseRepository
     @Inject lateinit var workoutRepo: WorkoutRepository
 
+    // ViewModel for managing exercise-related data
     private val exercisesViewModel: ExercisesViewModel by viewModels()
-    
 
+    // Navigation controller for managing navigation between fragments
     private lateinit var navController: NavController
+
+    // Bottom navigation view for navigating between main sections
     private lateinit var bottomNavigationView: BottomNavigationView
 
-    // Controllo la splash finché non risolvo l'autenticazione
+    // Flag to determine if authentication has been resolved
     private var isAuthenticationResolved = false
 
+    /**
+     * Called when the activity is created. Sets up the splash screen, navigation, and authentication observation.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Install the splash screen and keep it visible until authentication is resolved
         installSplashScreen()
             .setKeepOnScreenCondition { !isAuthenticationResolved }
 
-        // Gestisco eventuali deep link di Supabase
-
-
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        // Pre‐carica fin da subito gli esercizi nella cache di Room
+
+        // Initialize the ViewModel
         exercisesViewModel
 
+        // Handle deep links for authentication
         authRepository.handleDeeplinks(intent)
 
+        // Set up navigation and observe authentication status
         setupNavigation()
         observeAuthenticationStatus()
     }
 
-
+    /**
+     * Sets up the navigation controller and bottom navigation view.
+     */
     private fun setupNavigation() {
+        // Retrieve the navigation host fragment and its controller
         val navHostFragment = supportFragmentManager
             .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         navController = navHostFragment.navController
         navController.setGraph(R.navigation.nav_graph)
 
+        // Initialize the bottom navigation view and set it to be initially hidden
         bottomNavigationView = findViewById(R.id.bottom_nav)
         bottomNavigationView.visibility = View.GONE
 
+        // Handle bottom navigation item selection
         bottomNavigationView.setOnItemSelectedListener { item ->
             val builder = NavOptions.Builder()
                 .setLaunchSingleTop(true)
-                // MODIFICATO: Non ripristinare lo stato per workoutDetailFragment
                 .setRestoreState(item.itemId != R.id.workoutDetailFragment)
 
+            // Configure navigation options based on the selected item
             if (item.order and Menu.CATEGORY_SECONDARY == 0) {
                 builder.setPopUpTo(
                     navController.graph.findStartDestination().id,
@@ -92,6 +107,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        // Update bottom navigation visibility and selection based on the current destination
         navController.addOnDestinationChangedListener { _, destination, _ ->
             bottomNavigationView.visibility = when (destination.id) {
                 R.id.loginFragment, R.id.registerFragment -> View.GONE
@@ -101,6 +117,9 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Downloads the initial set of starred exercises from the repository.
+     */
     private fun downloadStarredExercisesInitial() {
         lifecycleScope.launch {
             try {
@@ -111,6 +130,9 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Downloads the initial set of workout cards from the repository.
+     */
     private fun downloadWorkoutCardsInitial() {
         lifecycleScope.launch {
             try {
@@ -121,15 +143,17 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Uploads any pending workout sessions to the repository.
+     */
     private fun uploadPendingWorkoutSessions() {
         lifecycleScope.launch {
             try {
-                // Upload pending changes for active and recent workout sessions - SOLO PUSH
+                // Retrieve the active workout session
                 val activeSession = workoutRepo.getActiveWorkoutSession()
                 if (activeSession != null) {
-                    // Upload the active session and all its exercises and sets to Supabase
+                    // Update the session and its associated exercises and sets
                     workoutRepo.updateWorkoutSession(activeSession)
-                    
                     val exercises = workoutRepo.getSessionExercises(activeSession.id)
                     exercises.forEach { exercise ->
                         workoutRepo.updateSessionExercise(exercise)
@@ -146,45 +170,51 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Observes the authentication status and updates the UI and navigation accordingly.
+     */
     private fun observeAuthenticationStatus() {
         lifecycleScope.launch {
             authRepository.observeAuthStatus().collect { status ->
                 when (status) {
                     is SessionStatus.Authenticated -> {
-                        // DOWNLOAD INIZIALE - fatto solo al primo accesso dell'app
+                        // Perform initial data synchronization
                         downloadStarredExercisesInitial()
                         downloadWorkoutCardsInitial()
-                        uploadPendingWorkoutSessions() // Upload eventuali modifiche pendenti
-                        
+                        uploadPendingWorkoutSessions()
+
+                        // Navigate to the home fragment if currently on login or register
                         navController.currentDestination?.id.let { current ->
                             if (current == R.id.loginFragment || current == R.id.registerFragment) {
-                                navController.navigate(R.id.homeFragment)
+                                val navOptions = NavOptions.Builder()
+                                    .setPopUpTo(R.id.nav_graph, true)
+                                    .build()
+                                navController.navigate(R.id.homeFragment, null, navOptions)
                             }
                         }
                         isAuthenticationResolved = true
                     }
                     is SessionStatus.NotAuthenticated -> {
-                        navController.navigate(R.id.loginFragment)
+                        // Navigate to the login fragment
+                        val navOptions = NavOptions.Builder()
+                            .setPopUpTo(R.id.nav_graph, true)
+                            .build()
+                        navController.navigate(R.id.loginFragment, null, navOptions)
                         isAuthenticationResolved = true
                     }
                     else -> {
+                        // Handle other authentication states if necessary
                     }
                 }
             }
         }
     }
 
+    /**
+     * Handles new intents, such as deep links, and passes them to the authentication repository.
+     */
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         authRepository.handleDeeplinks(intent)
-    }
-
-    //non penso sia necessario, ma lo lascio per sicurezza
-    private fun preloadExercises() {
-        lifecycleScope.launch {
-            exerciseRepo
-                .allExercises()          // Flow<List<ExerciseWithImage>>
-                .first()                 // sospende finché la prima lista non arriva
-        }
     }
 }
