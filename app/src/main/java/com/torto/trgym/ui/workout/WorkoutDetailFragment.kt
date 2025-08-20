@@ -26,11 +26,9 @@ import com.torto.trgym.database.entities.WorkoutSession
 import android.widget.ImageView
 import com.torto.trgym.ui.dialogs.SelectExercisesDialog
 import com.torto.trgym.ui.helpers.ExerciseDragCallback
-import com.torto.trgym.services.HeartRateManager
 import com.torto.trgym.viewmodel.workout.WorkoutDetailViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
@@ -39,9 +37,6 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
     private lateinit var exercisesAdapter: WorkoutExercisesAdapter
     private lateinit var itemTouchHelper: ItemTouchHelper
     private lateinit var dragCallback: ExerciseDragCallback
-    
-    @Inject
-    lateinit var heartRateManager: HeartRateManager
 
     // Views - simplified with lazy initialization
     private val backButton by lazy { requireView().findViewById<TextView>(R.id.backButton) }
@@ -423,12 +418,6 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
 
     private fun navigateToActiveWorkout() {
         val cardId = workoutDetailViewModel.workoutCard.value?.id ?: return
-        
-        // Avvia monitoraggio battito cardiaco se abilitato
-        if (heartRateManager.isConsentEnabled && heartRateManager.hasRequiredPermissions()) {
-            Toast.makeText(requireContext(), "Monitoraggio battito cardiaco avviato", Toast.LENGTH_SHORT).show()
-        }
-        
         val action = WorkoutDetailFragmentDirections
             .actionWorkoutDetailFragmentToActiveWorkoutFragment(cardId)
         findNavController().navigate(action)

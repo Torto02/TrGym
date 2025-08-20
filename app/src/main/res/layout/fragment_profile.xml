@@ -152,9 +152,10 @@
                 android:orientation="vertical"
                 android:layout_marginBottom="32dp">
 
-                <!-- Monitoraggio Battito Cardiaco -->
+                <!-- Connetti Smartwatch - COMMENTED OUT FOR NOW -->
+                <!-- TODO: Implementare connessione smartwatch in una versione futura
                 <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/cardHeartRateConsent"
+                    android:id="@+id/cardConnectWatch"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="8dp"
@@ -177,7 +178,7 @@
                         <ImageView
                             android:layout_width="24dp"
                             android:layout_height="24dp"
-                            android:src="@drawable/ic_email"
+                            android:src="@drawable/ic_watch"
                             app:tint="@color/primary" />
 
                         <LinearLayout
@@ -190,29 +191,30 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Monitoraggio Battito Cardiaco"
+                                android:text="Connetti Smartwatch"
                                 android:textSize="16sp"
                                 android:textStyle="bold"
                                 android:textColor="@color/ios_label" />
 
                             <TextView
-                                android:id="@+id/heartRateStatus"
+                                android:id="@+id/watchStatus"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Disattivato"
+                                android:text="Non connesso"
                                 android:textSize="14sp"
                                 android:textColor="@color/ios_secondaryLabel" />
 
                         </LinearLayout>
 
-                        <com.google.android.material.switchmaterial.SwitchMaterial
-                            android:id="@+id/switchHeartRateConsent"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp" />
+                        <ImageView
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:src="@drawable/ic_arrow_forward"
+                            app:tint="@color/ios_secondaryLabel" />
 
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
+                -->
 
 
                 <!-- Storico allenamenti -->
