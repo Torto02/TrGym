@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#121212"
+    android:gravity="center">
+
+    <!-- Cuore che batte -->
+    <ImageView
+        android:id="@+id/heartIcon"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_centerInParent="true"
+        android:src="@drawable/heart_pulse"
+        android:contentDescription="Heart Icon"/>
+
+    <!-- Frequenza cardiaca -->
+    <TextView
+        android:id="@+id/heartRateText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="-- BPM"
+        android:textColor="#FFFFFF"
+        android:textSize="24sp"
+        android:layout_below="@id/heartIcon"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="16dp"/>
+
+    <!-- Stato permessi -->
+    <TextView
+        android:id="@+id/permissionStatusText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Verifica permessi..."
+        android:textColor="#AAAAAA"
+        android:textSize="14sp"
+        android:layout_below="@id/heartRateText"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="8dp"/>
+
+    <!-- Pulsante richiesta permessi -->
+    <Button
+        android:id="@+id/requestPermissionBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Richiedi Permesso"
+        android:layout_below="@id/permissionStatusText"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="16dp"
+        android:visibility="gone"/>
+</RelativeLayout>

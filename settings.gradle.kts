@@ -20,4 +20,5 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "TrGym"
-include(":app")
+include(":TrGym")
+include(":TrGymWear")
