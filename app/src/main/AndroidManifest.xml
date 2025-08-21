@@ -40,6 +40,17 @@
                     android:host="login-callback" />
             </intent-filter>
         </activity>
+
+        <!-- Servizio per ricevere dati da Wear OS -->
+        <service
+            android:name=".service.HeartRateDataListenerService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.DATA_CHANGED" />
+                <data android:scheme="wear" android:host="*" />
+            </intent-filter>
+        </service>
+
     </application>
 
 </manifest>

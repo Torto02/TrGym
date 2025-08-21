@@ -1,7 +1,10 @@
 
 package com.torto.trgym.ui.profile
 
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -12,25 +15,62 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.navigation.fragment.findNavController
 import com.google.android.gms.wearable.CapabilityClient
 import com.google.android.gms.wearable.Node
 import com.google.android.gms.wearable.Wearable
 import com.google.android.material.card.MaterialCardView
 import com.torto.trgym.R
+import com.torto.trgym.service.HeartRateDataListenerService
 import com.torto.trgym.viewmodel.profile.ProfileViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @AndroidEntryPoint
 class ProfileFragment : Fragment(R.layout.fragment_profile) {
 
     private val viewModel: ProfileViewModel by viewModels()
+    private var heartRateTextView: TextView? = null
+    
+    private val heartRateReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            Log.d("ProfileFragment", "BroadcastReceiver.onReceive called")
+            Log.d("ProfileFragment", "Intent action: ${intent?.action}")
+            Log.d("ProfileFragment", "Expected action: ${HeartRateDataListenerService.ACTION_HEART_RATE_RECEIVED}")
+            
+            if (intent?.action == HeartRateDataListenerService.ACTION_HEART_RATE_RECEIVED) {
+                Log.d("ProfileFragment", "Heart rate broadcast received!")
+                val heartRate = intent.getIntExtra(HeartRateDataListenerService.EXTRA_HEART_RATE, 0)
+                val timestamp = intent.getLongExtra(HeartRateDataListenerService.EXTRA_TIMESTAMP, 0)
+                Log.d("ProfileFragment", "Received heart rate: $heartRate, timestamp: $timestamp")
+                updateHeartRateDisplay(heartRate, timestamp)
+            } else {
+                Log.w("ProfileFragment", "Received broadcast with wrong action: ${intent?.action}")
+            }
+        }
+    }
 
     override fun onResume() {
         super.onResume()
         viewModel.refreshProfile()
+        
+        // Registra il receiver per ricevere dati battito cardiaco
+        val filter = IntentFilter(HeartRateDataListenerService.ACTION_HEART_RATE_RECEIVED)
+        Log.d("ProfileFragment", "Registering BroadcastReceiver with filter: ${HeartRateDataListenerService.ACTION_HEART_RATE_RECEIVED}")
+        LocalBroadcastManager.getInstance(requireContext()).registerReceiver(heartRateReceiver, filter)
+        Log.d("ProfileFragment", "BroadcastReceiver registered successfully")
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // Deregistra il receiver
+        Log.d("ProfileFragment", "Unregistering BroadcastReceiver")
+        LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(heartRateReceiver)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -43,6 +83,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         val bodyMeasurementsCard = view.findViewById<MaterialCardView>(R.id.cardBodyMeasurements)
         val wearOSCard = view.findViewById<MaterialCardView>(R.id.cardConnectWearOS)
         val wearOSStatus = view.findViewById<TextView>(R.id.wearOSStatus)
+        heartRateTextView = view.findViewById<TextView>(R.id.heartRateStatus)
 
         setupClickListeners(logoutCard, workoutHistoryCard, resyncCard, bodyMeasurementsCard, wearOSCard)
         observeUiState(emailTv, textName, totalWorkouts, logoutCard, workoutHistoryCard, resyncCard, bodyMeasurementsCard, wearOSCard)
@@ -74,6 +115,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
 
         wearOSCard.setOnClickListener {
             checkWearOSConnection()
+            testHeartRateService()
         }
     }
 
@@ -188,5 +230,25 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             Log.e("WearOS", "Error getting connected nodes", e)
             emptyList()
         }
+    }
+
+    private fun updateHeartRateDisplay(heartRate: Int, timestamp: Long) {
+        val timeFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+        val time = timeFormat.format(Date(timestamp))
+        heartRateTextView?.text = "Battito: $heartRate BPM ($time)"
+        Log.d("ProfileFragment", "Heart rate display updated: $heartRate BPM at $time")
+    }
+    
+    private fun testHeartRateService() {
+        Log.d("ProfileFragment", "Testing heart rate service with fake data")
+        
+        // Test con dati fake per verificare se il broadcast funziona
+        val intent = Intent(HeartRateDataListenerService.ACTION_HEART_RATE_RECEIVED).apply {
+            putExtra(HeartRateDataListenerService.EXTRA_HEART_RATE, 85)
+            putExtra(HeartRateDataListenerService.EXTRA_TIMESTAMP, System.currentTimeMillis())
+        }
+        
+        Log.d("ProfileFragment", "Sending test broadcast")
+        LocalBroadcastManager.getInstance(requireContext()).sendBroadcast(intent)
     }
 }

@@ -104,4 +104,5 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
     compileOnly("com.google.android.wearable:wearable:2.9.0")
     implementation("com.google.android.support:wearable:2.9.0")
+    implementation("androidx.localbroadcastmanager:localbroadcastmanager:1.1.0")
 }
