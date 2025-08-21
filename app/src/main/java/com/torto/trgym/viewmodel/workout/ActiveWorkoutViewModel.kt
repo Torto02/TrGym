@@ -125,48 +125,55 @@ class ActiveWorkoutViewModel @Inject constructor(
     }
 
     init {
-        loadWorkoutCard()
-        checkForActiveSession()
-    }
-
-    private fun loadWorkoutCard() {
         viewModelScope.launch {
-            try {
-                val card = workoutRepository.getWorkoutCard(workoutCardId)
-                _workoutCard.value = card
-
-                if (card == null) {
-                    _uiState.value = UiState.Error("Scheda non trovata")
-                }
-            } catch (e: Exception) {
-                _uiState.value = UiState.Error(e.message ?: "Errore nel caricamento")
-            }
+            loadWorkoutCard()
+            checkForActiveSession()
         }
     }
 
-    private fun checkForActiveSession() {
-        viewModelScope.launch {
-            try {
-                // Reset sessionDataLoaded flag
-                _sessionDataLoaded.value = false
+    private suspend fun loadWorkoutCard() {
+        try {
+            Log.d("ActiveWorkoutViewModel", "Loading workout card for ID: $workoutCardId")
+            val card = workoutRepository.getWorkoutCard(workoutCardId)
+            _workoutCard.value = card
 
-                val activeSession = workoutRepository.getActiveWorkoutSession()
-
-                if (activeSession != null) {
-                    // Set session before setting UI state
-                    _activeSession.value = activeSession
-
-                    // Load session exercises and sets before indicating data is ready
-                    loadSessionExercisesAndSets(activeSession.id)
-
-                    // Only after data is loaded, update UI state
-                    _uiState.value = UiState.WorkoutInProgress
-                } else {
-                    _uiState.value = UiState.ReadyToStart
-                }
-            } catch (e: Exception) {
-                _uiState.value = UiState.Error(e.message ?: "Errore nel controllo della sessione attiva")
+            if (card == null) {
+                Log.e("ActiveWorkoutViewModel", "Workout card not found for ID: $workoutCardId")
+                _uiState.value = UiState.Error("Scheda non trovata")
+            } else {
+                Log.d("ActiveWorkoutViewModel", "Workout card loaded: ${card.name}")
             }
+        } catch (e: Exception) {
+            Log.e("ActiveWorkoutViewModel", "Error loading workout card", e)
+            _uiState.value = UiState.Error(e.message ?: "Errore nel caricamento")
+        }
+    }
+
+    private suspend fun checkForActiveSession() {
+        try {
+            // Reset sessionDataLoaded flag
+            _sessionDataLoaded.value = false
+
+            Log.d("ActiveWorkoutViewModel", "Checking for active session...")
+            val activeSession = workoutRepository.getActiveWorkoutSession()
+
+            if (activeSession != null) {
+                Log.d("ActiveWorkoutViewModel", "Found active session: ${activeSession.id}")
+                // Set session before setting UI state
+                _activeSession.value = activeSession
+
+                // Load session exercises and sets before indicating data is ready
+                loadSessionExercisesAndSets(activeSession.id)
+
+                // Only after data is loaded, update UI state
+                _uiState.value = UiState.WorkoutInProgress
+            } else {
+                Log.d("ActiveWorkoutViewModel", "No active session found, ready to start")
+                _uiState.value = UiState.ReadyToStart
+            }
+        } catch (e: Exception) {
+            Log.e("ActiveWorkoutViewModel", "Error checking for active session", e)
+            _uiState.value = UiState.Error(e.message ?: "Errore nel controllo della sessione attiva")
         }
     }
 
@@ -262,8 +269,15 @@ class ActiveWorkoutViewModel @Inject constructor(
     fun startWorkout() {
         viewModelScope.launch {
             try {
-                val card = _workoutCard.value ?: return@launch
+                Log.d("ActiveWorkoutViewModel", "Starting workout...")
+                val card = _workoutCard.value 
+                if (card == null) {
+                    Log.e("ActiveWorkoutViewModel", "Cannot start workout: workout card is null")
+                    _uiState.value = UiState.Error("Errore: scheda allenamento non trovata")
+                    return@launch
+                }
 
+                Log.d("ActiveWorkoutViewModel", "Creating session for card: ${card.name}")
                 // Create a new workout session
                 val session = WorkoutSession(
                     workoutCardId = card.id,
@@ -276,9 +290,12 @@ class ActiveWorkoutViewModel @Inject constructor(
                 _uiState.value = UiState.WorkoutInProgress
                 _timerRunning.value = true
 
+                Log.d("ActiveWorkoutViewModel", "Session created: ${session.id}, initializing exercises...")
                 // Initialize session exercises and sets from the workout card
                 initializeSessionExercisesAndSets(session.id)
+                Log.d("ActiveWorkoutViewModel", "Workout started successfully")
             } catch (e: Exception) {
+                Log.e("ActiveWorkoutViewModel", "Error starting workout", e)
                 _uiState.value = UiState.Error(e.message ?: "Errore nell'avvio dell'allenamento")
             }
         }
@@ -339,9 +356,11 @@ class ActiveWorkoutViewModel @Inject constructor(
     }
 
     fun completeWorkout() {
+        // Navigate immediately and complete in background
+        _uiState.value = UiState.WorkoutCompleted
+        
         viewModelScope.launch {
             try {
-                _uiState.value = UiState.CompletingWorkout
                 val session = _activeSession.value ?: return@launch
 
                 Log.d("ActiveWorkoutViewModel", "Completing workout: $session")
@@ -394,27 +413,31 @@ class ActiveWorkoutViewModel @Inject constructor(
                 workoutRepository.updateWorkoutSession(updatedSession)
 
                 _activeSession.value = null
-                _uiState.value = UiState.WorkoutCompleted
+                Log.d("ActiveWorkoutViewModel", "Workout completed successfully in background")
             } catch (e: Exception) {
-                _uiState.value = UiState.Error(e.message ?: "Errore nel completamento dell'allenamento")
+                Log.e("ActiveWorkoutViewModel", "Error completing workout in background", e)
+                // Don't change UI state since user already navigated away
             }
         }
     }
 
     fun cancelWorkout() {
+        // Navigate immediately and cancel in background
+        _uiState.value = UiState.WorkoutCancelled
+        
         viewModelScope.launch {
             try {
-                _uiState.value = UiState.CancellingWorkout
                 val session = _activeSession.value ?: return@launch
 
                 // Delete the session and all related data
                 workoutRepository.deleteWorkoutSession(session)
 
                 _activeSession.value = null
-                _uiState.value = UiState.WorkoutCancelled
+                Log.d("ActiveWorkoutViewModel", "Workout cancelled successfully in background")
 
             } catch (e: Exception) {
-                _uiState.value = UiState.Error(e.message ?: "Errore nell'annullamento dell'allenamento")
+                Log.e("ActiveWorkoutViewModel", "Error cancelling workout in background", e)
+                // Don't change UI state since user already navigated away
             }
         }
     }
@@ -423,8 +446,6 @@ class ActiveWorkoutViewModel @Inject constructor(
         object Loading : UiState
         object ReadyToStart : UiState
         object WorkoutInProgress : UiState
-        object CompletingWorkout : UiState
-        object CancellingWorkout : UiState
         object WorkoutCompleted : UiState
         object WorkoutCancelled : UiState
         data class Error(val message: String) : UiState

@@ -1,7 +1,9 @@
 
 package com.torto.trgym.ui.profile
 
+import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
@@ -11,11 +13,15 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
+import com.google.android.gms.wearable.CapabilityClient
+import com.google.android.gms.wearable.Node
+import com.google.android.gms.wearable.Wearable
 import com.google.android.material.card.MaterialCardView
 import com.torto.trgym.R
 import com.torto.trgym.viewmodel.profile.ProfileViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 @AndroidEntryPoint
 class ProfileFragment : Fragment(R.layout.fragment_profile) {
@@ -35,16 +41,19 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         val workoutHistoryCard = view.findViewById<MaterialCardView>(R.id.cardWorkoutHistory)
         val resyncCard = view.findViewById<MaterialCardView>(R.id.btnResync)
         val bodyMeasurementsCard = view.findViewById<MaterialCardView>(R.id.cardBodyMeasurements)
+        val wearOSCard = view.findViewById<MaterialCardView>(R.id.cardConnectWearOS)
+        val wearOSStatus = view.findViewById<TextView>(R.id.wearOSStatus)
 
-        setupClickListeners(logoutCard, workoutHistoryCard, resyncCard, bodyMeasurementsCard)
-        observeUiState(emailTv, textName, totalWorkouts, logoutCard, workoutHistoryCard, resyncCard, bodyMeasurementsCard)
+        setupClickListeners(logoutCard, workoutHistoryCard, resyncCard, bodyMeasurementsCard, wearOSCard)
+        observeUiState(emailTv, textName, totalWorkouts, logoutCard, workoutHistoryCard, resyncCard, bodyMeasurementsCard, wearOSCard)
     }
 
     private fun setupClickListeners(
         logoutCard: MaterialCardView,
         workoutHistoryCard: MaterialCardView,
         resyncCard: MaterialCardView,
-        bodyMeasurementsCard: MaterialCardView
+        bodyMeasurementsCard: MaterialCardView,
+        wearOSCard: MaterialCardView
     ) {
         logoutCard.setOnClickListener {
             viewModel.logout()
@@ -62,6 +71,10 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         bodyMeasurementsCard.setOnClickListener {
             findNavController().navigate(R.id.action_profileFragment_to_bodyMeasurementsFragment)
         }
+
+        wearOSCard.setOnClickListener {
+            checkWearOSConnection()
+        }
     }
 
     private fun observeUiState(
@@ -71,29 +84,30 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         logoutCard: MaterialCardView,
         workoutHistoryCard: MaterialCardView,
         resyncCard: MaterialCardView,
-        bodyMeasurementsCard: MaterialCardView
+        bodyMeasurementsCard: MaterialCardView,
+        wearOSCard: MaterialCardView
     ) {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect { state ->
                     when (state) {
                         is ProfileViewModel.ProfileUiState.Loading -> {
-                            setCardsEnabled(false, logoutCard, workoutHistoryCard, resyncCard, bodyMeasurementsCard)
+                            setCardsEnabled(false, logoutCard, workoutHistoryCard, resyncCard, bodyMeasurementsCard, wearOSCard)
                             // Potresti mostrare un loading spinner qui
                         }
 
                         is ProfileViewModel.ProfileUiState.Syncing -> {
-                            setCardsEnabled(false, logoutCard, workoutHistoryCard, resyncCard, bodyMeasurementsCard)
+                            setCardsEnabled(false, logoutCard, workoutHistoryCard, resyncCard, bodyMeasurementsCard, wearOSCard)
                             Toast.makeText(requireContext(), "Sincronizzazione in corso...", Toast.LENGTH_SHORT).show()
                         }
 
                         is ProfileViewModel.ProfileUiState.Data -> {
-                            setCardsEnabled(true, logoutCard, workoutHistoryCard, resyncCard, bodyMeasurementsCard)
+                            setCardsEnabled(true, logoutCard, workoutHistoryCard, resyncCard, bodyMeasurementsCard, wearOSCard)
                             updateProfileData(emailTv, textName, totalWorkouts, state.profileData)
                         }
 
                         is ProfileViewModel.ProfileUiState.SyncCompleted -> {
-                            setCardsEnabled(true, logoutCard, workoutHistoryCard, resyncCard, bodyMeasurementsCard)
+                            setCardsEnabled(true, logoutCard, workoutHistoryCard, resyncCard, bodyMeasurementsCard, wearOSCard)
                             updateProfileData(emailTv, textName, totalWorkouts, state.profileData)
                             Toast.makeText(requireContext(), "Sincronizzazione completata!", Toast.LENGTH_SHORT).show()
 
@@ -101,7 +115,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                         }
 
                         is ProfileViewModel.ProfileUiState.Error -> {
-                            setCardsEnabled(true, logoutCard, workoutHistoryCard, resyncCard, bodyMeasurementsCard)
+                            setCardsEnabled(true, logoutCard, workoutHistoryCard, resyncCard, bodyMeasurementsCard, wearOSCard)
                             Toast.makeText(requireContext(), state.message, Toast.LENGTH_LONG).show()
                         }
 
@@ -136,5 +150,43 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         emailTv.text = profileData.email
         textName.text = profileData.displayName
         totalWorkouts.text = profileData.totalWorkouts.toString()
+    }
+
+    private fun checkWearOSConnection() {
+        lifecycleScope.launch {
+            try {
+                val wearOSStatusTextView = view?.findViewById<TextView>(R.id.wearOSStatus)
+                wearOSStatusTextView?.text = "Verifica in corso..."
+
+                val connectedNodes = getConnectedWearOSDevices(requireContext())
+                
+                if (connectedNodes.isNotEmpty()) {
+                    val deviceNames = connectedNodes.map { it.displayName }.joinToString(", ")
+                    wearOSStatusTextView?.text = "Connesso: $deviceNames"
+                    Toast.makeText(requireContext(), "Wear OS connesso: $deviceNames", Toast.LENGTH_LONG).show()
+                    Log.d("WearOS", "Connected devices: $deviceNames")
+                } else {
+                    wearOSStatusTextView?.text = "Nessun dispositivo connesso"
+                    Toast.makeText(requireContext(), "Nessun dispositivo Wear OS connesso", Toast.LENGTH_SHORT).show()
+                    Log.d("WearOS", "No connected devices found")
+                }
+            } catch (e: Exception) {
+                Log.e("WearOS", "Errore nella verifica connessione Wear OS", e)
+                view?.findViewById<TextView>(R.id.wearOSStatus)?.text = "Errore nella verifica"
+                Toast.makeText(requireContext(), "Errore nella verifica: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    private suspend fun getConnectedWearOSDevices(context: Context): List<Node> {
+        return try {
+            val nodeClient = Wearable.getNodeClient(context)
+            val nodes = nodeClient.connectedNodes.await()
+            Log.d("WearOS", "Found ${nodes.size} connected nodes")
+            nodes.toList()
+        } catch (e: Exception) {
+            Log.e("WearOS", "Error getting connected nodes", e)
+            emptyList()
+        }
     }
 }
