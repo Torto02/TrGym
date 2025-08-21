@@ -51,7 +51,6 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
     private lateinit var emptyStateLayout: View
     private lateinit var completeWorkoutButton: MaterialButton
     private lateinit var cancelWorkoutButton: MaterialButton
-    private lateinit var pauseResumeButton: ImageView
     
     // Heart Rate Views
     private lateinit var heartRateCard: MaterialCardView
@@ -105,10 +104,8 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
         exercisesAdapter = ActiveWorkoutExercisesAdapter(
             onSetCompletionChanged = { setId, isCompleted ->
                 viewModel.toggleSetCompletion(setId, isCompleted)
-            },
-            onSetValueChangedSimple = { setId, weight, reps ->
-                viewModel.updateSessionSetFromValues(setId, weight, reps)
             }
+
         )
 
         exercisesRecyclerView.apply {

@@ -1,5 +1,4 @@
 package com.torto.trgym.adapters
-
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -22,10 +21,6 @@ import com.torto.trgym.database.entities.ExerciseSet
 
 class ActiveWorkoutExercisesAdapter(
     private val onSetCompletionChanged: (String, Boolean) -> Unit,
-    private val onSetValueChangedSimple: ((String, Double?, Int?) -> Unit)? = null,
-    private val onExerciseMenuClicked: ((String) -> Unit)? = null,
-    private val onSetMenuClicked: ((String) -> Unit)? = null,
-    private val onAddSetClicked: ((String) -> Unit)? = null
 ) : ListAdapter<WorkoutExerciseDetail, ActiveWorkoutExercisesAdapter.ExerciseViewHolder>(ExerciseDiffCallback()) {
 
     // Map to track the completion status of sets
@@ -138,15 +133,11 @@ class ActiveWorkoutExercisesAdapter(
             // Update exercise info text
             exerciseInfo.text = "$completedSetsCount/$totalSets serie"
 
-            // Update status icon based on completion
-            val isExerciseCompleted = totalSets > 0 && completedSetsCount == totalSets
-
-
 
             val defaultRes = R.drawable.ic_fitness_center
 
             val imagePath = exercise.imagePath
-            Log.d("imagePath", "Image path: $imagePath")
+            Log.d("imagePath", "Image path: $exercise")
             if (!imagePath.isNullOrBlank()) {
                 val assetUri = "file:///android_asset/images/$imagePath"
                 exercisePreview.load(assetUri) {
