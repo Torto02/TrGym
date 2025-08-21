@@ -95,7 +95,6 @@
                 android:layout_marginBottom="100dp"
                 tools:listitem="@layout/item_workout_exercise" />
 
-            <!-- Messaggio quando non ci sono esercizi -->
             <LinearLayout
                 android:id="@+id/emptyStateLayout"
                 android:layout_width="match_parent"
@@ -155,7 +154,7 @@
             android:layout_width="match_parent"
             android:layout_height="56dp"
             android:layout_marginBottom="4dp"
-            android:text="Completa Allenamento"
+            android:text="Complete Workout"
             android:textColor="@color/white"
             android:textSize="16sp"
             android:textStyle="bold"
@@ -168,7 +167,7 @@
             android:id="@+id/cancelWorkoutButton"
             android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:text="Annulla Allenamento"
+            android:text="Cancel Workout"
             android:textColor="@color/error"
             android:textSize="16sp"
             android:textStyle="bold"
@@ -198,66 +197,63 @@
         android:id="@+id/heartRateCard"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="30dp"
         android:layout_gravity="center_horizontal"
-        android:visibility="gone"
+        android:layout_marginTop="30dp"
+        app:cardBackgroundColor="#CCFFFFFF"
         app:cardCornerRadius="12dp"
         app:cardElevation="0dp"
-        app:cardBackgroundColor="#CCFFFFFF"
-        app:strokeWidth="0dp"
-        app:strokeColor="@color/ios_secondaryLabel">
+        app:strokeColor="@color/ios_secondaryLabel"
+        app:strokeWidth="0dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:padding="12dp"
+            android:background="@android:color/transparent"
             android:gravity="center_vertical"
-            android:background="@android:color/transparent">
+            android:orientation="horizontal"
+            android:padding="12dp">
 
             <ImageView
                 android:layout_width="20dp"
                 android:layout_height="20dp"
-                android:src="@drawable/ic_heart"
-                android:background="@android:color/transparent" />
+                android:background="@android:color/transparent"
+                android:src="@drawable/ic_heart" />
 
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
                 android:layout_marginStart="12dp"
-                android:background="@android:color/transparent">
+                android:layout_weight="1"
+                android:background="@android:color/transparent"
+                android:orientation="vertical">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Battito Cardiaco"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
+                    android:background="@android:color/transparent"
+                    android:text="Heart Rate"
                     android:textColor="@color/ios_secondaryLabel"
-                    android:background="@android:color/transparent" />
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/heartRateValue"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:background="@android:color/transparent"
                     android:text="-- BPM"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
                     android:textColor="#FF0000"
-                    android:background="@android:color/transparent" />
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
             </LinearLayout>
 
             <TextView
                 android:id="@+id/heartRateStatus"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Connessione..."
-                android:textSize="10sp"
-                android:visibility="gone"
+                android:background="@android:color/transparent"
                 android:textColor="@color/ios_secondaryLabel"
-                android:background="@android:color/transparent" />
+                android:textSize="10sp" />
 
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>

@@ -18,7 +18,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Profilo"
+            android:text="Profile"
             android:textColor="@color/primary"
             android:textSize="28sp"
             android:textStyle="bold"
@@ -129,7 +129,42 @@
                 </com.google.android.material.card.MaterialCardView>
 
 
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="6dp"
+                    app:cardCornerRadius="26dp"
+                    app:cardElevation="2dp"
+                    app:cardBackgroundColor="@color/error"
+                    android:layout_margin="5dp"
+                    app:strokeColor="@color/error">
 
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp"
+                        android:gravity="center">
+
+                        <TextView
+                            android:id="@+id/totalCalories"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="42"
+                            android:textSize="24sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/white" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/Calories"
+                            android:textSize="12sp"
+                            android:textColor="@color/white" />
+
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
 
 
             </LinearLayout>
@@ -138,7 +173,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Funzionalità"
+                android:text="Functionalities"
                 android:textColor="@color/ios_label"
                 android:layout_marginTop="20dp"
                 android:textSize="18sp"
@@ -159,9 +194,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="8dp"
                     app:cardCornerRadius="16dp"
-                    app:cardElevation="1dp"
                     app:cardBackgroundColor="@color/white"
-                    app:strokeWidth="1dp"
+                    app:strokeWidth="2dp"
                     app:strokeColor="@color/lightGray"
                     android:clickable="true"
                     android:focusable="true"
@@ -177,7 +211,7 @@
                         <ImageView
                             android:layout_width="24dp"
                             android:layout_height="24dp"
-                            android:src="@drawable/ic_sync"
+                            android:src="@drawable/ic_heart"
                             app:tint="@color/primary" />
 
                         <LinearLayout
@@ -190,7 +224,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Verifica Wear OS"
+                                android:text="Wear OS connection"
                                 android:textSize="16sp"
                                 android:textStyle="bold"
                                 android:textColor="@color/ios_label" />
@@ -199,7 +233,7 @@
                                 android:id="@+id/wearOSStatus"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Tocca per verificare"
+                                android:text="Click to check connection"
                                 android:textSize="14sp"
                                 android:textColor="@color/ios_secondaryLabel" />
 
@@ -207,7 +241,7 @@
                                 android:id="@+id/heartRateStatus"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Battito: In attesa..."
+                                android:text="Heart beat: waiting..."
                                 android:textSize="12sp"
                                 android:textColor="@color/primary"
                                 android:layout_marginTop="4dp" />
@@ -232,9 +266,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="8dp"
                     app:cardCornerRadius="16dp"
-                    app:cardElevation="1dp"
                     app:cardBackgroundColor="@color/white"
-                    app:strokeWidth="1dp"
+                    app:strokeWidth="2dp"
                     app:strokeColor="@color/lightGray"
                     android:clickable="true"
                     android:focusable="true"
@@ -279,9 +312,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="8dp"
                     app:cardCornerRadius="16dp"
-                    app:cardElevation="1dp"
                     app:cardBackgroundColor="@color/white"
-                    app:strokeWidth="1dp"
+                    app:strokeWidth="2dp"
                     app:strokeColor="@color/lightGray"
                     android:clickable="true"
                     android:focusable="true"
@@ -297,7 +329,7 @@
                         <ImageView
                             android:layout_width="24dp"
                             android:layout_height="24dp"
-                            android:src="@drawable/ic_ios_back"
+                            android:src="@drawable/ic_measurements"
                             android:rotation="180"
                             app:tint="@color/primary" />
 
@@ -327,9 +359,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="8dp"
                     app:cardCornerRadius="16dp"
-                    app:cardElevation="1dp"
                     app:cardBackgroundColor="@color/white"
-                    app:strokeWidth="1dp"
+                    app:strokeWidth="2dp"
                     app:strokeColor="@color/lightGray"
                     android:clickable="true"
                     android:focusable="true"
@@ -366,10 +397,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     app:cardCornerRadius="16dp"
-                    app:cardElevation="1dp"
                     app:cardBackgroundColor="@color/white"
                     android:layout_marginTop="50dp"
-                    app:strokeWidth="1dp"
+                    app:strokeWidth="2dp"
                     app:strokeColor="@color/lightGray"
                     android:clickable="true"
                     android:focusable="true"

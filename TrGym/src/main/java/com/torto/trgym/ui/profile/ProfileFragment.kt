@@ -17,7 +17,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.navigation.fragment.findNavController
-import com.google.android.gms.wearable.CapabilityClient
 import com.google.android.gms.wearable.Node
 import com.google.android.gms.wearable.Wearable
 import com.google.android.material.card.MaterialCardView
@@ -66,13 +65,6 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         Log.d("ProfileFragment", "BroadcastReceiver registered successfully")
     }
 
-    override fun onPause() {
-        super.onPause()
-        // Deregistra il receiver
-        Log.d("ProfileFragment", "Unregistering BroadcastReceiver")
-        LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(heartRateReceiver)
-    }
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val emailTv = view.findViewById<TextView>(R.id.UserEmail)
         val logoutCard = view.findViewById<MaterialCardView>(R.id.cardLogout)
@@ -82,8 +74,6 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         val resyncCard = view.findViewById<MaterialCardView>(R.id.btnResync)
         val bodyMeasurementsCard = view.findViewById<MaterialCardView>(R.id.cardBodyMeasurements)
         val wearOSCard = view.findViewById<MaterialCardView>(R.id.cardConnectWearOS)
-        val wearOSStatus = view.findViewById<TextView>(R.id.wearOSStatus)
-        heartRateTextView = view.findViewById<TextView>(R.id.heartRateStatus)
 
         setupClickListeners(logoutCard, workoutHistoryCard, resyncCard, bodyMeasurementsCard, wearOSCard)
         observeUiState(emailTv, textName, totalWorkouts, logoutCard, workoutHistoryCard, resyncCard, bodyMeasurementsCard, wearOSCard)
@@ -135,12 +125,11 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                     when (state) {
                         is ProfileViewModel.ProfileUiState.Loading -> {
                             setCardsEnabled(false, logoutCard, workoutHistoryCard, resyncCard, bodyMeasurementsCard, wearOSCard)
-                            // Potresti mostrare un loading spinner qui
                         }
 
                         is ProfileViewModel.ProfileUiState.Syncing -> {
                             setCardsEnabled(false, logoutCard, workoutHistoryCard, resyncCard, bodyMeasurementsCard, wearOSCard)
-                            Toast.makeText(requireContext(), "Sincronizzazione in corso...", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(requireContext(), "Synchronization...", Toast.LENGTH_SHORT).show()
                         }
 
                         is ProfileViewModel.ProfileUiState.Data -> {
@@ -151,7 +140,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                         is ProfileViewModel.ProfileUiState.SyncCompleted -> {
                             setCardsEnabled(true, logoutCard, workoutHistoryCard, resyncCard, bodyMeasurementsCard, wearOSCard)
                             updateProfileData(emailTv, textName, totalWorkouts, state.profileData)
-                            Toast.makeText(requireContext(), "Sincronizzazione completata!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(requireContext(), "Sync completed!", Toast.LENGTH_SHORT).show()
 
 
                         }
@@ -162,7 +151,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                         }
 
                         is ProfileViewModel.ProfileUiState.LoggedOut -> {
-                            Toast.makeText(requireContext(), "Logout effettuato", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(requireContext(), "Logged out", Toast.LENGTH_SHORT).show()
 
                             if (isAdded && findNavController().currentDestination?.id == R.id.profileFragment) {
                                 findNavController().navigate(R.id.action_profileFragment_to_loginFragment)

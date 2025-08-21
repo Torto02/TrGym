@@ -62,10 +62,9 @@ class RegisterFragment : Fragment(R.layout.fragment_register) {
                         is RegisterViewModel.RegisterUiState.Success -> {
                             Toast.makeText(
                                 requireContext(),
-                                "Registration complete! Log in to enter the app..",
+                                "Registration complete! Welcome ${usernameEt.text}!",
                                 Toast.LENGTH_LONG
                             ).show()
-                            findNavController().navigate(R.id.action_registerFragment_to_loginFragment)
                         }
                         is RegisterViewModel.RegisterUiState.Error -> {
                             registerBtn.isEnabled = true

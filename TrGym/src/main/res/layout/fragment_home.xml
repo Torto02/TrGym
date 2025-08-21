@@ -157,8 +157,8 @@
                         android:textStyle="bold"
                         app:backgroundTint="@color/white"
                         app:cornerRadius="16dp"
-                        app:icon="@drawable/ic_fitness_center"
-                        app:iconGravity="textStart"
+                        app:icon="@drawable/ic_arrow_forward"
+                        app:iconGravity="textEnd"
                         android:clickable="false"
                         app:iconTint="@color/primary"
                         style="@style/Widget.Material3.Button" />

@@ -38,7 +38,6 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
     private lateinit var itemTouchHelper: ItemTouchHelper
     private lateinit var dragCallback: ExerciseDragCallback
 
-    // Views - simplified with lazy initialization
     private val backButton by lazy { requireView().findViewById<TextView>(R.id.backButton) }
     private val workoutTitle by lazy { requireView().findViewById<TextView>(R.id.workoutTitle) }
     private val editButton by lazy { requireView().findViewById<TextView>(R.id.editButton) }
@@ -46,7 +45,6 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
     private val emptyStateLayout by lazy { requireView().findViewById<View>(R.id.emptyStateLayout) }
     private val startWorkoutButton by lazy { requireView().findViewById<MaterialButton>(R.id.startWorkoutButton) }
     private val addExerciseBtn by lazy { requireView().findViewById<FloatingActionButton>(R.id.addExerciseBtn) }
-    private val exercisePreviewIcon by lazy { requireView().findViewById<ImageView>(R.id.exercisePreviewIcon) }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -69,10 +67,6 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
         workoutDetailViewModel.refreshWorkoutCard()
     }
 
-    // ==========================================
-    // SETUP WITH DRAG AND DROP
-    // ==========================================
-
     private fun setupUI() {
         setupRecyclerView()
         setupDragAndDrop()
@@ -90,8 +84,8 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
             onSetChanged = workoutDetailViewModel::updateExerciseSet,
             onDeleteExercise = { exercise ->
                 showDeleteConfirmation(
-                    "Elimina esercizio",
-                    "Sei sicuro di voler eliminare \"${exercise.name}\"?"
+                    "Delete exercise",
+                    "Are you sure you want do delete \"${exercise.name}\"?"
                 ) { workoutDetailViewModel.deleteExercise(exercise) }
             },
             onDeleteSet = workoutDetailViewModel::deleteExerciseSet,
@@ -112,11 +106,8 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
             workoutDetailViewModel.moveExercise(fromPosition, toPosition)
         }
 
-        // Crea l'ItemTouchHelper
         itemTouchHelper = ItemTouchHelper(dragCallback)
         itemTouchHelper.attachToRecyclerView(exercisesRecyclerView)
-
-        // Passa l'ItemTouchHelper all'adapter
         exercisesAdapter.setItemTouchHelper(itemTouchHelper)
     }
 
@@ -126,8 +117,7 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
         startWorkoutButton.setOnClickListener { checkAndStartWorkout() }
         addExerciseBtn.setOnClickListener { showSelectExercisesDialog() }
 
-        // Long click for editing workout card name
-        workoutTitle.setOnLongClickListener {
+        workoutTitle.setOnClickListener {
             if (workoutDetailViewModel.isEditMode.value) {
                 showEditWorkoutCardDialog()
                 true
@@ -137,11 +127,10 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
 
     private fun handleEditButtonClick() {
         if (workoutDetailViewModel.isEditMode.value) {
-            // Trying to exit edit mode - validate first
             val validationResult = workoutDetailViewModel.validateForExitEditMode()
             if (!validationResult.isValid) {
                 // Show validation error message
-                val errorMessage = "Inserisci i valori mancanti per peso e ripetizioni"
+                val errorMessage = "Enter the missing values for weight and repetitions."
                 showValidationError(errorMessage, validationResult.errors)
                 return
             }
@@ -173,10 +162,8 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
             // Validate before leaving edit mode
             val validationResult = workoutDetailViewModel.validateForExitEditMode()
             if (!validationResult.isValid) {
-                // Show validation error
                 showValidationErrorWithBackPress(validationResult.errors)
             } else {
-                // Ask user if they want to save changes before leaving edit mode
                 showEditModeCancelConfirmation()
             }
         } else {
@@ -193,11 +180,10 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
         }
 
         MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_App_MaterialAlertDialog)
-            .setTitle("Valori mancanti")
-            .setMessage("Prima di uscire dalla modalità modifica:\n\n$detailedMessage")
-            .setPositiveButton("Completa i valori", null)
-            .setNegativeButton("Annulla modifiche") { _, _ ->
-                // Force exit edit mode without validation
+            .setTitle("Missing values")
+            .setMessage("Before exiting edit mode:\n\n$detailedMessage")
+            .setPositiveButton("Complete the values", null)
+            .setNegativeButton("Cancel edits") { _, _ ->
                 workoutDetailViewModel.cancelEditMode()
                 findNavController().popBackStack()
             }
@@ -207,25 +193,20 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
 
     private fun showEditModeCancelConfirmation() {
         MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_App_MaterialAlertDialog)
-            .setTitle("Uscire dalla modalità modifica?")
-            .setMessage("Hai delle modifiche non salvate. Vuoi salvarle prima di uscire?")
-            .setPositiveButton("Salva") { _, _ ->
-                // Save changes and exit edit mode
+            .setTitle("Exit edit mode?")
+            .setMessage("You have unsaved changes. Do you want to save them before exiting?")
+            .setPositiveButton("Save edits") { _, _ ->
                 workoutDetailViewModel.toggleEditMode()
                 findNavController().popBackStack()
             }
-            .setNegativeButton("Annulla modifiche") { _, _ ->
-                // Discard changes and exit edit mode
+            .setNegativeButton("Delete edits") { _, _ ->
                 workoutDetailViewModel.cancelEditMode()
                 findNavController().popBackStack()
             }
-            .setNeutralButton("Continua modifiche", null)
+            .setCancelable(true) // chiudi con back o tap fuori = "Continue editing"
             .show()
-    }
 
-    // ==========================================
-    // VIEWMODEL OBSERVATION WITH VALIDATION SUPPORT
-    // ==========================================
+    }
 
     private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
@@ -275,7 +256,7 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
                         // First line is the title, rest are details
                         showValidationError(errors.first(), errors.drop(1))
                     } else {
-                        showValidationError("Inserisci i valori mancanti", errors)
+                        showValidationError("Enter the missing values.", errors)
                     }
                 }
                 else -> { /* Handle loading/success states if needed */ }
@@ -288,17 +269,17 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
     // ==========================================
 
     private fun updateEditModeUI(isEditMode: Boolean) {
-        editButton.text = if (isEditMode) "Fine" else "Modifica"
+        editButton.text = if (isEditMode) "Save" else "Edit"
         addExerciseBtn.visibility = if (isEditMode) View.VISIBLE else View.GONE
         startWorkoutButton.visibility = if (isEditMode) View.GONE else View.VISIBLE
 
         // Update edit button style
         if (isEditMode) {
             editButton.setTextColor(resources.getColor(R.color.primary, null))
-            editButton.text = "Fine"
+            editButton.text = "Save"
         } else {
             editButton.setTextColor(resources.getColor(R.color.primary, null))
-            editButton.text = "Modifica"
+            editButton.text = "Edit"
         }
     }
 
@@ -318,12 +299,6 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
         val hasShownInstructions = prefs.getBoolean("has_shown_drag_instructions", false)
 
         if (!hasShownInstructions) {
-            Toast.makeText(
-                requireContext(),
-                "Usa l'icona a sinistra per trascinare e riordinare gli esercizi",
-                Toast.LENGTH_LONG
-            ).show()
-
             prefs.edit().putBoolean("has_shown_drag_instructions", true).apply()
         }
     }
@@ -332,8 +307,8 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
         MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_App_MaterialAlertDialog)
             .setTitle(title)
             .setMessage(message)
-            .setPositiveButton("Elimina") { _, _ -> onConfirm() }
-            .setNegativeButton("Annulla", null)
+            .setPositiveButton("Delete") { _, _ -> onConfirm() }
+            .setNegativeButton("Cancel", null)
             .show()
     }
 
@@ -342,9 +317,9 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
         dialog.setOnExercisesSelectedListener { selectedExercises ->
             workoutDetailViewModel.addMultipleExercises(selectedExercises)
             val message = if (selectedExercises.size == 1) {
-                "Esercizio aggiunto"
+                "Added exercise"
             } else {
-                "${selectedExercises.size} esercizi aggiunti"
+                "${selectedExercises.size} Added exercises"
             }
             showSuccess(message)
         }
@@ -361,7 +336,7 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
         descriptionInput.setText(currentCard?.description ?: "")
 
         MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_App_MaterialAlertDialog)
-            .setTitle("Modifica scheda")
+            .setTitle("Edit card")
             .setView(dialogView)
             .setPositiveButton("Salva") { _, _ ->
                 val name = nameInput.text.toString().trim()
@@ -369,18 +344,14 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
 
                 if (name.isNotEmpty()) {
                     workoutDetailViewModel.updateWorkoutCard(name, description)
-                    showSuccess("Scheda aggiornata")
+                    showSuccess("Card added")
                 } else {
-                    showError("Il nome è obbligatorio")
+                    showError("Name cannot be empty")
                 }
             }
-            .setNegativeButton("Annulla", null)
+            .setNegativeButton("Cancel", null)
             .show()
     }
-
-    // ==========================================
-    // WORKOUT MANAGEMENT
-    // ==========================================
 
     private fun checkAndStartWorkout() {
         viewLifecycleOwner.lifecycleScope.launch {
@@ -392,27 +363,27 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
                     navigateToActiveWorkout()
                 }
             } catch (e: Exception) {
-                showError("Errore: ${e.message}")
+                showError("Error: ${e.message}")
             }
         }
     }
 
     private fun showActiveSessionDialog(activeSession: WorkoutSession) {
         MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_App_MaterialAlertDialog)
-            .setTitle("Allenamento in corso")
-            .setMessage("Hai già un allenamento in corso. Vuoi continuare quello esistente o annullarlo?")
-            .setPositiveButton("Continua") { _, _ ->
+            .setTitle("Workout Session in Progress")
+            .setMessage("You already have an active workout session. Do you want to continue or cancel it?")
+            .setPositiveButton("Continue Workout") { _, _ ->
                 val action = WorkoutDetailFragmentDirections
                     .actionWorkoutDetailFragmentToActiveWorkoutFragment(activeSession.workoutCardId)
                 findNavController().navigate(action)
             }
-            .setNegativeButton("Annulla esistente") { _, _ ->
+            .setNegativeButton("Delete Workout") { _, _ ->
                 viewLifecycleOwner.lifecycleScope.launch {
                     workoutDetailViewModel.cancelActiveSession(activeSession)
                     navigateToActiveWorkout()
                 }
             }
-            .setNeutralButton("Annulla", null)
+            .setNeutralButton("Cancel", null)
             .show()
     }
 
@@ -431,13 +402,10 @@ class WorkoutDetailFragment : Fragment(R.layout.fragment_workout_detail) {
                 .actionWorkoutDetailFragmentToExerciseDetailFragment(exerciseId, workoutCardId)
             findNavController().navigate(action)
         } else {
-            showError("Dettagli non disponibili per esercizi personalizzati")
+            //
         }
     }
 
-    // ==========================================
-    // UTILITY METHODS
-    // ==========================================
 
     private fun showError(message: String) {
         Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()

@@ -30,41 +30,23 @@ import com.torto.trgym.viewmodel.exercises.ExercisesViewModel
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
-    // Injected repositories for authentication, exercises, and workouts
     @Inject lateinit var authRepository: AuthRepository
     @Inject lateinit var exerciseRepo: ExerciseRepository
     @Inject lateinit var workoutRepo: WorkoutRepository
-
-    // ViewModel for managing exercise-related data
-    private val exercisesViewModel: ExercisesViewModel by viewModels()
-
-    // Navigation controller for managing navigation between fragments
     private lateinit var navController: NavController
-
-    // Bottom navigation view for navigating between main sections
     private lateinit var bottomNavigationView: BottomNavigationView
-
-    // Flag to determine if authentication has been resolved
     private var isAuthenticationResolved = false
 
-    /**
-     * Called when the activity is created. Sets up the splash screen, navigation, and authentication observation.
-     */
+
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Install the splash screen and keep it visible until authentication is resolved
         installSplashScreen()
             .setKeepOnScreenCondition { !isAuthenticationResolved }
 
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // Initialize the ViewModel
-        exercisesViewModel
-
-        // Handle deep links for authentication
         authRepository.handleDeeplinks(intent)
 
-        // Set up navigation and observe authentication status
         setupNavigation()
         observeAuthenticationStatus()
     }
@@ -178,12 +160,11 @@ class MainActivity : AppCompatActivity() {
             authRepository.observeAuthStatus().collect { status ->
                 when (status) {
                     is SessionStatus.Authenticated -> {
-                        // Perform initial data synchronization
+
                         downloadStarredExercisesInitial()
                         downloadWorkoutCardsInitial()
                         uploadPendingWorkoutSessions()
 
-                        // Navigate to the home fragment if currently on login or register
                         navController.currentDestination?.id.let { current ->
                             if (current == R.id.loginFragment || current == R.id.registerFragment) {
                                 val navOptions = NavOptions.Builder()
@@ -194,25 +175,20 @@ class MainActivity : AppCompatActivity() {
                         }
                         isAuthenticationResolved = true
                     }
-                    is SessionStatus.NotAuthenticated -> {
-                        // Navigate to the login fragment
+                    else -> {
+//                    is SessionStatus.NotAuthenticated -> {
                         val navOptions = NavOptions.Builder()
                             .setPopUpTo(R.id.nav_graph, true)
                             .build()
                         navController.navigate(R.id.loginFragment, null, navOptions)
                         isAuthenticationResolved = true
                     }
-                    else -> {
-                        // Handle other authentication states if necessary
-                    }
+
                 }
             }
         }
     }
 
-    /**
-     * Handles new intents, such as deep links, and passes them to the authentication repository.
-     */
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         authRepository.handleDeeplinks(intent)

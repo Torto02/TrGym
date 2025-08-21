@@ -37,7 +37,7 @@
     <string name="bodyMeasurements">Body measurements</string>
     <string name="Synchronize">Synchronize</string>
     <string name="TrainingHystory">Training hystory</string>
-    <string name="workout">Workouts</string>
-    <string name="Calories">Burned calories</string>
+    <string name="workout">Total workouts</string>
+    <string name="Calories">Total Burned calories</string>
     <string name="ExerciseDetail">Exercise Details</string>
 </resources>

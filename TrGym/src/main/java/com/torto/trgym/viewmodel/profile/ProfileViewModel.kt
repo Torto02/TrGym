@@ -38,22 +38,21 @@ class ProfileViewModel @Inject constructor(
                 }
 
                 val totalWorkouts = workoutRepository.countWorkoutSessions()
-                Log.d("ProfileViewModel", "Totale esercizi: $totalWorkouts")
-
+//                val totalCalories = workoutRepository.countTotalCaloriesBurned()
 
                 val profileData = ProfileData(
                     email = user.email ?: "Ospite",
-                    displayName = user.userMetadata?.get("full_name")?.toString() ?: "Utente",
+                    // Usa il display_name dalla tabella di autenticazione invece dei metadata
+                    displayName = (user.userMetadata?.get("display_name")?.toString()
+                        ?.removeSurrounding("\"")) ?: "Utente",
                     totalWorkouts = totalWorkouts,
                     totalCalories = null
                 )
 
-                Log.d("ProfileViewModel", "Dati profilo: $profileData")
-
                 _uiState.value = ProfileUiState.Data(profileData)
 
             } catch (e: Exception) {
-                _uiState.value = ProfileUiState.Error("Errore nel caricamento del profilo")
+                _uiState.value = ProfileUiState.Error("Loading profile error")
             }
         }
     }
@@ -68,7 +67,7 @@ class ProfileViewModel @Inject constructor(
                 authRepository.signOut()
                 _uiState.value = ProfileUiState.LoggedOut
             } catch (e: Exception) {
-                _uiState.value = ProfileUiState.Error("Errore durante il logout")
+                _uiState.value = ProfileUiState.Error("Error logging out")
             }
         }
     }
@@ -83,8 +82,6 @@ class ProfileViewModel @Inject constructor(
                 bodyMeasurementRepository.syncUnsyncedMeasurements()
                 bodyMeasurementRepository.downloadMeasurementsFromSupabase()
 
-                Log.d("ProfileViewModel", "Sincronizzazione dati completata con successo")
-
                 // Dopo il sync, ottieni i dati aggiornati del profilo
                 val user = authRepository.getCurrentUser()
                 if (user == null) {
@@ -96,7 +93,8 @@ class ProfileViewModel @Inject constructor(
 
                 val profileData = ProfileData(
                     email = user.email ?: "Ospite",
-                    displayName = user.userMetadata?.get("full_name")?.toString() ?: "Utente",
+                    // Usa il display_name dalla tabella di autenticazione invece dei metadata
+                    displayName = user.userMetadata?.get("display_name")?.toString() ?: "Utente",
                     totalWorkouts = totalWorkouts,
                     totalCalories = null
                 )
@@ -110,25 +108,26 @@ class ProfileViewModel @Inject constructor(
                 _uiState.value = ProfileUiState.SyncCompleted(profileData)
 
             } catch (e: Exception) {
-                Log.e("ProfileViewModel", "Errore durante la sincronizzazione", e)
+                Log.e("ProfileViewModel", "Synchronization error ", e)
                 _uiState.value =
-                    ProfileUiState.Error("Errore durante la sincronizzazione: ${e.message}")
+                    ProfileUiState.Error("Synchronization error: ${e.message}")
             }
         }
     }
-                    sealed interface ProfileUiState {
-                    object Loading : ProfileUiState
-                    object Syncing : ProfileUiState
-                    data class Data(val profileData: ProfileData) : ProfileUiState
-                    data class SyncCompleted(val profileData: ProfileData) : ProfileUiState
-                    data class Error(val message: String) : ProfileUiState
-                    object LoggedOut : ProfileUiState
-                }
 
-                data class ProfileData(
-                    val email: String,
-                    val displayName: String,
-                    val totalWorkouts: Int,
-                    val totalCalories: Int?
-                )
-            }
+    sealed interface ProfileUiState {
+        object Loading : ProfileUiState
+        object Syncing : ProfileUiState
+        data class Data(val profileData: ProfileData) : ProfileUiState
+        data class SyncCompleted(val profileData: ProfileData) : ProfileUiState
+        data class Error(val message: String) : ProfileUiState
+        object LoggedOut : ProfileUiState
+    }
+
+    data class ProfileData(
+        val email: String,
+        val displayName: String,
+        val totalWorkouts: Int,
+        val totalCalories: Int?
+    )
+}

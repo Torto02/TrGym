@@ -65,7 +65,7 @@ class HomeViewModel @Inject constructor(
                 )
                 workoutRepository.insertWorkoutCard(workoutCard)
             } catch (e: Exception) {
-                _uiState.value = UiState.Error(e.message ?: "Errore nella creazione della scheda")
+                _uiState.value = UiState.Error(e.message ?: "Error in creation of the workout card")
             }
         }
     }
@@ -77,14 +77,14 @@ class HomeViewModel @Inject constructor(
                 val activeSession = workoutRepository.getActiveWorkoutSession()
                 if (activeSession != null && activeSession.workoutCardId == workoutCard.id) {
                     //Mostriamo un dialogo di messaggio all'utente
-                    _uiState.value = UiState.Error("Impossibile eliminare la scheda: è attualmente in uso.")
+                    _uiState.value = UiState.Error("Unable to delete the card: it is currently in use..")
                     return@launch
                 }
 
                 workoutRepository.deleteWorkoutCard(workoutCard)
 
             } catch (e: Exception) {
-                _uiState.value = UiState.Error(e.message ?: "Errore nell'eliminazione della scheda")
+                _uiState.value = UiState.Error(e.message ?: "Error in deletion of the workout card")
             }
         }
     }

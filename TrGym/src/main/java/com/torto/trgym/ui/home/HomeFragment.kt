@@ -163,30 +163,29 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         val descriptionEditText = dialogView.findViewById<TextInputEditText>(R.id.workoutDescriptionEditText)
 
         MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_App_MaterialAlertDialog)
-            .setTitle("Crea nuova scheda")
+            .setTitle("Create a new workout card")
             .setView(dialogView)
-            .setPositiveButton("Crea") { _, _ ->
+            .setPositiveButton("Create") { _, _ ->
                 val name = nameEditText.text.toString().trim()
                 val description = descriptionEditText.text.toString().trim().ifEmpty { null }
 
                 if (name.isNotEmpty()) {
                     viewModel.createWorkoutCard(name, description)
                 } else {
-                    Toast.makeText(requireContext(), "Inserisci un nome per la scheda", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Enter a name for the card.", Toast.LENGTH_SHORT).show()
                 }
             }
-            .setNegativeButton("Annulla", null)
+            .setNegativeButton("Cancel", null)
             .show()
     }
 
     private fun showWorkoutCardMenu(workoutCard: com.torto.trgym.database.entities.WorkoutCard) {
         MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_App_MaterialAlertDialog)
             .setTitle(workoutCard.name)
-            .setItems(arrayOf("Elimina")) { _, which ->
+            .setItems(arrayOf("Delete")) { _, which ->
                 when (which) {
 
                     0 -> {
-                        // Elimina scheda
                         showDeleteConfirmationDialog(workoutCard)
                     }
                 }
@@ -196,12 +195,12 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
     private fun showDeleteConfirmationDialog(workoutCard: com.torto.trgym.database.entities.WorkoutCard) {
         MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_App_MaterialAlertDialog)
-            .setTitle("Elimina scheda")
-            .setMessage("Sei sicuro di voler eliminare \"${workoutCard.name}\"? Questa azione non può essere annullata.")
-            .setPositiveButton("Elimina") { _, _ ->
+            .setTitle("Delete Workout Card")
+            .setMessage("Are you sure you want to delete \"${workoutCard.name}\"? This action cannot be undone.")
+            .setPositiveButton("Delete") { _, _ ->
                 viewModel.deleteWorkoutCard(workoutCard)
             }
-            .setNegativeButton("Annulla", null)
+            .setNegativeButton("Cancel", null)
             .show()
     }
 
@@ -215,7 +214,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
                     hideActiveWorkoutBanner()
                 }
             } catch (e: Exception) {
-                // Ignore errors
+                //
             }
         }
     }
@@ -242,7 +241,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         timerJob?.cancel()
         activeWorkoutCard.visibility = View.VISIBLE
         val workoutNameText = activeWorkoutCard.findViewById<TextView>(R.id.activeWorkoutName)
-        workoutNameText.text = "Nessun allenamento in corso \nApri una scheda per avviare un allenamento"
+        workoutNameText.text = "No workout in progress  \nOpen a card to start a workout"
         activeWorkoutTime.visibility = View.GONE
         continueWorkoutBtn.visibility = View.GONE
         minutes.visibility= View.GONE
@@ -252,8 +251,6 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     private fun navigateToActiveWorkout() {
         viewLifecycleOwner.lifecycleScope.launch {
             val activeSession = viewModel.getActiveWorkoutSession() ?: return@launch
-            
-            // Use the correct action ID that matches your navigation graph
             findNavController().navigate(
                 HomeFragmentDirections.actionHomeFragmentToActiveWorkoutFragment(activeSession.workoutCardId)
             )

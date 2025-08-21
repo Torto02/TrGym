@@ -117,7 +117,7 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
 
     private fun setupClickListeners() {
         backButton.setOnClickListener {
-            showExitConfirmationDialog()
+            findNavController().navigate(ActiveWorkoutFragmentDirections.actionActiveWorkoutFragmentToHomeFragment())
         }
 
         completeWorkoutButton.setOnClickListener {
@@ -160,11 +160,11 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
                             startWorkout()
                         }
                         is ActiveWorkoutViewModel.UiState.WorkoutCompleted -> {
-                            Toast.makeText(requireContext(), "Allenamento completato!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(requireContext(), "Workout completed!", Toast.LENGTH_SHORT).show()
                             findNavController().navigate(ActiveWorkoutFragmentDirections.actionActiveWorkoutFragmentToHomeFragment())
                         }
                         is ActiveWorkoutViewModel.UiState.WorkoutCancelled -> {
-                            Toast.makeText(requireContext(), "Allenamento annullato", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(requireContext(), "Workout deleted", Toast.LENGTH_SHORT).show()
                             findNavController().navigate(ActiveWorkoutFragmentDirections.actionActiveWorkoutFragmentToHomeFragment())
                         }
                         else -> { /* Handle other states if needed */ }
@@ -193,13 +193,10 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
         // Add a new collector for the setIdMapping
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                // Collect both completedSets and setIdMapping together
                 viewModel.completedSets.combine(viewModel.setIdMapping) { completedSets, setIdMapping ->
                     Pair(completedSets, setIdMapping)
                 }.collect { (completedSets, setIdMapping) ->
-                    // First update the ID mapping
                     exercisesAdapter.updateSetIdMapping(setIdMapping)
-                    // Then update the completed sets
                     exercisesAdapter.updateCompletedSets(completedSets)
                 }
             }
@@ -222,8 +219,8 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
 
     private fun showCompleteWorkoutConfirmation() {
         MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_App_MaterialAlertDialog)
-            .setTitle("Completa allenamento")
-            .setMessage("Sei sicuro di voler concludere l'allenamento? Verranno salvati tutti i set completati.")
+            .setTitle("Complete Workout")
+            .setMessage("Are you sure you want to complete the workout? This will save your progress.")
             .setPositiveButton("Completa") { _, _ ->
                 val averageHeartRate = calculateAverageHeartRate()
                 viewModel.completeWorkout(averageHeartRate)
@@ -234,23 +231,12 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
 
     private fun showCancelWorkoutConfirmation() {
         MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_App_MaterialAlertDialog)
-            .setTitle("Annulla allenamento")
-            .setMessage("Sei sicuro di voler annullare l'allenamento? Tutti i progressi andranno persi.")
-            .setPositiveButton("Annulla allenamento") { _, _ ->
+            .setTitle("Cancel Workout")
+            .setMessage("Are you sure you want to cancel the workout? This will delete all progress.")
+            .setPositiveButton("Cancel Workout") { _, _ ->
                 viewModel.cancelWorkout()
             }
-            .setNegativeButton("Continua allenamento", null)
-            .show()
-    }
-
-    private fun showExitConfirmationDialog() {
-        MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_App_MaterialAlertDialog)
-            .setTitle("Uscire dall'allenamento?")
-            .setMessage("L'allenamento rimarrÃ  attivo. Per completarlo o annullarlo torna a questa schermata.")
-            .setPositiveButton("Esci") { _, _ ->
-                findNavController().navigate(ActiveWorkoutFragmentDirections.actionActiveWorkoutFragmentToHomeFragment())
-            }
-            .setNegativeButton("Resta", null)
+            .setNegativeButton("Continue Workout", null)
             .show()
     }
 
@@ -259,7 +245,7 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
             viewLifecycleOwner,
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
-                    showExitConfirmationDialog()
+                    findNavController().navigate(ActiveWorkoutFragmentDirections.actionActiveWorkoutFragmentToHomeFragment())
                 }
             }
         )
@@ -288,10 +274,9 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
                     val connectedDevice = nodes.first()
                     Log.d("ActiveWorkout", "Wear OS connected: ${connectedDevice.displayName}")
                     
-                    // Show heart rate card and update status
+                    // Show heart rate card and update statusx
                     heartRateCard.visibility = View.VISIBLE
-                    heartRateStatus.text = "Connesso: ${connectedDevice.displayName}"
-                    heartRateValue.text = "In attesa..."
+                    heartRateValue.text = "Waiting..."
                 } else {
                     Log.d("ActiveWorkout", "No Wear OS devices connected")
                     heartRateCard.visibility = View.GONE
@@ -305,12 +290,9 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
     
     private fun updateHeartRateUI(heartRate: Int) {
         heartRateValue.text = "$heartRate BPM"
-        heartRateStatus.text = "Aggiornato ora"
         
         // Update timestamp for status
         val timeFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
-        val currentTime = timeFormat.format(Date())
-        heartRateStatus.text = "Aggiornato: $currentTime"
     }
     
     private fun calculateAverageHeartRate(): Int? {
@@ -330,15 +312,14 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
         val filter = IntentFilter(HeartRateDataListenerService.ACTION_HEART_RATE_RECEIVED)
         LocalBroadcastManager.getInstance(requireContext())
             .registerReceiver(heartRateReceiver, filter)
-        
-        // Check connection again when fragment resumes
+
         checkWearOSConnection()
     }
     
-    override fun onPause() {
-        super.onPause()
-        // Unregister receiver to avoid memory leaks
-        LocalBroadcastManager.getInstance(requireContext())
-            .unregisterReceiver(heartRateReceiver)
-    }
+//    override fun onPause() {
+//        super.onPause()
+//        // Unregister receiver to avoid memory leaks
+//        LocalBroadcastManager.getInstance(requireContext())
+//            .unregisterReceiver(heartRateReceiver)
+//    }
 }

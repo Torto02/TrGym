@@ -49,7 +49,7 @@
             android:layout_gravity="end|center_vertical"
             android:clickable="true"
             android:focusable="true"
-            android:text="Modifica"
+            android:text="Edit"
             app:strokeColor="@color/lightGray"
             app:strokeWidth="1dp"
             android:backgroundTint="#80FFFFFF"
@@ -97,6 +97,7 @@
                 android:layout_gravity="center_horizontal|top"
                 android:paddingHorizontal="16dp"
                 android:clickable="false"
+                app:icon="@null"
                 android:focusable="false"
                 android:elevation="0dp"
                 android:backgroundTint="#80FFFFFF"
@@ -134,7 +135,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Nessun esercizio"
+                    android:text="No Exercises Added"
                     android:textColor="@color/ios_secondaryLabel"
                     android:textSize="18sp"
                     android:textStyle="bold"
@@ -143,7 +144,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Aggiungi esercizi per iniziare ad allenarti"
+                    android:text="Add ecerices to start your workout"
                     android:textColor="@color/ios_secondaryLabel"
                     android:textSize="14sp"
                     android:gravity="center" />
@@ -183,7 +184,6 @@
 
     </LinearLayout>
 
-    <!-- FAB Aggiungi Esercizio (visibile solo in modalità modifica) -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/addExerciseBtn"
         android:layout_width="wrap_content"

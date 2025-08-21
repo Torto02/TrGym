@@ -30,14 +30,11 @@ class ActiveWorkoutViewModel @Inject constructor(
 
     // Active workout session
     private val _activeSession = MutableStateFlow<WorkoutSession?>(null)
-    val activeSession: StateFlow<WorkoutSession?> = _activeSession.asStateFlow()
 
     // Timer state
     private val _timerRunning = MutableStateFlow(false)
-    val timerRunning: StateFlow<Boolean> = _timerRunning.asStateFlow()
 
     private val _elapsedTime = MutableStateFlow(0L)
-    val elapsedTime: StateFlow<Long> = _elapsedTime.asStateFlow()
 
     // Track exercise completion state
     private val _completedSets = MutableStateFlow<Map<String, Boolean>>(emptyMap())
@@ -209,7 +206,7 @@ class ActiveWorkoutViewModel @Inject constructor(
             // Finally indicate that session data is loaded
             _sessionDataLoaded.value = true
         } catch (e: Exception) {
-            _uiState.value = UiState.Error(e.message ?: "Errore nel caricamento della sessione")
+            _uiState.value = UiState.Error(e.message ?: "Error loading session")
         }
     }
 
@@ -312,53 +309,16 @@ class ActiveWorkoutViewModel @Inject constructor(
             try {
                 workoutRepository.updateSessionSetCompletion(setId, completed)
             } catch (e: Exception) {
-                // Revert UI state if update fails
+
                 currentMap[setId] = !completed
                 _completedSets.value = currentMap
             }
         }
     }
 
-    fun updateSessionSetFromValues(setId: String, weight: Double?, reps: Int?) {
-        // Trova il set in sessionSets e aggiorna immediatamente
-        for ((exerciseId, sets) in _sessionSets.value) {
-            val setIndex = sets.indexOfFirst { it.id == setId }
-            if (setIndex != -1) {
-                val originalSet = sets[setIndex]
-                val updatedSet = originalSet.copy(
-                    actualWeightKg = weight,
-                    actualReps = reps
-                )
-
-                // Update local state immediately
-                val updatedSets = sets.toMutableList()
-                updatedSets[setIndex] = updatedSet
-                val updatedMap = _sessionSets.value.toMutableMap()
-                updatedMap[exerciseId] = updatedSets
-                _sessionSets.value = updatedMap
-
-                // Update database
-                viewModelScope.launch {
-                    try {
-                        workoutRepository.updateSessionSet(updatedSet)
-                    } catch (e: Exception) {
-                        // Revert on error
-                        val revertedSets = sets.toMutableList()
-                        revertedSets[setIndex] = originalSet
-                        val revertedMap = _sessionSets.value.toMutableMap()
-                        revertedMap[exerciseId] = revertedSets
-                        _sessionSets.value = revertedMap
-                        _uiState.value = UiState.Error(e.message ?: "Errore nell'aggiornamento del set")
-                    }
-                }
-
-                break
-            }
-        }
-    }
-
     fun completeWorkout(averageHeartRate: Int? = null) {
         // Navigate immediately and complete in background
+        //! problema : andando subito indietro vedo la card dell'allenamento in corso anche se in background sta terminando
         _uiState.value = UiState.WorkoutCompleted
         
         viewModelScope.launch {
@@ -428,7 +388,7 @@ class ActiveWorkoutViewModel @Inject constructor(
     }
 
     fun cancelWorkout() {
-        // Navigate immediately and cancel in background
+        //! problema : andando subito indietro vedo la card dell'allenamento in corso anche se in background si sta cancellando
         _uiState.value = UiState.WorkoutCancelled
         
         viewModelScope.launch {

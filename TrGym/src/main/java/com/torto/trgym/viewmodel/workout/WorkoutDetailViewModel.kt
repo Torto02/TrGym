@@ -59,53 +59,45 @@ class WorkoutDetailViewModel @Inject constructor(
     private val _localExercisesWithSets = MutableStateFlow<List<WorkoutExerciseDetail>>(emptyList())
 
     // Fixed version of the exercisesWithSets flow
-    val exercisesWithSets = _isEditMode
-        .flatMapLatest { isEditMode ->
-            if (isEditMode) {
-                // In edit mode, use our locally managed list that includes pending changes
-                _localExercisesWithSets
-            } else {
-                // Not in edit mode, use database data directly
-                workoutRepository.getExercisesForCard(workoutCardId)
-                    .flatMapLatest { exercises ->
-                        if (exercises.isEmpty()) {
-                            flowOf(emptyList())
-                        } else {
-                            // Create a flow of WorkoutExerciseDetail for each exercise
-                            val exerciseFlows = exercises.map { exercise ->
-                                workoutRepository.getSetsForExercise(exercise.id)
-                                    .map { sets -> WorkoutExerciseDetail(exercise, sets) }
-                            }
-
-                            // Combine all the flows into a single list flow
-                            combine(exerciseFlows) { exerciseDetails ->
-                                exerciseDetails.toList().sortedBy { it.exercise.orderIndex }
-                            }
-                        }
-                    }
-            }
-        }.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.Companion.WhileSubscribed(5000),
-            initialValue = emptyList()
-        )
+    val exercisesWithSets = _localExercisesWithSets
+//    _isEditMode
+//        .flatMapLatest { isEditMode ->
+//            if (isEditMode) {
+//                // In edit mode, use our locally managed list that includes pending changes
+//                _localExercisesWithSets
+//            } else {
+//                // Not in edit mode, use database data directly
+//                workoutRepository.getExercisesForCard(workoutCardId)
+//                    .flatMapLatest { exercises ->
+//                        if (exercises.isEmpty()) {
+//                            flowOf(emptyList())
+//                        } else {
+//                            // Create a flow of WorkoutExerciseDetail for each exercise
+//                            val exerciseFlows = exercises.map { exercise ->
+//                                workoutRepository.getSetsForExercise(exercise.id)
+//                                    .map { sets -> WorkoutExerciseDetail(exercise, sets) }
+//                            }
+//
+//                            // Combine all the flows into a single list flow
+//                            combine(exerciseFlows) { exerciseDetails ->
+//                                exerciseDetails.toList().sortedBy { it.exercise.orderIndex }
+//                            }
+//                        }
+//                    }
+//            }
+//        }.stateIn(
+//            scope = viewModelScope,
+//            started = SharingStarted.Companion.WhileSubscribed(5000),
+//            initialValue = emptyList()
+//        )
 
     init {
         loadWorkoutCard()
-        // Initialize local cache with DB data
         viewModelScope.launch {
             initializeLocalCache()
         }
     }
 
-    // ==========================================
-    // VALIDATION METHODS
-    // ==========================================
-
-    /**
-     * Verifica se ci sono set con valori mancanti (peso o ripetizioni nulli/vuoti)
-     * @return Una lista di stringi che descrivono i problemi trovati
-     */
     private fun validateSets(): List<String> {
         val validationErrors = mutableListOf<String>()
         val currentExercises = _localExercisesWithSets.value
@@ -120,17 +112,13 @@ class WorkoutDetailViewModel @Inject constructor(
 
             if (invalidSets.isNotEmpty()) {
                 val setNumbers = invalidSets.joinToString(", ") { "Set ${it.setNumber}" }
-                validationErrors.add("${exercise.name}: $setNumbers mancano peso o ripetizioni")
+                validationErrors.add("${exercise.name}: $setNumbers weight or repetitions are missing.")
             }
         }
 
         return validationErrors
     }
 
-    /**
-     * Verifica se è possibile uscire dalla modalità edit
-     * @return ValidationResult che indica se la validazione è passata e eventuali errori
-     */
     fun validateForExitEditMode(): ValidationResult {
         if (!_isEditMode.value) {
             return ValidationResult(true, emptyList())
@@ -140,19 +128,15 @@ class WorkoutDetailViewModel @Inject constructor(
         return ValidationResult(validationErrors.isEmpty(), validationErrors)
     }
 
-    // ==========================================
-    // INITIALIZATION AND DATA LOADING
-    // ==========================================
-
     private fun loadWorkoutCard() {
         viewModelScope.launch {
             try {
                 val card = workoutRepository.getWorkoutCard(workoutCardId)
                 _workoutCard.value = card
-                _uiState.value = if (card != null) UiState.Success else UiState.Error("Scheda non trovata")
+                _uiState.value = if (card != null) UiState.Success else UiState.Error("Card not found")
             } catch (e: Exception) {
                 Log.e("WorkoutDetailViewModel", "Error loading workout card", e)
-                _uiState.value = UiState.Error(e.message ?: "Errore nel caricamento")
+                _uiState.value = UiState.Error(e.message ?: "Loading error")
             }
         }
     }
@@ -185,7 +169,7 @@ class WorkoutDetailViewModel @Inject constructor(
                 _uiState.value = UiState.Success
             } catch (e: Exception) {
                 Log.e("WorkoutDetailViewModel", "Error refreshing workout card", e)
-                _uiState.value = UiState.Error("Errore nell'aggiornamento dei dati")
+                _uiState.value = UiState.Error("Loading data error")
             }
         }
     }
@@ -206,7 +190,7 @@ class WorkoutDetailViewModel @Inject constructor(
                 val validationResult = validateForExitEditMode()
                 if (!validationResult.isValid) {
                     // Validation failed - emit error state
-                    val errorMessage = "Inserisci i valori mancanti per peso e ripetizioni:\n" +
+                    val errorMessage = "Enter missing values for weight and repetitions:\n" +
                             validationResult.errors.joinToString("\n")
                     _uiState.value = UiState.ValidationError(errorMessage)
                     return@launch
@@ -224,7 +208,7 @@ class WorkoutDetailViewModel @Inject constructor(
                     Log.d("WorkoutDetailViewModel", "Edit mode exited successfully")
                 } catch (e: Exception) {
                     Log.e("WorkoutDetailViewModel", "Error exiting edit mode", e)
-                    _uiState.value = UiState.Error("Errore nel salvataggio: ${e.message}")
+                    _uiState.value = UiState.Error("Error while saving: ${e.message}")
                 }
             } else {
                 // Entering edit mode - initialize empty pending changes
@@ -317,7 +301,7 @@ class WorkoutDetailViewModel @Inject constructor(
 
         } catch (e: Exception) {
             Log.e("WorkoutDetailViewModel", "Error saving pending changes", e)
-            _uiState.value = UiState.Error(e.message ?: "Errore nel salvataggio delle modifiche")
+            _uiState.value = UiState.Error(e.message ?: "Error while saving changes")
         }
     }
 
@@ -422,15 +406,10 @@ class WorkoutDetailViewModel @Inject constructor(
                     exercises[index] = exerciseDetail.copy(exercise = updatedExercise)
                 }
             }
-
             _localExercisesWithSets.value = exercises
             Log.d("WorkoutDetailViewModel", "Moved exercise from $fromPosition to $toPosition")
         }
     }
-
-    // ==========================================
-    // SET MANAGEMENT
-    // ==========================================
 
     fun addSetToExercise(exerciseId: String) {
         if (!_isEditMode.value) return

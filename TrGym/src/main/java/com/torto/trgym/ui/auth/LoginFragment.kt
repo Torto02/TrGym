@@ -16,23 +16,12 @@ import com.torto.trgym.viewmodel.auth.LoginViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
-/**
- * Fragment per la gestione del login degli utenti.
- * Utilizza Hilt per l'iniezione delle dipendenze.
- */
 @AndroidEntryPoint
 class LoginFragment : Fragment(R.layout.fragment_login) {
 
     // ViewModel per la gestione della logica di login
     private val viewModel: LoginViewModel by viewModels()
 
-    /**
-     * Metodo chiamato quando la vista è stata creata.
-     * Effettua il binding delle view e imposta i listener per i pulsanti.
-     *
-     * @param view Vista principale del fragment
-     * @param savedInstanceState Stato salvato del fragment
-     */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         // Binding delle view (si consiglia l'uso di ViewBinding)
         val emailEt    = view.findViewById<EditText>(R.id.emailInput)
@@ -41,7 +30,6 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
         val registerBtn= view.findViewById<Button>(R.id.registerBtn)
         val googleBtn  = view.findViewById<Button>(R.id.signInGoogleBtn)
 
-        // Listener per il pulsante di login
         loginBtn.setOnClickListener {
             viewModel.login(
                 email    = emailEt.text.toString().trim(),
@@ -74,7 +62,7 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
                             // Mostra il messaggio di successo
                             Toast.makeText(
                                 requireContext(),
-                                "Login effettuato!",
+                                "Logged in successfully!",
                                 Toast.LENGTH_SHORT
                             ).show()
 

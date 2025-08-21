@@ -10,10 +10,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/**
- * ViewModel per la gestione del login utente.
- * Utilizza Hilt per l'iniezione delle dipendenze.
- */
 @HiltViewModel
 class LoginViewModel @Inject constructor(
     private val authRepository: AuthRepository // Repository per le operazioni di autenticazione
@@ -24,17 +20,9 @@ class LoginViewModel @Inject constructor(
     // Stato pubblico della UI, esposto come StateFlow
     val uiState: StateFlow<LoginUiState> = _uiState
 
-    /**
-     * Metodo per effettuare il login con email e password.
-     * Esegue validazioni sui campi e tenta il login tramite il repository.
-     *
-     * @param email Email dell'utente
-     * @param password Password dell'utente
-     */
     fun login(email: String, password: String) {
-        // Validazione minima sui campi di input
         if (email.isBlank() || password.isBlank()) {
-            _uiState.value = LoginUiState.Error("Compila tutti i campi")
+            _uiState.value = LoginUiState.Error("Fill in all the fields")
             return
         }
 
@@ -45,24 +33,15 @@ class LoginViewModel @Inject constructor(
                 authRepository.signIn(email, password) // Chiamata al repository per il login
                 _uiState.value = LoginUiState.Success
             } catch (e: Exception) {
-                _uiState.value = LoginUiState.Error(e.message ?: "Login fallito")
+                _uiState.value = LoginUiState.Error(e.message ?: "Login failed")
             }
         }
     }
 
-    /**
-     * Metodo per effettuare il login con Google.
-     *
-     * @param context Contesto dell'applicazione
-     */
     fun signInWithGoogle(context: Context) {
         authRepository.signInWithGoogle(context) // Chiamata al repository per il login con Google
     }
 
-    /**
-     * Stato della UI per il login.
-     * Può essere Idle, Loading, Success o Error.
-     */
     sealed interface LoginUiState {
         object Idle    : LoginUiState // Stato iniziale
         object Loading : LoginUiState // Stato di caricamento

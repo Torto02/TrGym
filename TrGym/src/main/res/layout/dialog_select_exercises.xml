@@ -143,7 +143,7 @@
             android:id="@+id/btnCancel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Annulla"
+            android:text="Cancel"
             android:backgroundTint="@color/white"
             app:strokeColor="@color/lightGray"
             android:textColor="@color/black"
@@ -155,7 +155,7 @@
             android:layout_width="wrap_content"
             android:textColor="@color/white"
             android:layout_height="wrap_content"
-            android:text="Aggiungi"
+            android:text="Add"
             android:enabled="false"
             android:backgroundTint= "@color/button_background_activation"/>
 
