@@ -1,6 +1,7 @@
 package com.torto.trgym.database.dao
 
 import androidx.room.*
+import com.torto.trgym.database.dto.SessionHeartRateAndTime
 import com.torto.trgym.database.dto.WorkoutCardDetail
 import com.torto.trgym.database.dto.WorkoutExerciseDetail
 import com.torto.trgym.database.dto.WorkoutSessionExerciseDetail
@@ -249,4 +250,8 @@ interface WorkoutDao {
 
     @Query("UPDATE workout_session_sets SET syncedWithServer = 1, pendingSync = 0 WHERE id = :setId")
     suspend fun markSessionSetAsSynced(setId: String)
+
+    // Nel WorkoutDao.kt
+    @Query("SELECT averageHeartRate, startTime, endTime FROM workout_sessions WHERE id = :sessionId")
+    suspend fun getHeartRateAndTimeForSession(sessionId: String): SessionHeartRateAndTime?
 }

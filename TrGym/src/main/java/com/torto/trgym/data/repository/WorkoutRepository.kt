@@ -2,7 +2,9 @@ package com.torto.trgym.data.repository
 
 import android.util.Log
 import androidx.room.Update
+
 import com.torto.trgym.database.dao.WorkoutDao
+import com.torto.trgym.database.dto.SessionHeartRateAndTime
 import com.torto.trgym.database.dto.WorkoutSessionExerciseDetail
 import com.torto.trgym.database.dto.SupabaseWorkoutCard
 import com.torto.trgym.database.dto.SupabaseWorkoutExercise
@@ -11,6 +13,7 @@ import com.torto.trgym.database.dto.SupabaseWorkoutSession
 import com.torto.trgym.database.dto.SupabaseWorkoutSessionExercise
 import com.torto.trgym.database.dto.SupabaseWorkoutSessionSet
 import com.torto.trgym.database.entities.*
+
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
@@ -18,8 +21,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
+
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.collections.plusAssign
+import kotlin.div
+import kotlin.times
 
 
 @Singleton
@@ -1214,6 +1221,53 @@ class WorkoutRepository @Inject constructor(
             }
         } catch (e: Exception) {
             Log.e("WorkoutRepository", "Error downloading all sets for card $cardId during initial sync", e)
+        }
+    }
+
+     suspend fun getTotalHeartBeat(): Int {
+        return withContext(Dispatchers.IO) {
+            try {
+                val sessions = workoutDao.getLatestWorkoutSessions(100)
+                Log.d("WorkoutRepository", "Session count for total heart beat: ${sessions}")
+
+                var totalCalories = 0.0
+
+                for (session in sessions) {
+
+                    val heartRateData = getHeartRateAndTimeForSession(session.id)
+                    val startTime = heartRateData?.startTime
+                    val endTime = heartRateData?.endTime
+                    val avgHeartBeat = heartRateData?.averageHeartRate
+
+
+                    if (startTime != null && endTime != null && avgHeartBeat != null) {
+                        val time = endTime - startTime
+                        val minutes = time / 60000.0
+                        val calories = ((-55.0969 + (0.6309 * avgHeartBeat) + (0.1988 * 70) + (0.2017 * 30)) * minutes) / 4.184
+                        totalCalories += calories
+                    }
+                }
+
+                return@withContext totalCalories.toInt()
+            } catch (e: Exception) {
+                Log.e("WorkoutRepository", "Error calculating total calories burned", e)
+                return@withContext 0
+            }
+        }
+    }
+
+    private suspend fun getHeartRateAndTimeForSession(sessionId: String): SessionHeartRateAndTime? {
+        return withContext(Dispatchers.IO) {
+            try {
+                workoutDao.getHeartRateAndTimeForSession(sessionId)
+            } catch (e: Exception) {
+                Log.e("WorkoutRepository", "Error getting heart rate for session $sessionId", e)
+                SessionHeartRateAndTime(
+                    averageHeartRate = null,
+                    startTime = null,
+                    endTime = null
+                )
+            }
         }
     }
     
