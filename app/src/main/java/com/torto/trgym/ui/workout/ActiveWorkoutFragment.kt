@@ -58,14 +58,19 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
     private lateinit var heartRateValue: TextView
     private lateinit var heartRateStatus: TextView
     
+    // Heart Rate Data Collection
+    private val heartRateReadings = mutableListOf<Int>()
+    
     // Heart Rate BroadcastReceiver
     private val heartRateReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action == HeartRateDataListenerService.ACTION_HEART_RATE_RECEIVED) {
                 val heartRate = intent.getIntExtra(HeartRateDataListenerService.EXTRA_HEART_RATE, -1)
                 if (heartRate > 0) {
+                    // Add heart rate to collection for averaging
+                    heartRateReadings.add(heartRate)
                     updateHeartRateUI(heartRate)
-                    Log.d("ActiveWorkout", "Heart rate received: $heartRate")
+                    Log.d("ActiveWorkout", "Heart rate received: $heartRate, Total readings: ${heartRateReadings.size}")
                 }
             }
         }
@@ -223,7 +228,8 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
             .setTitle("Completa allenamento")
             .setMessage("Sei sicuro di voler concludere l'allenamento? Verranno salvati tutti i set completati.")
             .setPositiveButton("Completa") { _, _ ->
-                viewModel.completeWorkout()
+                val averageHeartRate = calculateAverageHeartRate()
+                viewModel.completeWorkout(averageHeartRate)
             }
             .setNegativeButton("Annulla", null)
             .show()
@@ -308,6 +314,17 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
         val timeFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
         val currentTime = timeFormat.format(Date())
         heartRateStatus.text = "Aggiornato: $currentTime"
+    }
+    
+    private fun calculateAverageHeartRate(): Int? {
+        return if (heartRateReadings.isNotEmpty()) {
+            val average = heartRateReadings.average().toInt()
+            Log.d("ActiveWorkout", "Calculated average heart rate: $average from ${heartRateReadings.size} readings")
+            average
+        } else {
+            Log.d("ActiveWorkout", "No heart rate readings collected during workout")
+            null
+        }
     }
     
     override fun onResume() {

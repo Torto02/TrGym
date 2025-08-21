@@ -21,5 +21,7 @@ data class SupabaseWorkoutSession(
     val totalDurationMs: Long = 0,
     val notes: String? = null,
     @SerialName("created_at")
-    val createdAt: String? = null
+    val createdAt: String? = null,
+    @SerialName("heart_rate_avg")
+    val heartRateAvg: Int? = null
 )

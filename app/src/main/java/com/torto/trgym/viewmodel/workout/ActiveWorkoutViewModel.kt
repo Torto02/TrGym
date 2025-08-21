@@ -355,7 +355,7 @@ class ActiveWorkoutViewModel @Inject constructor(
         }
     }
 
-    fun completeWorkout() {
+    fun completeWorkout(averageHeartRate: Int? = null) {
         // Navigate immediately and complete in background
         _uiState.value = UiState.WorkoutCompleted
         
@@ -401,14 +401,18 @@ class ActiveWorkoutViewModel @Inject constructor(
                     }
                 }
 
-                // Update session with end time and completed status
+                // Update session with end time, completed status and heart rate average
                 val updatedSession = session.copy(
                     endTime = System.currentTimeMillis(),
                     totalDurationMs = _elapsedTime.value,
-                    isCompleted = true
+                    isCompleted = true,
+                    averageHeartRate = averageHeartRate
                 )
 
                 Log.d("ActiveWorkoutViewModel", "Completed workout: $updatedSession")
+                if (averageHeartRate != null) {
+                    Log.d("ActiveWorkoutViewModel", "Saving average heart rate: $averageHeartRate BPM")
+                }
 
                 workoutRepository.updateWorkoutSession(updatedSession)
 

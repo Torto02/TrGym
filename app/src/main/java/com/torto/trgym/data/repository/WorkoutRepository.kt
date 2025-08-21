@@ -519,7 +519,8 @@ class WorkoutRepository @Inject constructor(
                         endTime = session.endTime?.let { java.time.Instant.ofEpochMilli(it).toString() },
                         isCompleted = session.isCompleted,
                         totalDurationMs = session.totalDurationMs,
-                        notes = session.notes
+                        notes = session.notes,
+                        heartRateAvg = session.averageHeartRate
                     )
                     supabaseClient.from("workout_sessions").upsert(listOf(supabaseSession))
                     workoutDao.markWorkoutSessionAsSynced(session.id)
@@ -649,21 +650,7 @@ class WorkoutRepository @Inject constructor(
             Log.d("WorkoutRepository", "Local workout session count: $count")
             return@withContext count
             
-            /*
-            // DISABILITATO: Count from Supabase
-            val response = supabaseClient.from("workout_sessions")
-                .select {
-                    filter {
-                        eq("is_completed", true)
-                    }
-                }
-                .decodeList<SupabaseWorkoutSession>()
-            Log.d("WorkoutRepository", "Supabase workout response: $response")
 
-            val count = response.size
-            Log.d("WorkoutRepository", "Supabase workout session count: $count")
-            return@withContext count
-            */
         } catch (e: Exception) {
             Log.e("WorkoutRepository", "Error counting workout sessions", e)
             return@withContext 0
@@ -685,7 +672,8 @@ class WorkoutRepository @Inject constructor(
                     endTime = session.endTime?.let { java.time.Instant.ofEpochMilli(it).toString() },
                     isCompleted = session.isCompleted,
                     totalDurationMs = session.totalDurationMs,
-                    notes = session.notes
+                    notes = session.notes,
+                    heartRateAvg = session.averageHeartRate
                 )
                 supabaseClient.from("workout_sessions").upsert(listOf(supabaseSession))
                 workoutDao.markWorkoutSessionAsSynced(session.id)
@@ -710,7 +698,8 @@ class WorkoutRepository @Inject constructor(
                     endTime = session.endTime?.let { java.time.Instant.ofEpochMilli(it).toString() },
                     isCompleted = session.isCompleted,
                     totalDurationMs = session.totalDurationMs,
-                    notes = session.notes
+                    notes = session.notes,
+                    heartRateAvg = session.averageHeartRate
                 )
                 supabaseClient.from("workout_sessions").upsert(listOf(supabaseSession))
                 Log.d("WorkoutRepository", "Synced workout_sessions item ${session.id} to Supabase")
@@ -916,7 +905,8 @@ class WorkoutRepository @Inject constructor(
                             createdAt = System.currentTimeMillis(),
                             updatedAt = System.currentTimeMillis(),
                             syncedWithServer = true,
-                            pendingSync = false
+                            pendingSync = false,
+                            averageHeartRate = remote.heartRateAvg
                         )
                     },
                     insert = { session ->

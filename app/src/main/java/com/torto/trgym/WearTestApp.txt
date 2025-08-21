@@ -1,203 +1,101 @@
-//Manifest file for the Wear OS app
-<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+-- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
 
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.health.READ_HEART_RATE"/>
-
-
-
-    <uses-feature android:name="android.hardware.type.watch" />
-
-    <application
-        android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
-        android:supportsRtl="true"
-        android:theme="@style/MainActivityTheme.Starting">
-
-    <uses-library
-            android:name="com.google.android.wearable"
-            android:required="true" />
-
-        <meta-data
-            android:name="com.google.android.wearable.standalone"
-            android:value="true" />
-
-        <activity
-            android:name=".presentation.MainActivity"
-            android:exported="true"
-            android:taskAffinity=""
-            android:theme="@style/MainActivityTheme.Starting">
-
-        <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-    </application>
-
-</manifest>
-
-
-
-
-//Mainactivity.kt
-package com.torto.myapplication.presentation
-
-
-import android.Manifest
-import android.content.Context
-import android.content.pm.PackageManager
-import android.hardware.Sensor
-import android.hardware.SensorEvent
-import android.hardware.SensorEventListener
-import android.hardware.SensorManager
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat
-import androidx.wear.compose.material.Button
-import androidx.wear.compose.material.MaterialTheme
-import androidx.wear.compose.material.Text
-
-class MainActivity : ComponentActivity() {
-
-    private val permissionState = mutableStateOf("Verifica permesso in corso...")
-    private val heartRateState = mutableStateOf("Attesa dati...")
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        // Launcher per richiedere il permesso
-        val requestPermissionLauncher = registerForActivityResult(
-            ActivityResultContracts.RequestPermission()
-        ) { isGranted: Boolean ->
-            updatePermissionStatus(isGranted)
-        }
-
-        // Imposta l'interfaccia con Jetpack Compose
-        setContent {
-            WearApp(
-                permissionStatus = permissionState.value,
-                heartRate = heartRateState.value,
-                onRequestPermission = {
-                    requestPermissionLauncher.launch("android.permission.health.READ_HEART_RATE")
-                }
-            )
-        }
-
-        // Verifica il permesso all'avvio
-        checkAndRequestPermission(requestPermissionLauncher)
-    }
-
-    override fun onResume() {
-        super.onResume()
-        // Verifica nuovamente il permesso quando l'app torna in primo piano
-        if (ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.BODY_SENSORS
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            updatePermissionStatus(true)
-        }
-    }
-
-    private fun checkAndRequestPermission(
-        requestPermissionLauncher: androidx.activity.result.ActivityResultLauncher<String>
-    ) {
-        when {
-            ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.BODY_SENSORS
-            ) == PackageManager.PERMISSION_GRANTED -> {
-                updatePermissionStatus(true)
-            }
-            else -> {
-                permissionState.value = "Permesso BODY_SENSORS non concesso."
-                requestPermissionLauncher.launch("android.permission.health.READ_HEART_RATE")
-            }
-        }
-    }
-
-    private fun updatePermissionStatus(isGranted: Boolean) {
-        if (isGranted) {
-            permissionState.value = "Permesso BODY_SENSORS concesso!"
-            startHeartRateSensor()
-        } else {
-            permissionState.value = "Permesso BODY_SENSORS negato."
-            heartRateState.value = "Permesso negato, sensore non disponibile."
-        }
-    }
-
-    private fun startHeartRateSensor() {
-        val sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
-        val heartRateSensor = sensorManager.getDefaultSensor(Sensor.TYPE_HEART_RATE)
-
-        if (heartRateSensor != null) {
-            // Registra il listener per il sensore di frequenza cardiaca
-            sensorManager.registerListener(
-                object : SensorEventListener {
-                    override fun onSensorChanged(event: SensorEvent?) {
-                        event?.let {
-                            if (it.sensor.type == Sensor.TYPE_HEART_RATE) {
-                                val heartRate = it.values[0].toInt()
-                                heartRateState.value = "$heartRate BPM"
-                            }
-                        }
-                    }
-
-                    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
-                        // Non necessario per questo esempio
-                    }
-                },
-                heartRateSensor,
-                SensorManager.SENSOR_DELAY_NORMAL
-            )
-        } else {
-            heartRateState.value = "Sensore di frequenza cardiaca non disponibile."
-        }
-    }
-}
-
-@Composable
-fun WearApp(
-    permissionStatus: String,
-    heartRate: String,
-    onRequestPermission: () -> Unit
-) {
-    MaterialTheme {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "Stato Permesso:\n$permissionStatus",
-                textAlign = TextAlign.Center,
-                fontSize = 12.sp
-            )
-            Text(
-                text = "Frequenza Cardiaca:\n$heartRate",
-                textAlign = TextAlign.Center,
-                fontSize = 16.sp,
-                modifier = Modifier.weight(1f)
-            )
-            if (permissionStatus.contains("negato", ignoreCase = true)) {
-                Button(onClick = onRequestPermission) {
-                    Text("Richiedi Permesso")
-                }
-            }
-        }
-    }
-}
+CREATE TABLE public.body_measurements (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  name character varying NOT NULL,
+  value numeric NOT NULL,
+  unit character varying NOT NULL,
+  measurement_date timestamp with time zone NOT NULL DEFAULT now(),
+  notes text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT body_measurements_pkey PRIMARY KEY (id),
+  CONSTRAINT body_measurements_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.exercise_sets (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  exercise_id uuid,
+  set_number integer NOT NULL,
+  weight_kg numeric,
+  reps integer,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT exercise_sets_pkey PRIMARY KEY (id),
+  CONSTRAINT exercise_sets_exercise_id_fkey FOREIGN KEY (exercise_id) REFERENCES public.exercises(id)
+);
+CREATE TABLE public.exercises (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  workout_card_id uuid,
+  name character varying NOT NULL,
+  order_index integer NOT NULL,
+  created_at timestamp with time zone DEFAULT now(),
+  exercise_id integer,
+  image_path text,
+  CONSTRAINT exercises_pkey PRIMARY KEY (id),
+  CONSTRAINT exercises_workout_card_id_fkey FOREIGN KEY (workout_card_id) REFERENCES public.workout_cards(id)
+);
+CREATE TABLE public.starred_exercises (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid,
+  exercise_id integer NOT NULL,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT starred_exercises_pkey PRIMARY KEY (id),
+  CONSTRAINT starred_exercises_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.workout_cards (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid,
+  name character varying NOT NULL,
+  description text,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT workout_cards_pkey PRIMARY KEY (id),
+  CONSTRAINT workout_cards_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.workout_session_exercises (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  workout_session_id uuid NOT NULL,
+  original_exercise_id uuid,
+  name character varying NOT NULL,
+  order_index integer NOT NULL,
+  is_completed boolean NOT NULL DEFAULT false,
+  start_time timestamp with time zone,
+  end_time timestamp with time zone,
+  rest_time_between_sets bigint NOT NULL DEFAULT 60000,
+  notes text,
+  CONSTRAINT workout_session_exercises_pkey PRIMARY KEY (id),
+  CONSTRAINT workout_session_exercises_workout_session_id_fkey FOREIGN KEY (workout_session_id) REFERENCES public.workout_sessions(id),
+  CONSTRAINT workout_session_exercises_original_exercise_id_fkey FOREIGN KEY (original_exercise_id) REFERENCES public.exercises(id)
+);
+CREATE TABLE public.workout_session_sets (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  exercise_id uuid NOT NULL,
+  set_number integer NOT NULL,
+  target_weight_kg numeric,
+  actual_weight_kg numeric,
+  target_reps integer,
+  actual_reps integer,
+  is_completed boolean NOT NULL DEFAULT false,
+  completed_at timestamp with time zone,
+  rest_time_ms bigint,
+  rpe integer CHECK (rpe >= 1 AND rpe <= 10),
+  notes text,
+  CONSTRAINT workout_session_sets_pkey PRIMARY KEY (id),
+  CONSTRAINT workout_session_sets_exercise_id_fkey FOREIGN KEY (exercise_id) REFERENCES public.workout_session_exercises(id)
+);
+TABLE public.workout_sessions (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid,
+  workout_card_id uuid,
+  name character varying NOT NULL,
+  start_time timestamp with time zone NOT NULL,
+  end_time timestamp with time zone,
+  is_completed boolean NOT NULL DEFAULT false,
+  total_duration_ms bigint NOT NULL DEFAULT 0,
+  notes text,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT workout_sessions_pkey PRIMARY KEY (id),
+  CONSTRAINT workout_sessions_workout_card_id_fkey FOREIGN KEY (workout_card_id) REFERENCES public.workout_cards(id),
+  CONSTRAINT workout_sessions_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);

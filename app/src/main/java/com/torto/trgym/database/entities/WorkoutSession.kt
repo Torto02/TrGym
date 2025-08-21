@@ -14,6 +14,7 @@ data class WorkoutSession(
     val endTime: Long? = null, // Timestamp fine allenamento (null se in corso)
     val isCompleted: Boolean = false, // Se l'allenamento è stato completato
     val totalDurationMs: Long = 0, // Durata totale in millisecondi
+    val averageHeartRate: Int? = null, // Media battiti cardiaci durante allenamento
     val notes: String? = null, // Note dell'allenamento
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
