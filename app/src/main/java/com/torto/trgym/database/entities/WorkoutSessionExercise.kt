@@ -29,8 +29,7 @@ data class WorkoutSessionExercise(
     val notes: String? = null,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
-
-    // Campi per sincronizzazione Supabase
+    val imagePath: String? = null,
     val syncedWithServer: Boolean = false,
     val pendingSync: Boolean = false
 )

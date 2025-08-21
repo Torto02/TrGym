@@ -21,5 +21,7 @@ data class SupabaseWorkoutSessionExercise(
     val endTime: String? = null,
     @SerialName("rest_time_between_sets")
     val restTimeBetweenSets: Long = 60000,
-    val notes: String? = null
+    val notes: String? = null,
+    @SerialName("image_path")
+    val imagePath: String? = null
 )

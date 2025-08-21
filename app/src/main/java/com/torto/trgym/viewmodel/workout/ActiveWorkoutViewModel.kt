@@ -107,7 +107,8 @@ class ActiveWorkoutViewModel @Inject constructor(
             exerciseId = detail.exercise.originalExerciseId.toIntOrNull(),
             name = detail.exercise.name,
             orderIndex = detail.exercise.orderIndex,
-            updatedAt = System.currentTimeMillis()
+            updatedAt = System.currentTimeMillis(),
+            imagePath = detail.exercise.imagePath,
         )
 
         val exerciseSets = detail.sets.map { sessionSet ->
@@ -224,7 +225,8 @@ class ActiveWorkoutViewModel @Inject constructor(
                 originalExerciseId = exerciseDetail.exercise.id,
                 name = exerciseDetail.exercise.name,
                 orderIndex = index,
-                startTime = System.currentTimeMillis()
+                startTime = System.currentTimeMillis(),
+                imagePath = exerciseDetail.exercise.imagePath,
             )
         }
 

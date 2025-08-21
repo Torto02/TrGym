@@ -543,7 +543,8 @@ class WorkoutRepository @Inject constructor(
                         startTime = exercise.startTime?.let { java.time.Instant.ofEpochMilli(it).toString() },
                         endTime = exercise.endTime?.let { java.time.Instant.ofEpochMilli(it).toString() },
                         restTimeBetweenSets = exercise.restTimeBetweenSets,
-                        notes = exercise.notes
+                        notes = exercise.notes,
+                        imagePath = exercise.imagePath // AGGIUNTO: Include imagePath
                     )
                     supabaseClient.from("workout_session_exercises").upsert(listOf(supabaseExercise))
                     workoutDao.markSessionExerciseAsSynced(exercise.id)
@@ -740,7 +741,8 @@ class WorkoutRepository @Inject constructor(
                         startTime = exercise.startTime?.let { java.time.Instant.ofEpochMilli(it).toString() },
                         endTime = exercise.endTime?.let { java.time.Instant.ofEpochMilli(it).toString() },
                         restTimeBetweenSets = exercise.restTimeBetweenSets,
-                        notes = exercise.notes
+                        notes = exercise.notes,
+                        imagePath = exercise.imagePath // AGGIUNTO: Include imagePath
                     )
                 }
                 supabaseClient.from("workout_session_exercises").upsert(supabaseExercises)
@@ -766,7 +768,8 @@ class WorkoutRepository @Inject constructor(
                     startTime = exercise.startTime?.let { java.time.Instant.ofEpochMilli(it).toString() },
                     endTime = exercise.endTime?.let { java.time.Instant.ofEpochMilli(it).toString() },
                     restTimeBetweenSets = exercise.restTimeBetweenSets,
-                    notes = exercise.notes
+                    notes = exercise.notes,
+                  imagePath = exercise.imagePath // AGGIUNTO: Include imagePath
                 )
                 supabaseClient.from("workout_session_exercises").upsert(listOf(supabaseExercise))
                 Log.d("WorkoutRepository", "Synced workout_session_exercises item ${exercise.id} to Supabase")
@@ -968,7 +971,8 @@ class WorkoutRepository @Inject constructor(
                         createdAt = System.currentTimeMillis(),
                         updatedAt = System.currentTimeMillis(),
                         syncedWithServer = true,
-                        pendingSync = false
+                        pendingSync = false,
+                        imagePath = remote.imagePath // AGGIUNTO: Include imagePath
                     )
                 },
                 insert = { exercise ->
