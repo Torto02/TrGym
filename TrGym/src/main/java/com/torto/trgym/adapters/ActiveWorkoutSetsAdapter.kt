@@ -97,8 +97,6 @@ class ActiveWorkoutSetsAdapter(
                     }
                 }
             }
-
-
         }
 
         fun bind(set: ExerciseSet) {

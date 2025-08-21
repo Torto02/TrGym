@@ -101,10 +101,10 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Statistiche"
+                        android:text="Stats"
                         android:textSize="18sp"
                         android:textStyle="bold"
-                        android:textColor="@color/ios_label"
+                        android:textColor="@color/primary"
                         android:layout_marginBottom="16dp" />
 
                     <!-- Grid delle statistiche -->
@@ -130,7 +130,7 @@
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="Ultimo"
+                                    android:text="Lates"
                                     android:textSize="12sp"
                                     android:textColor="@color/ios_secondaryLabel" />
 
@@ -156,7 +156,7 @@
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="Minimo"
+                                    android:text="Min"
                                     android:textSize="12sp"
                                     android:textColor="@color/ios_secondaryLabel" />
 
@@ -190,7 +190,7 @@
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="Massimo"
+                                    android:text="Max"
                                     android:textSize="12sp"
                                     android:textColor="@color/ios_secondaryLabel" />
 
@@ -215,7 +215,7 @@
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="Media"
+                                    android:text="Avg"
                                     android:textSize="12sp"
                                     android:textColor="@color/ios_secondaryLabel" />
 

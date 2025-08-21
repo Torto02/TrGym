@@ -45,7 +45,7 @@
                     android:text="Allenamento Push"
                     android:textSize="20sp"
                     android:textStyle="bold"
-                    android:textColor="@color/ios_label"
+                    android:textColor="@color/primary"
                     android:layout_marginBottom="4dp"
                     tools:text="Allenamento Push" />
 
@@ -73,10 +73,9 @@
                     android:id="@+id/workoutStatus"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Completato"
+                    android:text="Completed"
                     android:textSize="15sp"
-                    android:textStyle="bold"
-                    tools:text="Completato" />
+                    android:textStyle="bold" />
 
             </LinearLayout>
 
@@ -124,7 +123,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Data"
+                        android:text="Date"
                         android:textSize="14sp"
                         android:textStyle="bold"
                         android:letterSpacing="0.05"
@@ -174,7 +173,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Durata"
+                        android:text="Time"
                         android:textSize="14sp"
                         android:textStyle="bold"
                         android:letterSpacing="0.05"

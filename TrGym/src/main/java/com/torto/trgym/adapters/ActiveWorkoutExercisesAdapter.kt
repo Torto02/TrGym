@@ -1,23 +1,19 @@
 package com.torto.trgym.adapters
-import android.text.Editable
-import android.text.TextWatcher
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import com.google.android.material.button.MaterialButton
-import com.google.android.material.checkbox.MaterialCheckBox
 import com.torto.trgym.R
 import com.torto.trgym.database.dto.WorkoutExerciseDetail
-import com.torto.trgym.database.entities.ExerciseSet
+
 
 class ActiveWorkoutExercisesAdapter(
     private val onSetCompletionChanged: (String, Boolean) -> Unit,

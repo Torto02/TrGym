@@ -52,9 +52,9 @@ class WorkoutHistoryAdapter(
 
             // Status
             workoutStatus.text = if (workoutSession.isCompleted) {
-                "Completato"
+                "Completed"
             } else {
-                "Non completato"
+                "Not Completed"
             }
 
             // Set status color
@@ -76,7 +76,7 @@ class WorkoutHistoryAdapter(
             val minutes = totalSeconds / 60
             val seconds = totalSeconds % 60
 
-            return String.format("%02d:%02d minuti", minutes, seconds)
+            return String.format("%02d:%02d minutes", minutes, seconds)
         }
 
     }

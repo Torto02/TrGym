@@ -48,7 +48,7 @@ class MeasurementCategoryAdapter(
 
         fun bind(category: BodyMeasurementViewModel.MeasurementCategory) {
             nameTextView.text = category.name
-            countTextView.text = "${category.totalCount} misurazioni"
+            countTextView.text = "${category.totalCount} measurements"
 
             if (category.latestValue != null) {
                 latestValueTextView.text = "${category.latestValue} ${category.unit}"

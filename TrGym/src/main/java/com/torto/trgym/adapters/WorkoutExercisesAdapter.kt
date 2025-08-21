@@ -130,7 +130,7 @@ class WorkoutExercisesAdapter(
 
             // Calculate exercise info
             val setsCount = sets.size
-            val exerciseInfoText = "$setsCount serie"
+            val exerciseInfoText = "$setsCount set"
             exerciseInfo.text = exerciseInfoText
 
             // Show/hide sets header based on whether we have sets
@@ -151,7 +151,7 @@ class WorkoutExercisesAdapter(
         fun updateSets(sets: List<ExerciseSet>) {
             // Update exercise info
             val setsCount = sets.size
-            val exerciseInfoText = "$setsCount serie"
+            val exerciseInfoText = "$setsCount set"
             exerciseInfo.text = exerciseInfoText
 
             // Show/hide sets header based on whether we have sets

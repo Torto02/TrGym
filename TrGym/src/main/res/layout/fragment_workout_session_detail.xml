@@ -12,7 +12,7 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="@color/ios_systemBackground"
+        android:background="@color/transparent"
         android:elevation="3dp">
 
         <!-- Back Button -->
@@ -60,7 +60,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
                 app:cardCornerRadius="16dp"
-                app:cardElevation="2dp"
+                app:cardElevation="1dp"
                 app:cardBackgroundColor="@color/white"
                 app:strokeWidth="1dp"
                 app:strokeColor="@color/lightGray">
@@ -79,7 +79,7 @@
                         android:text="Allenamento Push"
                         android:textSize="24sp"
                         android:textStyle="bold"
-                        android:textColor="@color/ios_label"
+                        android:textColor="@color/primary"
                         android:layout_marginBottom="12dp"
                         tools:text="Allenamento Push" />
 
@@ -159,10 +159,10 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Esercizi Eseguiti"
+                android:text="Completed Sets of Exercises"
                 android:textSize="20sp"
                 android:textStyle="bold"
-                android:textColor="@color/ios_label"
+                android:textColor="@color/primary"
                 android:layout_marginBottom="12dp" />
 
             <!-- RecyclerView per gli esercizi -->

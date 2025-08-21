@@ -25,11 +25,9 @@ class WorkoutSessionExerciseAdapter : ListAdapter<WorkoutSessionExerciseDetail, 
     }
 
     inner class ExerciseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val cardView: MaterialCardView = itemView.findViewById(R.id.exerciseCard)
         private val exerciseName: TextView = itemView.findViewById(R.id.exerciseName)
         private val exerciseStatus: TextView = itemView.findViewById(R.id.exerciseStatus)
         private val setsRecyclerView: RecyclerView = itemView.findViewById(R.id.setsRecyclerView)
-        private val exerciseNotes: TextView = itemView.findViewById(R.id.exerciseNotes)
 
         private val setsAdapter = WorkoutSessionSetAdapter()
 
@@ -64,13 +62,6 @@ class WorkoutSessionExerciseAdapter : ListAdapter<WorkoutSessionExerciseDetail, 
             // Sets
             setsAdapter.submitList(sets)
 
-            // Notes
-            if (!exercise.notes.isNullOrBlank()) {
-                exerciseNotes.text = exercise.notes
-                exerciseNotes.visibility = View.VISIBLE
-            } else {
-                exerciseNotes.visibility = View.GONE
-            }
         }
     }
 

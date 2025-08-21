@@ -52,8 +52,6 @@ class WorkoutSessionDetailFragment : Fragment(R.layout.fragment_workout_session_
         super.onViewCreated(view, savedInstanceState)
         setupUI()
         observeViewModel()
-        Log.d("WorkoutSessionDetailViewModel", "loading")
-        // Load workout session data
         viewModel.loadWorkoutSession(args.sessionId)
     }
 
@@ -98,7 +96,7 @@ class WorkoutSessionDetailFragment : Fragment(R.layout.fragment_workout_session_
                 workoutTitle.text = it.name
 
                 // Format date
-                val dateFormat = SimpleDateFormat("EEEE, dd MMMM yyyy 'alle' HH:mm", Locale.getDefault())
+                val dateFormat = SimpleDateFormat("EEEE, dd MMMM yyyy 'at' HH:mm", Locale.getDefault())
                 workoutDate.text = dateFormat.format(Date(it.startTime))
 
                 val durationMs = it.endTime?.minus(it.startTime) ?: 0L
@@ -127,7 +125,7 @@ class WorkoutSessionDetailFragment : Fragment(R.layout.fragment_workout_session_
         val minutes = totalSeconds / 60
         val seconds = totalSeconds % 60
 
-        return String.format("%02d:%02d minuti", minutes, seconds)
+        return String.format("%02d:%02d minutes", minutes, seconds)
     }
 
     private suspend fun observeUiState() {

@@ -174,7 +174,7 @@ class MeasurementDetailFragment : Fragment() {
         minValueTextView.text = "${stats.minValue} ${stats.latestUnit}"
         maxValueTextView.text = "${stats.maxValue} ${stats.latestUnit}"
         avgValueTextView.text = "${String.format("%.1f", stats.averageValue)} ${stats.latestUnit}"
-        countTextView.text = "${stats.count} misurazioni"
+        countTextView.text = "${stats.count} measurements"
     }
 
     private fun showAddMeasurementDialog(categoryName: String, unit: String) {
@@ -188,10 +188,10 @@ class MeasurementDetailFragment : Fragment() {
         unitTextView.text = unit
 
         MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_App_MaterialAlertDialog)
-            .setTitle("Aggiungi Misurazione")
-            .setMessage("Aggiungi un nuovo valore per: $categoryName")
+            .setTitle("Add measurement")
+            .setMessage("Add new value for: $categoryName")
             .setView(dialogView)
-            .setPositiveButton("Aggiungi") { _, _ ->
+            .setPositiveButton("Add") { _, _ ->
                 val valueText = valueEditText.text.toString().trim()
                 val notes = notesEditText.text.toString().trim()
 
@@ -199,17 +199,17 @@ class MeasurementDetailFragment : Fragment() {
                     try {
                         val value = valueText.toDouble()
                         viewModel.addNewMeasurement(categoryName, value, unit, notes.takeIf { it.isNotEmpty() })
-                        Toast.makeText(requireContext(), "Misurazione aggiunta", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), "Measurement added", Toast.LENGTH_SHORT).show()
                         // Ricarica le statistiche
                         loadStatsForCategory(categoryName)
                     } catch (e: NumberFormatException) {
-                        Toast.makeText(requireContext(), "Valore non valido", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), "Not valid value", Toast.LENGTH_SHORT).show()
                     }
                 } else {
-                    Toast.makeText(requireContext(), "Inserisci un valore", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Insert a value", Toast.LENGTH_SHORT).show()
                 }
             }
-            .setNegativeButton("Annulla", null)
+            .setNegativeButton("Cancel", null)
             .show()
     }
 
@@ -227,7 +227,7 @@ class MeasurementDetailFragment : Fragment() {
         unitTextView.text = measurement.unit
 
         MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_App_MaterialAlertDialog)
-            .setTitle("Modifica Misurazione")
+            .setTitle("Edit misuration")
             .setView(dialogView)
             .setPositiveButton("Salva") { _, _ ->
                 val valueText = valueEditText.text.toString().trim()
@@ -237,44 +237,44 @@ class MeasurementDetailFragment : Fragment() {
                     try {
                         val value = valueText.toDouble()
                         viewModel.updateMeasurement(measurement, value, notes.takeIf { it.isNotEmpty() })
-                        Toast.makeText(requireContext(), "Misurazione aggiornata", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), "Misuration updated", Toast.LENGTH_SHORT).show()
                         // Ricarica le statistiche
                         currentCategoryName?.let { loadStatsForCategory(it) }
                     } catch (e: NumberFormatException) {
-                        Toast.makeText(requireContext(), "Valore non valido", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), "Not valid value", Toast.LENGTH_SHORT).show()
                     }
                 } else {
-                    Toast.makeText(requireContext(), "Inserisci un valore", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Insert a value", Toast.LENGTH_SHORT).show()
                 }
             }
-            .setNegativeButton("Annulla", null)
+            .setNegativeButton("Cancel", null)
             .show()
     }
 
     private fun showDeleteConfirmationDialog(measurement: BodyMeasurement) {
         MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_App_MaterialAlertDialog)
-            .setTitle("Elimina Misurazione")
-            .setMessage("Sei sicuro di voler eliminare questa misurazione?")
+            .setTitle("Delete Misuration")
+            .setMessage("Are you sure you want to delete this measurement?")
             .setPositiveButton("Elimina") { _, _ ->
                 viewModel.deleteMeasurement(measurement)
-                Toast.makeText(requireContext(), "Misurazione eliminata", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Measurement deleted", Toast.LENGTH_SHORT).show()
                 // Ricarica le statistiche
                 currentCategoryName?.let { loadStatsForCategory(it) }
             }
-            .setNegativeButton("Annulla", null)
+            .setNegativeButton("Cancel", null)
             .show()
     }
 
     private fun showDeleteCategoryDialog(categoryName: String) {
         MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_App_MaterialAlertDialog)
-            .setTitle("Elimina Categoria")
-            .setMessage("Sei sicuro di voler eliminare tutte le misurazioni per '$categoryName'? Questa azione non può essere annullata.")
-            .setPositiveButton("Elimina Tutto") { _, _ ->
+            .setTitle("Delete categoru")
+            .setMessage("Are you sure you want to delete all the measurement for '$categoryName'?")
+            .setPositiveButton("Delete all") { _, _ ->
                 viewModel.deleteMeasurementCategory(categoryName)
-                Toast.makeText(requireContext(), "Categoria eliminata", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Category deleted", Toast.LENGTH_SHORT).show()
                 findNavController().navigateUp()
             }
-            .setNegativeButton("Annulla", null)
+            .setNegativeButton("Cancel", null)
             .show()
     }
 }

@@ -82,15 +82,14 @@
                 <ImageView
                     android:layout_width="80dp"
                     android:layout_height="80dp"
-                    android:src="@drawable/ic_ios_back"
-                    android:rotation="180"
+                    android:src="@drawable/ic_measurements"
                     app:tint="@color/ios_secondaryLabel"
                     android:layout_marginBottom="16dp" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Nessuna misurazione"
+                    android:text="No Measurements"
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:textColor="@color/ios_label"
@@ -99,7 +98,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Tocca + per creare la tua prima categoria di misurazione"
+                    android:text="Tap on '+' to add your first measurement"
                     android:textSize="14sp"
                     android:textColor="@color/ios_secondaryLabel"
                     android:textAlignment="center"

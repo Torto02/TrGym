@@ -31,7 +31,6 @@ class WorkoutHistoryViewModel @Inject constructor(
             try {
                 _uiState.value = UiState.Loading
 
-                // Carica le sessioni di allenamento completate ordinate per data più recente
                 val sessions = workoutRepository.getLatestWorkoutSessions(20)
                     .filter { it.isCompleted } // Solo allenamenti completati
                     .sortedByDescending { it.startTime } // Ordine decrescente per data
@@ -40,7 +39,7 @@ class WorkoutHistoryViewModel @Inject constructor(
                 _uiState.value = UiState.Success
 
             } catch (e: Exception) {
-                _uiState.value = UiState.Error("Errore nel caricamento dello storico: ${e.message}")
+                _uiState.value = UiState.Error("History loading error: ${e.message}")
             }
         }
     }

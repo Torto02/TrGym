@@ -8,7 +8,7 @@
     android:layout_height="wrap_content"
     android:layout_marginBottom="12dp"
     app:cardCornerRadius="16dp"
-    app:cardElevation="2dp"
+    app:cardElevation="1dp"
     app:cardBackgroundColor="@color/white"
     app:strokeWidth="1dp"
     app:strokeColor="@color/lightGray">
@@ -34,7 +34,7 @@
                 android:text="Panca Piana"
                 android:textSize="18sp"
                 android:textStyle="bold"
-                android:textColor="@color/ios_label"
+                android:textColor="@color/primary"
                 tools:text="Panca Piana" />
 
             <TextView
@@ -47,8 +47,7 @@
                 android:textColor="@color/primary"
                 android:backgroundTint="#E8F5E8"
                 android:paddingHorizontal="8dp"
-                android:paddingVertical="4dp"
-                tools:text="Completato" />
+                android:paddingVertical="4dp"/>
 
         </LinearLayout>
 
@@ -67,7 +66,7 @@
             <TextView
                 android:layout_width="40dp"
                 android:layout_height="wrap_content"
-                android:text="Serie"
+                android:text="Set"
                 android:textColor="@color/ios_secondaryLabel"
                 android:textSize="12sp"
                 android:textStyle="bold"
@@ -77,7 +76,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Peso (kg)"
+                android:text="Weight (kg)"
                 android:textColor="@color/ios_secondaryLabel"
                 android:textSize="12sp"
                 android:textStyle="bold"
@@ -105,21 +104,7 @@
             android:nestedScrollingEnabled="false"
             tools:listitem="@layout/item_workout_session_set" />
 
-        <!-- Note dell'esercizio (opzionale) -->
-        <TextView
-            android:id="@+id/exerciseNotes"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Note esercizio"
-            android:textSize="14sp"
-            android:textColor="@color/ios_secondaryLabel"
-            android:background="@drawable/ic_email"
-            android:backgroundTint="@color/ios_systemGray6"
-            android:padding="12dp"
-            android:layout_marginTop="8dp"
-            android:visibility="gone"
-            tools:text="Buone sensazioni, peso aumentato rispetto alla volta scorsa"
-            tools:visibility="visible" />
+
 
     </LinearLayout>
 
