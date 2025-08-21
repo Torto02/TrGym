@@ -14,6 +14,8 @@
         android:layout_height="?attr/actionBarSize"
         android:elevation="10dp">
 
+
+
         <!-- Back Button a sinistra -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/backButton"
@@ -60,7 +62,10 @@
             android:visibility="visible"/>
 
 
+
     </com.google.android.material.appbar.MaterialToolbar>
+
+
 
     <!-- Workout Title centrato sotto la toolbar -->
 
@@ -78,7 +83,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingTop="16dp">
+            android:paddingTop="50dp">
 
 
             <!-- Lista esercizi -->
@@ -142,67 +147,7 @@
         android:elevation="8dp">
 
         <!-- Heart Rate Card (visible when Wear OS connected) -->
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/heartRateCard"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:visibility="gone"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="2dp"
-            app:cardBackgroundColor="@color/white"
-            app:strokeWidth="1dp"
-            app:strokeColor="@color/lightGray">
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:padding="12dp"
-                android:gravity="center_vertical">
-
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/ic_sync"
-                    app:tint="@color/primary" />
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:layout_marginStart="12dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Battito Cardiaco"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/ios_secondaryLabel" />
-
-                    <TextView
-                        android:id="@+id/heartRateValue"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="-- BPM"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/primary" />
-
-                </LinearLayout>
-
-                <TextView
-                    android:id="@+id/heartRateStatus"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Connessione..."
-                    android:textSize="10sp"
-                    android:textColor="@color/ios_secondaryLabel" />
-
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
 
         <!-- Pulsante Completa Allenamento -->
         <com.google.android.material.button.MaterialButton
@@ -248,5 +193,74 @@
         app:backgroundTint="@color/primary"
         app:tint="@color/white"
         android:visibility="gone" />
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/heartRateCard"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:layout_gravity="center_horizontal"
+        android:visibility="gone"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="0dp"
+        app:cardBackgroundColor="#CCFFFFFF"
+        app:strokeWidth="0dp"
+        app:strokeColor="@color/ios_secondaryLabel">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="12dp"
+            android:gravity="center_vertical"
+            android:background="@android:color/transparent">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_heart"
+                android:background="@android:color/transparent" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginStart="12dp"
+                android:background="@android:color/transparent">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Battito Cardiaco"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/ios_secondaryLabel"
+                    android:background="@android:color/transparent" />
+
+                <TextView
+                    android:id="@+id/heartRateValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="-- BPM"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="#FF0000"
+                    android:background="@android:color/transparent" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/heartRateStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Connessione..."
+                android:textSize="10sp"
+                android:visibility="gone"
+                android:textColor="@color/ios_secondaryLabel"
+                android:background="@android:color/transparent" />
+
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
