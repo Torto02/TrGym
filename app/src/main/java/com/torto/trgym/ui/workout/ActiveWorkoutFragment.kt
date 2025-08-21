@@ -1,6 +1,11 @@
 package com.torto.trgym.ui.workout
 
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
@@ -11,17 +16,26 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.gms.wearable.Node
+import com.google.android.gms.wearable.Wearable
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.card.MaterialCardView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.torto.trgym.R
 import com.torto.trgym.adapters.ActiveWorkoutExercisesAdapter
+import com.torto.trgym.service.HeartRateDataListenerService
 import com.torto.trgym.viewmodel.workout.ActiveWorkoutViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 
 @AndroidEntryPoint
@@ -38,6 +52,24 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
     private lateinit var completeWorkoutButton: MaterialButton
     private lateinit var cancelWorkoutButton: MaterialButton
     private lateinit var pauseResumeButton: ImageView
+    
+    // Heart Rate Views
+    private lateinit var heartRateCard: MaterialCardView
+    private lateinit var heartRateValue: TextView
+    private lateinit var heartRateStatus: TextView
+    
+    // Heart Rate BroadcastReceiver
+    private val heartRateReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == HeartRateDataListenerService.ACTION_HEART_RATE_RECEIVED) {
+                val heartRate = intent.getIntExtra(HeartRateDataListenerService.EXTRA_HEART_RATE, -1)
+                if (heartRate > 0) {
+                    updateHeartRateUI(heartRate)
+                    Log.d("ActiveWorkout", "Heart rate received: $heartRate")
+                }
+            }
+        }
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -47,6 +79,7 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
         setupClickListeners()
         observeViewModel()
         setupBackPressHandler()
+        setupHeartRateMonitoring()
     }
 
     private fun initViews(view: View) {
@@ -56,6 +89,11 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
         emptyStateLayout = view.findViewById(R.id.emptyStateLayout)
         completeWorkoutButton = view.findViewById(R.id.completeWorkoutButton)
         cancelWorkoutButton = view.findViewById(R.id.cancelWorkoutButton)
+        
+        // Heart Rate Views
+        heartRateCard = view.findViewById(R.id.heartRateCard)
+        heartRateValue = view.findViewById(R.id.heartRateValue)
+        heartRateStatus = view.findViewById(R.id.heartRateStatus)
     }
 
     private fun setupRecyclerView() {
@@ -222,5 +260,71 @@ class ActiveWorkoutFragment : Fragment(R.layout.fragment_active_workout) {
                 }
             }
         )
+    }
+    
+    // ==========================================
+    // HEART RATE MONITORING METHODS
+    // ==========================================
+    
+    private fun setupHeartRateMonitoring() {
+        checkWearOSConnection()
+        
+        // Register BroadcastReceiver
+        val filter = IntentFilter(HeartRateDataListenerService.ACTION_HEART_RATE_RECEIVED)
+        LocalBroadcastManager.getInstance(requireContext())
+            .registerReceiver(heartRateReceiver, filter)
+    }
+    
+    private fun checkWearOSConnection() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val nodeClient = Wearable.getNodeClient(requireContext())
+                val nodes: Collection<Node> = nodeClient.connectedNodes.await()
+                
+                if (nodes.isNotEmpty()) {
+                    val connectedDevice = nodes.first()
+                    Log.d("ActiveWorkout", "Wear OS connected: ${connectedDevice.displayName}")
+                    
+                    // Show heart rate card and update status
+                    heartRateCard.visibility = View.VISIBLE
+                    heartRateStatus.text = "Connesso: ${connectedDevice.displayName}"
+                    heartRateValue.text = "In attesa..."
+                } else {
+                    Log.d("ActiveWorkout", "No Wear OS devices connected")
+                    heartRateCard.visibility = View.GONE
+                }
+            } catch (e: Exception) {
+                Log.e("ActiveWorkout", "Error checking Wear OS connection", e)
+                heartRateCard.visibility = View.GONE
+            }
+        }
+    }
+    
+    private fun updateHeartRateUI(heartRate: Int) {
+        heartRateValue.text = "$heartRate BPM"
+        heartRateStatus.text = "Aggiornato ora"
+        
+        // Update timestamp for status
+        val timeFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+        val currentTime = timeFormat.format(Date())
+        heartRateStatus.text = "Aggiornato: $currentTime"
+    }
+    
+    override fun onResume() {
+        super.onResume()
+        // Re-register receiver in case it was unregistered
+        val filter = IntentFilter(HeartRateDataListenerService.ACTION_HEART_RATE_RECEIVED)
+        LocalBroadcastManager.getInstance(requireContext())
+            .registerReceiver(heartRateReceiver, filter)
+        
+        // Check connection again when fragment resumes
+        checkWearOSConnection()
+    }
+    
+    override fun onPause() {
+        super.onPause()
+        // Unregister receiver to avoid memory leaks
+        LocalBroadcastManager.getInstance(requireContext())
+            .unregisterReceiver(heartRateReceiver)
     }
 }
