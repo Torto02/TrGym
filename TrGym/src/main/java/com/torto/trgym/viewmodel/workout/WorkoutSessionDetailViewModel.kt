@@ -1,9 +1,8 @@
 package com.torto.trgym.viewmodel.workout
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.torto.trgym.data.repository.WorkoutRepository
+import com.torto.trgym.repository.WorkoutRepository
 import com.torto.trgym.database.dto.WorkoutSessionExerciseDetail
 import com.torto.trgym.database.entities.WorkoutSession
 import dagger.hilt.android.lifecycle.HiltViewModel

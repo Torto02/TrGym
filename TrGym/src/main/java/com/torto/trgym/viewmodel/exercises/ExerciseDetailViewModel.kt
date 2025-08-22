@@ -3,7 +3,7 @@ package com.torto.trgym.viewmodel.exercises
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.torto.trgym.data.repository.ExerciseRepository
+import com.torto.trgym.repository.ExerciseRepository
 import com.torto.trgym.database.dto.ExerciseDetail
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*

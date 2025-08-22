@@ -47,9 +47,9 @@ class WorkoutSessionExerciseAdapter : ListAdapter<WorkoutSessionExerciseDetail, 
 
             // Status
             exerciseStatus.text = if (exercise.isCompleted) {
-                "Completato"
+                "Completed"
             } else {
-                "Non completato"
+                "Not Completed"
             }
 
             val statusColor = if (exercise.isCompleted) {

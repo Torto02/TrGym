@@ -1,4 +1,4 @@
-package com.torto.trgym.data.repository
+package com.torto.trgym.repository
 
 import android.util.Log
 import androidx.room.Update
@@ -21,6 +21,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
+import java.time.Instant
 
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -522,8 +523,8 @@ class WorkoutRepository @Inject constructor(
                         userId = userId,
                         workoutCardId = session.workoutCardId,
                         name = session.name,
-                        startTime = java.time.Instant.ofEpochMilli(session.startTime).toString(),
-                        endTime = session.endTime?.let { java.time.Instant.ofEpochMilli(it).toString() },
+                        startTime = Instant.ofEpochMilli(session.startTime).toString(),
+                        endTime = session.endTime?.let { Instant.ofEpochMilli(it).toString() },
                         isCompleted = session.isCompleted,
                         totalDurationMs = session.totalDurationMs,
                         notes = session.notes,
@@ -547,8 +548,8 @@ class WorkoutRepository @Inject constructor(
                         name = exercise.name,
                         orderIndex = exercise.orderIndex,
                         isCompleted = exercise.isCompleted,
-                        startTime = exercise.startTime?.let { java.time.Instant.ofEpochMilli(it).toString() },
-                        endTime = exercise.endTime?.let { java.time.Instant.ofEpochMilli(it).toString() },
+                        startTime = exercise.startTime?.let { Instant.ofEpochMilli(it).toString() },
+                        endTime = exercise.endTime?.let { Instant.ofEpochMilli(it).toString() },
                         restTimeBetweenSets = exercise.restTimeBetweenSets,
                         notes = exercise.notes,
                         imagePath = exercise.imagePath // AGGIUNTO: Include imagePath
@@ -573,7 +574,7 @@ class WorkoutRepository @Inject constructor(
                         targetReps = set.targetReps,
                         actualReps = set.actualReps,
                         isCompleted = set.isCompleted,
-                        completedAt = set.completedAt?.let { java.time.Instant.ofEpochMilli(it).toString() },
+                        completedAt = set.completedAt?.let { Instant.ofEpochMilli(it).toString() },
                         restTimeMs = set.restTimeMs,
                         rpe = set.rpe,
                         notes = set.notes
@@ -676,8 +677,8 @@ class WorkoutRepository @Inject constructor(
                     userId = userId,
                     workoutCardId = session.workoutCardId,
                     name = session.name,
-                    startTime = java.time.Instant.ofEpochMilli(session.startTime).toString(),
-                    endTime = session.endTime?.let { java.time.Instant.ofEpochMilli(it).toString() },
+                    startTime = Instant.ofEpochMilli(session.startTime).toString(),
+                    endTime = session.endTime?.let { Instant.ofEpochMilli(it).toString() },
                     isCompleted = session.isCompleted,
                     totalDurationMs = session.totalDurationMs,
                     notes = session.notes,
@@ -702,8 +703,8 @@ class WorkoutRepository @Inject constructor(
                     userId = userId,
                     workoutCardId = session.workoutCardId,
                     name = session.name,
-                    startTime = java.time.Instant.ofEpochMilli(session.startTime).toString(),
-                    endTime = session.endTime?.let { java.time.Instant.ofEpochMilli(it).toString() },
+                    startTime = Instant.ofEpochMilli(session.startTime).toString(),
+                    endTime = session.endTime?.let { Instant.ofEpochMilli(it).toString() },
                     isCompleted = session.isCompleted,
                     totalDurationMs = session.totalDurationMs,
                     notes = session.notes,
@@ -745,8 +746,8 @@ class WorkoutRepository @Inject constructor(
                         name = exercise.name,
                         orderIndex = exercise.orderIndex,
                         isCompleted = exercise.isCompleted,
-                        startTime = exercise.startTime?.let { java.time.Instant.ofEpochMilli(it).toString() },
-                        endTime = exercise.endTime?.let { java.time.Instant.ofEpochMilli(it).toString() },
+                        startTime = exercise.startTime?.let { Instant.ofEpochMilli(it).toString() },
+                        endTime = exercise.endTime?.let { Instant.ofEpochMilli(it).toString() },
                         restTimeBetweenSets = exercise.restTimeBetweenSets,
                         notes = exercise.notes,
                         imagePath = exercise.imagePath // AGGIUNTO: Include imagePath
@@ -772,8 +773,8 @@ class WorkoutRepository @Inject constructor(
                     name = exercise.name,
                     orderIndex = exercise.orderIndex,
                     isCompleted = exercise.isCompleted,
-                    startTime = exercise.startTime?.let { java.time.Instant.ofEpochMilli(it).toString() },
-                    endTime = exercise.endTime?.let { java.time.Instant.ofEpochMilli(it).toString() },
+                    startTime = exercise.startTime?.let { Instant.ofEpochMilli(it).toString() },
+                    endTime = exercise.endTime?.let { Instant.ofEpochMilli(it).toString() },
                     restTimeBetweenSets = exercise.restTimeBetweenSets,
                     notes = exercise.notes,
                   imagePath = exercise.imagePath // AGGIUNTO: Include imagePath
@@ -801,7 +802,7 @@ class WorkoutRepository @Inject constructor(
                         targetReps = set.targetReps,
                         actualReps = set.actualReps,
                         isCompleted = set.isCompleted,
-                        completedAt = set.completedAt?.let { java.time.Instant.ofEpochMilli(it).toString() },
+                        completedAt = set.completedAt?.let { Instant.ofEpochMilli(it).toString() },
                         restTimeMs = set.restTimeMs,
                         rpe = set.rpe,
                         notes = set.notes
@@ -829,7 +830,7 @@ class WorkoutRepository @Inject constructor(
                     targetReps = set.targetReps,
                     actualReps = set.actualReps,
                     isCompleted = set.isCompleted,
-                    completedAt = set.completedAt?.let { java.time.Instant.ofEpochMilli(it).toString() },
+                    completedAt = set.completedAt?.let { Instant.ofEpochMilli(it).toString() },
                     restTimeMs = set.restTimeMs,
                     rpe = set.rpe,
                     notes = set.notes
@@ -850,7 +851,7 @@ class WorkoutRepository @Inject constructor(
                 supabaseClient.from("workout_session_sets")
                     .update(mapOf(
                         "is_completed" to isCompleted,
-                        "completed_at" to (completedAt?.let { java.time.Instant.ofEpochMilli(it).toString() })
+                        "completed_at" to (completedAt?.let { Instant.ofEpochMilli(it).toString() })
                     )) { filter { eq("id", setId) } }
             } catch (e: Exception) {
                 Log.e("WorkoutRepository", "Error updating session set completion on Supabase", e)
@@ -907,8 +908,8 @@ class WorkoutRepository @Inject constructor(
                             id = remote.id!!,
                             workoutCardId = remote.workoutCardId ?: "",
                             name = remote.name,
-                            startTime = java.time.Instant.parse(remote.startTime).toEpochMilli(),
-                            endTime = remote.endTime?.let { java.time.Instant.parse(it).toEpochMilli() },
+                            startTime = Instant.parse(remote.startTime).toEpochMilli(),
+                            endTime = remote.endTime?.let { Instant.parse(it).toEpochMilli() },
                             isCompleted = remote.isCompleted,
                             totalDurationMs = remote.totalDurationMs,
                             notes = remote.notes,
@@ -938,7 +939,7 @@ class WorkoutRepository @Inject constructor(
                                 isCompleted = remote.isCompleted,
                                 totalDurationMs = remote.totalDurationMs,
                                 notes = remote.notes,
-                                endTime = remote.endTime?.let { java.time.Instant.parse(it).toEpochMilli() },
+                                endTime = remote.endTime?.let { Instant.parse(it).toEpochMilli() },
                                 updatedAt = System.currentTimeMillis()
                             )
                         )
@@ -971,8 +972,8 @@ class WorkoutRepository @Inject constructor(
                         name = remote.name,
                         orderIndex = remote.orderIndex,
                         isCompleted = remote.isCompleted,
-                        startTime = remote.startTime?.let { java.time.Instant.parse(it).toEpochMilli() },
-                        endTime = remote.endTime?.let { java.time.Instant.parse(it).toEpochMilli() },
+                        startTime = remote.startTime?.let { Instant.parse(it).toEpochMilli() },
+                        endTime = remote.endTime?.let { Instant.parse(it).toEpochMilli() },
                         restTimeBetweenSets = remote.restTimeBetweenSets,
                         notes = remote.notes,
                         createdAt = System.currentTimeMillis(),
@@ -1000,8 +1001,8 @@ class WorkoutRepository @Inject constructor(
                             name = remote.name,
                             orderIndex = remote.orderIndex,
                             isCompleted = remote.isCompleted,
-                            startTime = remote.startTime?.let { java.time.Instant.parse(it).toEpochMilli() },
-                            endTime = remote.endTime?.let { java.time.Instant.parse(it).toEpochMilli() },
+                            startTime = remote.startTime?.let { Instant.parse(it).toEpochMilli() },
+                            endTime = remote.endTime?.let { Instant.parse(it).toEpochMilli() },
                             restTimeBetweenSets = remote.restTimeBetweenSets,
                             notes = remote.notes,
                             updatedAt = System.currentTimeMillis()
@@ -1036,7 +1037,7 @@ class WorkoutRepository @Inject constructor(
                         targetReps = remote.targetReps,
                         actualReps = remote.actualReps,
                         isCompleted = remote.isCompleted,
-                        completedAt = remote.completedAt?.let { java.time.Instant.parse(it).toEpochMilli() },
+                        completedAt = remote.completedAt?.let { Instant.parse(it).toEpochMilli() },
                         restTimeMs = remote.restTimeMs,
                         rpe = remote.rpe,
                         notes = remote.notes,
@@ -1067,7 +1068,7 @@ class WorkoutRepository @Inject constructor(
                             targetReps = remote.targetReps,
                             actualReps = remote.actualReps,
                             isCompleted = remote.isCompleted,
-                            completedAt = remote.completedAt?.let { java.time.Instant.parse(it).toEpochMilli() },
+                            completedAt = remote.completedAt?.let { Instant.parse(it).toEpochMilli() },
                             restTimeMs = remote.restTimeMs,
                             rpe = remote.rpe,
                             notes = remote.notes,

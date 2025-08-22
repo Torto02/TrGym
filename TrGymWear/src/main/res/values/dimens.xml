@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Padding ottimizzato per schermi Wear OS rotondi -->
+    <dimen name="box_inset_layout_padding">6dp</dimen>
+
+    <!-- Margini e padding specifici per Wear OS -->
+    <dimen name="wear_margin_small">4dp</dimen>
+    <dimen name="wear_margin_medium">8dp</dimen>
+    <dimen name="wear_margin_large">16dp</dimen>
+    <dimen name="wear_margin_extra_large">20dp</dimen>
+
+    <!-- Dimensioni testo ottimizzate per leggibilità su Wear OS -->
+    <dimen name="wear_text_size_small">12sp</dimen>
+    <dimen name="wear_text_size_medium">12sp</dimen>
+    <dimen name="wear_text_size_large">16sp</dimen>
+    <dimen name="wear_text_size_extra_large">22sp</dimen>
+
+    <!-- Dimensioni elementi UI specifiche per Wear OS -->
+    <dimen name="wear_button_height">42dp</dimen>
+    <dimen name="wear_button_min_height">40dp</dimen>
+    <dimen name="wear_icon_size">75dp</dimen>
+
+    <!-- Dimensioni per la barra di scorrimento -->
+    <dimen name="scroll_indicator_width">2dp</dimen>
+    <dimen name="scroll_indicator_height">30dp</dimen>
+    <dimen name="scroll_indicator_margin">4dp</dimen>
+</resources>

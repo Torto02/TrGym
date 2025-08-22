@@ -1,4 +1,4 @@
-package com.torto.trgym.data.repository
+package com.torto.trgym.repository
 
 import android.content.Context
 import android.util.Log

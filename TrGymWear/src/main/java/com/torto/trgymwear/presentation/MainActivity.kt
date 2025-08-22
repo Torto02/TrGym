@@ -1,12 +1,10 @@
-
 package com.torto.trgymwear.presentation
 
-import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
-import android.hardware.Sensor
-import android.hardware.SensorEventListener
-import android.hardware.SensorManager
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import android.view.animation.AnimationUtils
 import android.widget.Button
@@ -14,22 +12,25 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.gms.wearable.DataClient
+import com.google.android.gms.wearable.DataEvent
 import com.google.android.gms.wearable.DataEventBuffer
-import com.google.android.gms.wearable.PutDataMapRequest
+import com.google.android.gms.wearable.DataMapItem
 import com.google.android.gms.wearable.Wearable
 import com.torto.trgymwear.R
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import com.torto.trgymwear.service.HeartRateService
 
 class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
 
-    private lateinit var permissionStatusText: TextView
     private lateinit var heartRateText: TextView
-    private lateinit var requestPermissionBtn: Button
+    private lateinit var startServiceBtn: Button
+    private lateinit var stopServiceBtn: Button
     private lateinit var heartIcon: ImageView
+    private lateinit var requestPermissionBtn: Button
+
+    private var isServiceRunning = false
 
     companion object {
         private const val HEART_RATE_PATH = "/heart_rate"
@@ -40,17 +41,25 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // Collega le view
-        permissionStatusText = findViewById(R.id.permissionStatusText)
-        heartRateText = findViewById(R.id.heartRateText)
-        requestPermissionBtn = findViewById(R.id.requestPermissionBtn)
-        heartIcon = findViewById(R.id.heartIcon)
+        initViews()
+        setupAnimations()
+        setupPermissionHandling()
+    }
 
-        // Avvia animazione cuore
+    private fun initViews() {
+        heartRateText = findViewById(R.id.heartRateText)
+        startServiceBtn = findViewById(R.id.startServiceBtn)
+        stopServiceBtn = findViewById(R.id.stopServiceBtn)
+        heartIcon = findViewById(R.id.heartIcon)
+        requestPermissionBtn = findViewById(R.id.requestPermissionBtn)
+    }
+
+    private fun setupAnimations() {
         val anim = AnimationUtils.loadAnimation(this, R.anim.heartbeat)
         heartIcon.startAnimation(anim)
+    }
 
-        // Launcher per richiedere il permesso
+    private fun setupPermissionHandling() {
         val requestPermissionLauncher = registerForActivityResult(
             ActivityResultContracts.RequestPermission()
         ) { isGranted: Boolean ->
@@ -58,23 +67,39 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
         }
 
         requestPermissionBtn.setOnClickListener {
-            requestPermissionLauncher.launch("android.permission.health.READ_HEART_RATE")
+            if (!hasHeartRatePermission() &&
+                !ActivityCompat.shouldShowRequestPermissionRationale(this, "android.permission.health.READ_HEART_RATE")) {
+                // Il permesso è stato negato definitivamente, apri le impostazioni
+                openAppSettings()
+            } else {
+                // Prova ancora a richiedere il permesso
+                requestPermissionLauncher.launch("android.permission.health.READ_HEART_RATE")
+            }
         }
 
-        // Verifica subito il permesso
-        checkAndRequestPermission(requestPermissionLauncher)
+        startServiceBtn.setOnClickListener {
+            if (hasHeartRatePermission()) {
+                startHeartRateService()
+            } else {
+                requestPermissionLauncher.launch("android.permission.health.READ_HEART_RATE")
+            }
+        }
+
+        stopServiceBtn.setOnClickListener {
+            stopHeartRateService()
+        }
+
+        // Richiede automaticamente il permesso se non concesso
+        checkAndRequestPermissionAutomatically(requestPermissionLauncher)
     }
 
     override fun onResume() {
         super.onResume()
         Wearable.getDataClient(this).addListener(this)
+        updateUI()
 
-        // Ricontrolla permessi
-        if (ContextCompat.checkSelfPermission(
-                this,
-                "android.permission.health.READ_HEART_RATE"
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
+        // Controlla se l'utente ha concesso il permesso dalle impostazioni
+        if (hasHeartRatePermission()) {
             updatePermissionStatus(true)
         }
     }
@@ -84,87 +109,109 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
         Wearable.getDataClient(this).removeListener(this)
     }
 
-    private fun checkAndRequestPermission(
+    private fun hasHeartRatePermission(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            this,
+            "android.permission.health.READ_HEART_RATE"
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun checkAndRequestPermissionAutomatically(
         requestPermissionLauncher: androidx.activity.result.ActivityResultLauncher<String>
     ) {
-        when {
-            ContextCompat.checkSelfPermission(
-                this,
-                "android.permission.health.READ_HEART_RATE"
-            ) == PackageManager.PERMISSION_GRANTED -> {
-                updatePermissionStatus(true)
-            }
-            else -> {
-                permissionStatusText.text = "Permesso non concesso."
-                requestPermissionBtn.visibility = Button.VISIBLE
-                requestPermissionLauncher.launch("android.permission.health.READ_HEART_RATE")
-            }
+        if (hasHeartRatePermission()) {
+            updatePermissionStatus(true)
+        } else {
+            // Richiede automaticamente il permesso senza mostrare bottoni
+//            permissionStatusText.text = "Richiesta permesso battito cardiaco..."
+            requestPermissionLauncher.launch("android.permission.health.READ_HEART_RATE")
         }
     }
 
     private fun updatePermissionStatus(isGranted: Boolean) {
         if (isGranted) {
-            permissionStatusText.text = "Permesso BODY_SENSORS concesso!"
+            heartRateText.text = "Start heart rate monitoring"
+            heartRateText.gravity = android.view.Gravity.CENTER
+//            permissionStatusText.text = ""
             requestPermissionBtn.visibility = Button.GONE
-            startHeartRateSensor()
+            updateServiceButtons(true)
         } else {
-            permissionStatusText.text = "Permesso BODY_SENSORS negato."
-            heartRateText.text = "Sensore non disponibile"
-            requestPermissionBtn.visibility = Button.VISIBLE
-        }
-    }
+            heartRateText.text = "Permission Required to Read Heart Rate"
+            heartRateText.gravity = android.view.Gravity.CENTER
 
-    private fun startHeartRateSensor() {
-        val sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
-        val heartRateSensor = sensorManager.getDefaultSensor(Sensor.TYPE_HEART_RATE)
-
-        if (heartRateSensor != null) {
-            sensorManager.registerListener(
-                object : SensorEventListener {
-                    override fun onSensorChanged(event: android.hardware.SensorEvent?) {
-                        event?.let {
-                            if (it.sensor.type == Sensor.TYPE_HEART_RATE) {
-                                val heartRate = it.values[0].toInt()
-                                heartRateText.text = "$heartRate BPM"
-                                sendHeartRateToPhone(heartRate)
-                            }
-                        }
-                    }
-
-                    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
-                },
-                heartRateSensor,
-                SensorManager.SENSOR_DELAY_NORMAL
-            )
-        } else {
-            heartRateText.text = "Sensore non disponibile"
-        }
-    }
-
-    private fun sendHeartRateToPhone(heartRate: Int) {
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val putDataMapReq = PutDataMapRequest.create(HEART_RATE_PATH)
-                putDataMapReq.dataMap.putInt("heart_rate", heartRate)
-                putDataMapReq.dataMap.putLong("timestamp", System.currentTimeMillis())
-
-                val putDataReq = putDataMapReq.asPutDataRequest()
-                putDataReq.setUrgent()
-
-                Wearable.getDataClient(this@MainActivity).putDataItem(putDataReq)
-                    .addOnSuccessListener {
-                        Log.d(TAG, "Dati inviati: $heartRate BPM")
-                    }
-                    .addOnFailureListener { exception ->
-                        Log.e(TAG, "Errore invio: ${exception.message}")
-                    }
-            } catch (e: Exception) {
-                Log.e(TAG, "Eccezione invio", e)
+            // Controlla se il permesso è stato negato definitivamente
+            if (!ActivityCompat.shouldShowRequestPermissionRationale(this, "android.permission.health.READ_HEART_RATE")) {
+                requestPermissionBtn.text = "Enable in Settings"
+                requestPermissionBtn.gravity = android.view.Gravity.CENTER
+            } else {
+                requestPermissionBtn.text = "Permission Request"
+                requestPermissionBtn.gravity = android.view.Gravity.CENTER
             }
+
+            requestPermissionBtn.visibility = Button.VISIBLE
+            updateServiceButtons(false)
+        }
+    }
+
+    private fun openAppSettings() {
+        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+            data = Uri.fromParts("package", packageName, null)
+        }
+        startActivity(intent)
+    }
+
+    private fun updateServiceButtons(permissionGranted: Boolean) {
+        if (permissionGranted) {
+            startServiceBtn.visibility = if (isServiceRunning) Button.GONE else Button.VISIBLE
+            stopServiceBtn.visibility = if (isServiceRunning) Button.VISIBLE else Button.GONE
+        } else {
+            startServiceBtn.visibility = Button.GONE
+            stopServiceBtn.visibility = Button.GONE
+        }
+    }
+
+    private fun updateUI() {
+        val permissionGranted = hasHeartRatePermission()
+        updatePermissionStatus(permissionGranted)
+    }
+
+    private fun startHeartRateService() {
+        try {
+            HeartRateService.startService(this)
+            isServiceRunning = true
+            updateServiceButtons(true)
+//            heartRateText.text = "Service started - waiting data..."
+        } catch (e: Exception) {
+            //
+        }
+    }
+
+    private fun stopHeartRateService() {
+        try {
+            HeartRateService.stopService(this)
+            isServiceRunning = false
+            updateServiceButtons(true)
+            heartRateText.text = "-- BPM"
+        } catch (e: Exception) {
+            Log.e(TAG, "Errore stop servizio", e)
         }
     }
 
     override fun onDataChanged(dataEvents: DataEventBuffer) {
         Log.d(TAG, "onDataChanged ricevuto")
+
+        for (event in dataEvents) {
+            if (event.type == DataEvent.TYPE_CHANGED) {
+                val item = event.dataItem
+                if (item.uri.path?.compareTo(HEART_RATE_PATH) == 0) {
+                    val dataMap = DataMapItem.fromDataItem(item).dataMap
+                    val heartRate = dataMap.getInt("heart_rate")
+
+                    runOnUiThread {
+                        heartRateText.text = "$heartRate BPM"
+                    }
+                }
+            }
+        }
     }
 }

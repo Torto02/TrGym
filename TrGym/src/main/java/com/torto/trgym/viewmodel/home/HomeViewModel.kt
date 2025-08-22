@@ -2,7 +2,7 @@ package com.torto.trgym.viewmodel.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.torto.trgym.data.repository.WorkoutRepository
+import com.torto.trgym.repository.WorkoutRepository
 import com.torto.trgym.database.entities.WorkoutCard
 import com.torto.trgym.database.entities.WorkoutSession
 import dagger.hilt.android.lifecycle.HiltViewModel

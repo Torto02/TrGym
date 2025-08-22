@@ -2,16 +2,13 @@ package com.torto.trgym.viewmodel.exercises
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.torto.trgym.data.repository.EquipmentRepository
-import com.torto.trgym.data.repository.ExerciseRepository
-import com.torto.trgym.data.repository.MuscleRepository
+import com.torto.trgym.repository.EquipmentRepository
+import com.torto.trgym.repository.ExerciseRepository
+import com.torto.trgym.repository.MuscleRepository
 import com.torto.trgym.database.dto.ExerciseWithImage
-import com.torto.trgym.database.entities.MuscleGroupI18n
-import com.torto.trgym.database.entities.EquipmentI18n
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.Dispatchers

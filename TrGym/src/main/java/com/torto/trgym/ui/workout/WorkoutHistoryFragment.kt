@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.addCallback
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -30,6 +31,16 @@ class WorkoutHistoryFragment : Fragment(R.layout.fragment_workout_history) {
     private val backButton by lazy { requireView().findViewById<TextView>(R.id.backButton) }
     private val historyRecyclerView by lazy { requireView().findViewById<RecyclerView>(R.id.historyRecyclerView) }
     private val emptyStateLayout by lazy { requireView().findViewById<View>(R.id.emptyStateLayout) }
+
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        requireActivity().onBackPressedDispatcher.addCallback(this) {
+            val action = WorkoutHistoryFragmentDirections
+                .actionWorkoutHistoryFragmentToProfileFragment()
+            findNavController().navigate(action)
+        }
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

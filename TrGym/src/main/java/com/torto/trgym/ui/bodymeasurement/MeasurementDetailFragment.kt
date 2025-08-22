@@ -125,16 +125,11 @@ class MeasurementDetailFragment : Fragment() {
             }
         }
 
-        // Back button
-        view?.findViewById<ImageView>(R.id.btnBack)?.setOnClickListener {
+        categoryNameTextView.setOnClickListener {
             val action = MeasurementDetailFragmentDirections.actionMeasurementDetailFragmentToBodyMeasurementsFragment()
             findNavController().navigate(action)
         }
 
-
-
-
-        // Delete category button
         view?.findViewById<ImageView>(R.id.btnDeleteCategory)?.setOnClickListener {
             currentCategoryName?.let { categoryName ->
                 showDeleteCategoryDialog(categoryName)

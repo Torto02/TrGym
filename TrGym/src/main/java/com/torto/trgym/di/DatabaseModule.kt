@@ -2,8 +2,6 @@ package com.torto.trgym.di
 
 import android.content.Context
 import androidx.room.Room
-import com.torto.trgym.data.repository.ExerciseRepository
-import com.torto.trgym.data.repository.WorkoutRepository
 import com.torto.trgym.database.AppDatabase
 import com.torto.trgym.database.dao.*
 import dagger.Module

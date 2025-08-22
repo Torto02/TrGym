@@ -13,15 +13,13 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.NavHostFragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.torto.trgym.data.repository.AuthRepository
-import com.torto.trgym.data.repository.ExerciseRepository
-import com.torto.trgym.data.repository.WorkoutRepository
+import com.torto.trgym.repository.AuthRepository
+import com.torto.trgym.repository.ExerciseRepository
+import com.torto.trgym.repository.WorkoutRepository
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.jan.supabase.auth.status.SessionStatus
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import androidx.activity.viewModels
-import com.torto.trgym.viewmodel.exercises.ExercisesViewModel
 
 /**
  * MainActivity serves as the entry point of the application after the splash screen.

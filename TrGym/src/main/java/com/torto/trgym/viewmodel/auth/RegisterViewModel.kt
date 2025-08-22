@@ -3,7 +3,7 @@ package com.torto.trgym.viewmodel.auth
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.torto.trgym.data.repository.AuthRepository
+import com.torto.trgym.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

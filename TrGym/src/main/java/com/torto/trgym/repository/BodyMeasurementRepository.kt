@@ -1,4 +1,4 @@
-package com.torto.trgym.data.repository
+package com.torto.trgym.repository
 
 import android.util.Log
 import com.torto.trgym.database.dao.BodyMeasurementDao
@@ -91,10 +91,10 @@ class BodyMeasurementRepository @Inject constructor(
                     name = measurement.name,
                     value = measurement.value,
                     unit = measurement.unit,
-                    measurement_date = java.time.Instant.ofEpochMilli(measurement.measurementDate).toString(),
+                    measurement_date = Instant.ofEpochMilli(measurement.measurementDate).toString(),
                     notes = measurement.notes,
-                    created_at = java.time.Instant.ofEpochMilli(measurement.createdAt).toString(),
-                    updated_at = java.time.Instant.ofEpochMilli(measurementToUpdate.updatedAt).toString()
+                    created_at = Instant.ofEpochMilli(measurement.createdAt).toString(),
+                    updated_at = Instant.ofEpochMilli(measurementToUpdate.updatedAt).toString()
                 )
                 supabaseClient.from("body_measurements").upsert(listOf(supabaseMeasurement))
                 bodyMeasurementDao.markMeasurementAsSynced(measurement.id)
@@ -183,10 +183,10 @@ class BodyMeasurementRepository @Inject constructor(
                             name = measurement.name,
                             value = measurement.value,
                             unit = measurement.unit,
-                            measurement_date = java.time.Instant.ofEpochMilli(measurement.measurementDate).toString(),
+                            measurement_date = Instant.ofEpochMilli(measurement.measurementDate).toString(),
                             notes = measurement.notes,
-                            created_at = java.time.Instant.ofEpochMilli(measurement.createdAt).toString(),
-                            updated_at = java.time.Instant.ofEpochMilli(measurement.updatedAt).toString()
+                            created_at = Instant.ofEpochMilli(measurement.createdAt).toString(),
+                            updated_at = Instant.ofEpochMilli(measurement.updatedAt).toString()
                         )
                         supabaseClient.from("body_measurements").upsert(listOf(supabaseMeasurement))
                         bodyMeasurementDao.markMeasurementAsSynced(measurement.id)

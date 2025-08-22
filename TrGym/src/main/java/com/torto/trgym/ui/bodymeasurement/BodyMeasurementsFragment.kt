@@ -34,6 +34,7 @@ class BodyMeasurementsFragment : Fragment() {
     private lateinit var adapter: MeasurementCategoryAdapter
     private lateinit var emptyView: LinearLayout
     private lateinit var fab: FloatingActionButton
+    private lateinit var btnBack: MaterialButton
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -62,6 +63,7 @@ class BodyMeasurementsFragment : Fragment() {
         recyclerView = view.findViewById(R.id.recyclerViewMeasurements)
         emptyView = view.findViewById(R.id.emptyView)
         fab = view.findViewById(R.id.fabAddMeasurement)
+        btnBack = view.findViewById(R.id.btnBack)
     }
 
     private fun setupRecyclerView() {
@@ -91,9 +93,9 @@ class BodyMeasurementsFragment : Fragment() {
             showCreateCategoryDialog()
         }
 
-        // Back button
-        view?.findViewById<MaterialButton>(R.id.btnBack)?.setOnClickListener {
-            findNavController().navigateUp()
+        btnBack.setOnClickListener {
+            val action = BodyMeasurementsFragmentDirections.actionBodyMeasurementsFragmentToProfileFragment()
+            findNavController().navigate(action)
         }
     }
 

@@ -3,9 +3,9 @@ package com.torto.trgym.viewmodel.profile
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.torto.trgym.data.repository.AuthRepository
-import com.torto.trgym.data.repository.BodyMeasurementRepository
-import com.torto.trgym.data.repository.WorkoutRepository
+import com.torto.trgym.repository.AuthRepository
+import com.torto.trgym.repository.BodyMeasurementRepository
+import com.torto.trgym.repository.WorkoutRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

@@ -3,7 +3,7 @@ package com.torto.trgym.viewmodel.measurement
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.torto.trgym.data.repository.BodyMeasurementRepository
+import com.torto.trgym.repository.BodyMeasurementRepository
 import com.torto.trgym.database.dto.MeasurementStats
 import com.torto.trgym.database.entities.BodyMeasurement
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,7 +23,6 @@ class BodyMeasurementViewModel @Inject constructor(
     val uiState: StateFlow<BodyMeasurementUiState> = _uiState
 
     private val _selectedMeasurementName = MutableStateFlow<String?>(null)
-    val selectedMeasurementName: StateFlow<String?> = _selectedMeasurementName
 
     init {
         loadMeasurementCategories()
@@ -128,10 +127,6 @@ class BodyMeasurementViewModel @Inject constructor(
 
     fun selectMeasurementCategory(categoryName: String) {
         _selectedMeasurementName.value = categoryName
-    }
-
-    fun clearSelection() {
-        _selectedMeasurementName.value = null
     }
 
     fun getMeasurementsForCategory(categoryName: String) = repository.getMeasurementsByName(categoryName)
