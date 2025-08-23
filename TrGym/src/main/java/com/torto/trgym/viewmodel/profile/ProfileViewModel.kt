@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.torto.trgym.repository.AuthRepository
 import com.torto.trgym.repository.BodyMeasurementRepository
+import com.torto.trgym.repository.ExerciseRepository
 import com.torto.trgym.repository.WorkoutRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,11 +17,13 @@ import javax.inject.Inject
 class ProfileViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val workoutRepository: WorkoutRepository,
-    private val bodyMeasurementRepository: BodyMeasurementRepository
+    private val bodyMeasurementRepository: BodyMeasurementRepository,
+    private val exerciseRepository: ExerciseRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<ProfileUiState>(ProfileUiState.Loading)
     val uiState: StateFlow<ProfileUiState> = _uiState
+
 
     init {
         fetchUserProfile()
@@ -29,7 +32,6 @@ class ProfileViewModel @Inject constructor(
     private fun fetchUserProfile() {
         viewModelScope.launch {
             try {
-
                 val user = authRepository.getCurrentUser()
 
                 if (user == null) {
@@ -39,10 +41,8 @@ class ProfileViewModel @Inject constructor(
 
                 val totalWorkouts = workoutRepository.countWorkoutSessions()
                 val totalCalories = workoutRepository.getTotalCalories()
-//                val totalCalories = "1547 kCal"
                 val profileData = ProfileData(
                     email = user.email ?: "Ospite",
-                    // Usa il display_name dalla tabella di autenticazione invece dei metadata
                     displayName = (user.userMetadata?.get("display_name")?.toString()
                         ?.removeSurrounding("\"")) ?: "Utente",
                     totalWorkouts = totalWorkouts,
@@ -57,9 +57,6 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    fun refreshProfile() {
-        fetchUserProfile()
-    }
 
     fun logout() {
         viewModelScope.launch {
@@ -81,6 +78,7 @@ class ProfileViewModel @Inject constructor(
                 workoutRepository.downloadWorkoutCardsInitial()
                 bodyMeasurementRepository.syncUnsyncedMeasurements()
                 bodyMeasurementRepository.downloadMeasurementsFromSupabase()
+                exerciseRepository.syncStarredExercises()
 
                 // Dopo il sync, ottieni i dati aggiornati del profilo
                 val user = authRepository.getCurrentUser()

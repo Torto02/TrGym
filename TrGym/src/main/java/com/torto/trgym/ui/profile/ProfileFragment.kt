@@ -53,7 +53,6 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
 
     override fun onResume() {
         super.onResume()
-        viewModel.refreshProfile()
         
         // Registra il receiver per ricevere dati battito cardiaco
         val filter = IntentFilter(HeartRateDataListenerService.ACTION_HEART_RATE_RECEIVED)
@@ -180,7 +179,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         emailTv.text = profileData.email
         textName.text = profileData.displayName
         totalWorkouts.text = profileData.totalWorkouts.toString()
-        totalCalories.text = profileData.totalCalories?.toString() ?: "N/A"
+        totalCalories.text = profileData.totalCalories.toString() ?: "N/A"
     }
 
     private fun checkWearOSConnection() {

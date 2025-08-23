@@ -14,21 +14,10 @@ import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.realtime.Realtime
 import javax.inject.Singleton
 
-/**
- * Modulo Dagger per la configurazione del client Supabase.
- * Fornisce le dipendenze necessarie per l'interazione con Supabase.
- */
 @Module
 @InstallIn(SingletonComponent::class)
 object SupabaseModule {
 
-    /**
-     * Fornisce un'istanza singleton di [SupabaseClient].
-     * Configura il client con URL e chiave di accesso, e installa i moduli necessari.
-     *
-     * @param app L'istanza dell'applicazione, fornita da Hilt.
-     * @return Un'istanza configurata di [SupabaseClient].
-     */
     @Provides
     @Singleton
     @OptIn(SupabaseInternal::class)

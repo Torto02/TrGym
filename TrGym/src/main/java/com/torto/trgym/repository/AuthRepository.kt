@@ -22,7 +22,6 @@ class AuthRepository @Inject constructor(
     private val client: SupabaseClient
 ) {
 
-    // Riferimento al modulo di autenticazione di Supabase
     private val auth = client.auth
 
     fun observeAuthStatus() = auth.sessionStatus

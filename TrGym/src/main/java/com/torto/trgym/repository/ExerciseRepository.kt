@@ -113,47 +113,6 @@ class ExerciseRepository @Inject constructor(
 
             Log.d("ExerciseRepository", "Push-only sync completed: uploaded ${unsyncedLocal.size} local changes to Supabase")
 
-            // DISABILITATO: Download e merge da Supabase per evitare flash/reload della UI
-            // Il download viene fatto solo al primo accesso dell'app in MainActivity
-            /*
-            // Step 2: Scarica i dati da Supabase
-            val supabaseStarred = supabaseClient
-                .from("starred_exercises")
-                .select{ filter {
-                    eq("user_id", userId)
-                }}
-                .decodeList<SupabaseStarredExercise>()
-
-            // Step 3: Ottieni i dati locali attuali
-            val localStarred = starredExerciseDao.getAllLocalStarredExercises()
-            val localIds = localStarred.map { it.exerciseId }.toSet()
-            val supabaseIds = supabaseStarred.map { it.exerciseId }.toSet()
-
-            // Step 4: Merge intelligente
-            // Aggiungi elementi da Supabase che non sono presenti localmente
-            val toAddLocally = supabaseIds - localIds
-            if (toAddLocally.isNotEmpty()) {
-                val newLocalStarred = toAddLocally.map { exerciseId ->
-                    StarredExercise(
-                        exerciseId = exerciseId,
-                        syncedWithServer = true
-                    )
-                }
-                starredExerciseDao.insertStarredExercises(newLocalStarred)
-                Log.d("ExerciseRepository", "Added ${toAddLocally.size} starred exercises from Supabase")
-            }
-
-            // Step 5: Rimuovi elementi locali che non sono più su Supabase (solo se erano sincronizzati)
-            val toRemoveLocally = localIds - supabaseIds
-            toRemoveLocally.forEach { exerciseId ->
-                val localExercise = localStarred.find { it.exerciseId == exerciseId }
-                // Rimuovi solo se era già sincronizzato (evita di cancellare modifiche offline pendenti)
-                if (localExercise?.syncedWithServer == true) {
-                    starredExerciseDao.removeFromStarred(exerciseId)
-                    Log.d("ExerciseRepository", "Removed synced starred exercise $exerciseId that was deleted on server")
-                }
-            }
-            */
         } catch (e: Exception) {
             Log.e("ExerciseRepository", "Error during push-only sync of starred exercises", e)
         }

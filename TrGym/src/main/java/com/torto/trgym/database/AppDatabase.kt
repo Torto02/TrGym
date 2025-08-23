@@ -19,9 +19,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun muscleDao(): MuscleDao
     abstract fun equipmentDao(): EquipmentDao
     abstract fun starredExerciseDao(): StarredExerciseDao
-    abstract fun workoutDao(): WorkoutDao // Nuovo DAO
-
-    abstract fun bodyMeasurementDao(): BodyMeasurementDao // DAO per le misurazioni del corpo
-//    abstract fun workoutSessionDao(): WorkoutSessionDao // Nuovo DAO
-
+    abstract fun workoutDao(): WorkoutDao 
+    abstract fun bodyMeasurementDao(): BodyMeasurementDao 
 }
