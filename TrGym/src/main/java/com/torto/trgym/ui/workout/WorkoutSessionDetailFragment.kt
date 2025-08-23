@@ -95,17 +95,12 @@ class WorkoutSessionDetailFragment : Fragment(R.layout.fragment_workout_session_
             session?.let {
                 workoutTitle.text = it.name
 
-                // Format date
+
                 val dateFormat = SimpleDateFormat("EEEE, dd MMMM yyyy 'at' HH:mm", Locale.getDefault())
-                workoutDate.text = dateFormat.format(Date(it.startTime))
-
                 val durationMs = it.endTime?.minus(it.startTime) ?: 0L
-                // Format duration
+                workoutDate.text = dateFormat.format(Date(it.startTime))
                 workoutDuration.text = formatDuration(durationMs)
-
                 burnedCalories.text = " Burned ${viewModel.totalCalories.value} kcal"
-
-
             }
         }
     }

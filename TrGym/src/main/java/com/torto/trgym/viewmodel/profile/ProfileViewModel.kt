@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.torto.trgym.repository.AuthRepository
 import com.torto.trgym.repository.BodyMeasurementRepository
+import com.torto.trgym.repository.DataCleanupRepository
 import com.torto.trgym.repository.ExerciseRepository
 import com.torto.trgym.repository.WorkoutRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -18,7 +19,8 @@ class ProfileViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val workoutRepository: WorkoutRepository,
     private val bodyMeasurementRepository: BodyMeasurementRepository,
-    private val exerciseRepository: ExerciseRepository
+    private val exerciseRepository: ExerciseRepository,
+    private val dataCleanupRepository: DataCleanupRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<ProfileUiState>(ProfileUiState.Loading)
@@ -61,10 +63,18 @@ class ProfileViewModel @Inject constructor(
     fun logout() {
         viewModelScope.launch {
             try {
+                // First clear all user data from Room
+                dataCleanupRepository.clearAllUserData()
+                Log.d("ProfileViewModel", "User data cleared from Room")
+                
+                // Then sign out from Supabase
                 authRepository.signOut()
+                Log.d("ProfileViewModel", "Signed out from Supabase")
+                
                 _uiState.value = ProfileUiState.LoggedOut
             } catch (e: Exception) {
-                _uiState.value = ProfileUiState.Error("Error logging out")
+                Log.e("ProfileViewModel", "Error during logout", e)
+                _uiState.value = ProfileUiState.Error("Error logging out: ${e.message}")
             }
         }
     }

@@ -66,4 +66,10 @@ interface BodyMeasurementDao {
 
     @Query("UPDATE body_measurements SET syncedWithServer = 1, pendingSync = 0 WHERE id = :measurementId")
     suspend fun markMeasurementAsSynced(measurementId: String)
+
+    /**
+     * Removes all user-specific body measurement data.
+     */
+    @Query("DELETE FROM body_measurements")
+    suspend fun clearAllMeasurements()
 }

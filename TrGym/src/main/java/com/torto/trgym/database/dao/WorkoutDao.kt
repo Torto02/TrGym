@@ -254,4 +254,29 @@ interface WorkoutDao {
     // Nel WorkoutDao.kt
     @Query("SELECT averageHeartRate, startTime, endTime FROM workout_sessions WHERE id = :sessionId")
     suspend fun getHeartRateAndTimeForSession(sessionId: String): SessionHeartRateAndTime?
+
+    // ==========================================
+    // CLEANUP OPERATIONS
+    // ==========================================
+
+    /**
+     * Removes all user-specific workout data.
+     */
+    @Query("DELETE FROM workout_cards")
+    suspend fun clearAllWorkoutCards()
+
+    @Query("DELETE FROM workout_exercises")
+    suspend fun clearAllWorkoutExercises()
+
+    @Query("DELETE FROM exercise_sets")
+    suspend fun clearAllExerciseSets()
+
+    @Query("DELETE FROM workout_sessions")
+    suspend fun clearAllWorkoutSessions()
+
+    @Query("DELETE FROM workout_session_exercises")
+    suspend fun clearAllWorkoutSessionExercises()
+
+    @Query("DELETE FROM workout_session_sets")
+    suspend fun clearAllWorkoutSessionSets()
 }
