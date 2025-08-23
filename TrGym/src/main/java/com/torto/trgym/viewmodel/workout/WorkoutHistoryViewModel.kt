@@ -3,13 +3,13 @@ package com.torto.trgym.viewmodel.workout
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.torto.trgym.repository.WorkoutRepository
-import com.torto.trgym.database.entities.WorkoutSession
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.torto.trgym.database.dto.WorkoutSessionWithCalories
 
 @HiltViewModel
 class WorkoutHistoryViewModel @Inject constructor(
@@ -19,8 +19,8 @@ class WorkoutHistoryViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
 
-    private val _workoutSessions = MutableStateFlow<List<WorkoutSession>>(emptyList())
-    val workoutSessions: StateFlow<List<WorkoutSession>> = _workoutSessions.asStateFlow()
+    private val _workoutSessions = MutableStateFlow<List<WorkoutSessionWithCalories>>(emptyList())
+    val workoutSessions: StateFlow<List<WorkoutSessionWithCalories>> = _workoutSessions.asStateFlow()
 
     init {
         loadWorkoutHistory()
@@ -35,7 +35,13 @@ class WorkoutHistoryViewModel @Inject constructor(
                     .filter { it.isCompleted } // Solo allenamenti completati
                     .sortedByDescending { it.startTime } // Ordine decrescente per data
 
-                _workoutSessions.value = sessions
+                // Carica le calorie per ogni sessione
+                val sessionsWithCalories = sessions.map { session ->
+                    val calories = workoutRepository.getCaloriesForWorkout(session.id)
+                    WorkoutSessionWithCalories(session, calories)
+                }
+
+                _workoutSessions.value = sessionsWithCalories
                 _uiState.value = UiState.Success
 
             } catch (e: Exception) {
@@ -43,7 +49,6 @@ class WorkoutHistoryViewModel @Inject constructor(
             }
         }
     }
-
 
     sealed interface UiState {
         object Loading : UiState

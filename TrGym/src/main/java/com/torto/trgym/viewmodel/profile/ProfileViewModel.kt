@@ -38,8 +38,8 @@ class ProfileViewModel @Inject constructor(
                 }
 
                 val totalWorkouts = workoutRepository.countWorkoutSessions()
-//                val totalCalories = workoutRepository.getTotalHeartBeat()
-                val totalCalories = "1547 kCal"
+                val totalCalories = workoutRepository.getTotalCalories()
+//                val totalCalories = "1547 kCal"
                 val profileData = ProfileData(
                     email = user.email ?: "Ospite",
                     // Usa il display_name dalla tabella di autenticazione invece dei metadata
@@ -90,13 +90,14 @@ class ProfileViewModel @Inject constructor(
                 }
 
                 val totalWorkouts = workoutRepository.countWorkoutSessions()
+                val totalCalories = workoutRepository.getTotalCalories()
 
                 val profileData = ProfileData(
                     email = user.email ?: "Ospite",
                     // Usa il display_name dalla tabella di autenticazione invece dei metadata
                     displayName = user.userMetadata?.get("display_name")?.toString() ?: "Utente",
                     totalWorkouts = totalWorkouts,
-                    totalCalories = null
+                    totalCalories = totalCalories
                 )
 
                 // Indica che la sincronizzazione è completata con i dati aggiornati
@@ -123,6 +124,6 @@ class ProfileViewModel @Inject constructor(
         val email: String,
         val displayName: String,
         val totalWorkouts: Int,
-        val totalCalories: String? = null
+        val totalCalories: Int
     )
 }

@@ -1,6 +1,7 @@
 package com.torto.trgym.ui.workout
 
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
@@ -34,7 +35,7 @@ class WorkoutSessionDetailFragment : Fragment(R.layout.fragment_workout_session_
     private val workoutTitle by lazy { requireView().findViewById<TextView>(R.id.workoutTitle) }
     private val workoutDate by lazy { requireView().findViewById<TextView>(R.id.workoutDate) }
     private val workoutDuration by lazy { requireView().findViewById<TextView>(R.id.workoutDuration) }
-    private val workoutNotes by lazy { requireView().findViewById<TextView>(R.id.workoutNotes) }
+    private val burnedCalories by lazy { requireView().findViewById<TextView>(R.id.burnedCalories) }
     private val exercisesRecyclerView by lazy { requireView().findViewById<RecyclerView>(R.id.exercisesRecyclerView) }
     private val emptyStateLayout by lazy { requireView().findViewById<View>(R.id.emptyStateLayout) }
 
@@ -102,13 +103,9 @@ class WorkoutSessionDetailFragment : Fragment(R.layout.fragment_workout_session_
                 // Format duration
                 workoutDuration.text = formatDuration(durationMs)
 
-                // Notes
-                if (!it.notes.isNullOrBlank()) {
-                    workoutNotes.text = it.notes
-                    workoutNotes.visibility = View.VISIBLE
-                } else {
-                    workoutNotes.visibility = View.GONE
-                }
+                burnedCalories.text = " Burned ${viewModel.totalCalories.value} kcal"
+
+
             }
         }
     }

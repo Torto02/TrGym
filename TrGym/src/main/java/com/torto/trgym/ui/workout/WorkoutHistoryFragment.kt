@@ -15,8 +15,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.torto.trgym.R
 import com.torto.trgym.adapters.WorkoutHistoryAdapter
-import com.torto.trgym.database.entities.WorkoutSession
-import com.torto.trgym.ui.exercises.ExerciseDetailFragmentDirections
+import com.torto.trgym.database.dto.WorkoutSessionWithCalories
 import com.torto.trgym.viewmodel.workout.WorkoutHistoryViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -31,7 +30,6 @@ class WorkoutHistoryFragment : Fragment(R.layout.fragment_workout_history) {
     private val backButton by lazy { requireView().findViewById<TextView>(R.id.backButton) }
     private val historyRecyclerView by lazy { requireView().findViewById<RecyclerView>(R.id.historyRecyclerView) }
     private val emptyStateLayout by lazy { requireView().findViewById<View>(R.id.emptyStateLayout) }
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,8 +52,8 @@ class WorkoutHistoryFragment : Fragment(R.layout.fragment_workout_history) {
     }
 
     private fun setupRecyclerView() {
-        historyAdapter = WorkoutHistoryAdapter { workoutSession ->
-            navigateToWorkoutDetail(workoutSession)
+        historyAdapter = WorkoutHistoryAdapter { workoutSessionWithCalories ->
+            navigateToWorkoutDetail(workoutSessionWithCalories)
         }
 
         historyRecyclerView.apply {
@@ -108,9 +106,9 @@ class WorkoutHistoryFragment : Fragment(R.layout.fragment_workout_history) {
         }
     }
 
-    private fun navigateToWorkoutDetail(workoutSession: WorkoutSession) {
+    private fun navigateToWorkoutDetail(workoutSessionWithCalories: WorkoutSessionWithCalories) {
         val action = WorkoutHistoryFragmentDirections
-            .actionWorkoutHistoryFragmentToWorkoutSessionDetailFragment(workoutSession.id)
+            .actionWorkoutHistoryFragmentToWorkoutSessionDetailFragment(workoutSessionWithCalories.workoutSession.id)
         findNavController().navigate(action)
     }
 

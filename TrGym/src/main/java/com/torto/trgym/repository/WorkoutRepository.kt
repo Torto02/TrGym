@@ -1,7 +1,6 @@
 package com.torto.trgym.repository
 
 import android.util.Log
-import androidx.room.Update
 
 import com.torto.trgym.database.dao.WorkoutDao
 import com.torto.trgym.database.dto.SessionHeartRateAndTime
@@ -25,9 +24,6 @@ import java.time.Instant
 
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.collections.plusAssign
-import kotlin.div
-import kotlin.times
 
 
 @Singleton
@@ -1225,7 +1221,35 @@ class WorkoutRepository @Inject constructor(
         }
     }
 
-     suspend fun getTotalHeartBeat(): Int {
+    suspend fun getCaloriesForWorkout(sessionId: String): Int {
+        return withContext(Dispatchers.IO) {
+            try {
+                val heartRateData = getHeartRateAndTimeForSession(sessionId)
+                val startTime = heartRateData?.startTime
+                val endTime = heartRateData?.endTime
+                val avgHeartBeat = heartRateData?.averageHeartRate
+
+                if (startTime != null && endTime != null && avgHeartBeat != null) {
+                    val time = endTime - startTime
+                    val minutes = time / 60000.0
+                    val calories =
+                        ((-55.0969 + (0.6309 * avgHeartBeat) + (0.1988 * 70) + (0.2017 * 30)) * minutes) / 4.184
+                    return@withContext calories.toInt()
+                } else {
+                    return@withContext 0
+                }
+            } catch (e: Exception) {
+                Log.e(
+                    "WorkoutRepository",
+                    "Error calculating calories burned for session $sessionId",
+                    e
+                )
+                return@withContext 0
+            }
+        }
+    }
+
+     suspend fun getTotalCalories(): Int {
         return withContext(Dispatchers.IO) {
             try {
                 val sessions = workoutDao.getLatestWorkoutSessions(100)

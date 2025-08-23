@@ -1,5 +1,6 @@
 package com.torto.trgym.viewmodel.workout
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.torto.trgym.repository.WorkoutRepository
@@ -26,6 +27,9 @@ class WorkoutSessionDetailViewModel @Inject constructor(
     private val _exercisesWithSets = MutableStateFlow<List<WorkoutSessionExerciseDetail>>(emptyList())
     val exercisesWithSets: StateFlow<List<WorkoutSessionExerciseDetail>> = _exercisesWithSets.asStateFlow()
 
+    private val _totalCalories = MutableStateFlow(0)
+    val totalCalories: StateFlow<Int> = _totalCalories.asStateFlow()
+
     fun loadWorkoutSession(sessionId: String) {
         viewModelScope.launch {
             try {
@@ -50,6 +54,10 @@ class WorkoutSessionDetailViewModel @Inject constructor(
 
                 _exercisesWithSets.value = exercisesWithSets.sortedBy { it.exercise.orderIndex }
                 _uiState.value = UiState.Success
+
+                val totalCalories = workoutRepository.getCaloriesForWorkout(sessionId)
+                _totalCalories.value = totalCalories
+                Log.d("WorkoutSessionDetailViewModel", "Total calories: $totalCalories")
 
             } catch (e: Exception) {
                 _uiState.value = UiState.Error("Errore nel caricamento: ${e.message}")

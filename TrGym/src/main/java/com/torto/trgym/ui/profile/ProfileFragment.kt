@@ -27,7 +27,6 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
 
 @AndroidEntryPoint
@@ -38,9 +37,6 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
     
     private val heartRateReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            Log.d("ProfileFragment", "BroadcastReceiver.onReceive called")
-            Log.d("ProfileFragment", "Intent action: ${intent?.action}")
-            Log.d("ProfileFragment", "Expected action: ${HeartRateDataListenerService.ACTION_HEART_RATE_RECEIVED}")
             
             if (intent?.action == HeartRateDataListenerService.ACTION_HEART_RATE_RECEIVED) {
                 val heartRate = intent.getIntExtra(HeartRateDataListenerService.EXTRA_HEART_RATE, 0)
@@ -49,7 +45,6 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                 if (heartRateStatus != null) {
                     updateHeartRateDisplay(heartRate, timestamp, heartRateStatus)
                 }
-//                updateHeartRateDisplay(heartRate, timestamp)
             } else {
                 Log.w("ProfileFragment", "Received broadcast with wrong action: ${intent?.action}")
             }

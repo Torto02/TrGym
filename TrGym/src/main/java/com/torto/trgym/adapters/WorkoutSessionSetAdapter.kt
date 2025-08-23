@@ -30,15 +30,8 @@ class WorkoutSessionSetAdapter : ListAdapter<WorkoutSessionSet, WorkoutSessionSe
         fun bind(set: WorkoutSessionSet) {
             setNumber.text = "${set.setNumber}"
 
-            // Target values
             weigth.text = set.targetWeightKg?.let { "${it}kg" } ?: "-"
             reps.text = set.targetReps?.toString() ?: "-"
-
-            // Actual values
-
-
-
-            // Status indicator
 
         }
     }

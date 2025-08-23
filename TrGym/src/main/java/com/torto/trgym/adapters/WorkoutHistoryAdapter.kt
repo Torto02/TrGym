@@ -1,6 +1,5 @@
 package com.torto.trgym.adapters
 
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,15 +9,13 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.card.MaterialCardView
 import com.torto.trgym.R
-import com.torto.trgym.database.entities.WorkoutSession
-import com.torto.trgym.database.entities.WorkoutSessionExercise
-import com.torto.trgym.database.entities.WorkoutSessionSet
+import com.torto.trgym.database.dto.WorkoutSessionWithCalories
 import java.text.SimpleDateFormat
 import java.util.*
 
 class WorkoutHistoryAdapter(
-    private val onWorkoutClick: (WorkoutSession) -> Unit
-) : ListAdapter<WorkoutSession, WorkoutHistoryAdapter.WorkoutSessionViewHolder>(WorkoutSessionDiffCallback()) {
+    private val onWorkoutClick: (WorkoutSessionWithCalories) -> Unit
+) : ListAdapter<WorkoutSessionWithCalories, WorkoutHistoryAdapter.WorkoutSessionViewHolder>(WorkoutSessionDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): WorkoutSessionViewHolder {
         val view = LayoutInflater.from(parent.context)
@@ -35,10 +32,12 @@ class WorkoutHistoryAdapter(
         private val workoutName: TextView = itemView.findViewById(R.id.workoutName)
         private val workoutDate: TextView = itemView.findViewById(R.id.workoutDate)
         private val workoutDuration: TextView = itemView.findViewById(R.id.workoutDuration)
-        private val workoutStatus: TextView = itemView.findViewById(R.id.workoutStatus)
+        private val burnedCalories: TextView = itemView.findViewById(R.id.burnedCalories)
 
+        fun bind(workoutSessionWithCalories: WorkoutSessionWithCalories) {
+            val workoutSession = workoutSessionWithCalories.workoutSession
+            val calories = workoutSessionWithCalories.calories
 
-        fun bind(workoutSession: WorkoutSession) {
             workoutName.text = workoutSession.name
 
             // Mostra solo giorno e mese
@@ -48,26 +47,11 @@ class WorkoutHistoryAdapter(
             val durationMs = workoutSession.endTime?.minus(workoutSession.startTime) ?: 0L
             workoutDuration.text = formatDuration(durationMs)
 
-            // Funzione di formattazione
-
-            // Status
-            workoutStatus.text = if (workoutSession.isCompleted) {
-                "Completed"
-            } else {
-                "Not Completed"
-            }
-
-            // Set status color
-            val statusColor = if (workoutSession.isCompleted) {
-                itemView.context.getColor(R.color.primary)
-            } else {
-                itemView.context.getColor(R.color.ios_secondaryLabel)
-            }
-            workoutStatus.setTextColor(statusColor)
-
+            // Mostra le calorie bruciate
+            burnedCalories.text = "${calories} kCal"
 
             cardView.setOnClickListener {
-                onWorkoutClick(workoutSession)
+                onWorkoutClick(workoutSessionWithCalories)
             }
         }
 
@@ -78,18 +62,14 @@ class WorkoutHistoryAdapter(
 
             return String.format("%02d:%02d minutes", minutes, seconds)
         }
-
     }
 
-
-
-
-    private class WorkoutSessionDiffCallback : DiffUtil.ItemCallback<WorkoutSession>() {
-        override fun areItemsTheSame(oldItem: WorkoutSession, newItem: WorkoutSession): Boolean {
-            return oldItem.id == newItem.id
+    private class WorkoutSessionDiffCallback : DiffUtil.ItemCallback<WorkoutSessionWithCalories>() {
+        override fun areItemsTheSame(oldItem: WorkoutSessionWithCalories, newItem: WorkoutSessionWithCalories): Boolean {
+            return oldItem.workoutSession.id == newItem.workoutSession.id
         }
 
-        override fun areContentsTheSame(oldItem: WorkoutSession, newItem: WorkoutSession): Boolean {
+        override fun areContentsTheSame(oldItem: WorkoutSessionWithCalories, newItem: WorkoutSessionWithCalories): Boolean {
             return oldItem == newItem
         }
     }

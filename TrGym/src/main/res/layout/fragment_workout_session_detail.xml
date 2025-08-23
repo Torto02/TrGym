@@ -140,16 +140,16 @@
 
                     <!-- Note del workout (opzionale) -->
                     <TextView
-                        android:id="@+id/workoutNotes"
+                        android:id="@+id/burnedCalories"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Note del workout"
                         android:textSize="14sp"
-                        android:textColor="@color/ios_secondaryLabel"
+                        android:textStyle="bold"
+                        android:textColor="@color/error"
                         android:backgroundTint="@color/ios_systemGray6"
-                        android:padding="12dp"
-                        android:visibility="gone"
-                        tools:text="Ottimo allenamento, mi sono sentito molto energico oggi"
+                        app:drawableStartCompat="@drawable/ic_fire"
+                        android:drawableTint="@color/error"
+                        tools:text="Burned Calories: 500 kcal"
                         tools:visibility="visible" />
 
                 </LinearLayout>
