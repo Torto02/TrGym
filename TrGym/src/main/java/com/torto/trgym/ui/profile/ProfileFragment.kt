@@ -75,7 +75,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         val heartRateStatus = view.findViewById<TextView>(R.id.heartRateStatus)
 
         setupClickListeners(logoutCard, workoutHistoryCard, resyncCard, bodyMeasurementsCard, wearOSCard)
-        observeUiState(emailTv, textName, totalWorkouts, totalCalories, logoutCard, workoutHistoryCard, resyncCard, bodyMeasurementsCard, wearOSCard, heartRateStatus)
+        observeUiState(emailTv, textName, totalWorkouts, totalCalories, logoutCard, workoutHistoryCard, resyncCard, bodyMeasurementsCard, wearOSCard)
     }
 
     private fun setupClickListeners(
@@ -123,8 +123,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         workoutHistoryCard: MaterialCardView,
         resyncCard: MaterialCardView,
         bodyMeasurementsCard: MaterialCardView,
-        wearOSCard: MaterialCardView,
-        heartRateStatus: TextView
+        wearOSCard: MaterialCardView
     ) {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -146,7 +145,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
 
                         is ProfileViewModel.ProfileUiState.SyncCompleted -> {
                             setCardsEnabled(true, logoutCard, workoutHistoryCard, resyncCard, bodyMeasurementsCard, wearOSCard)
-                            updateProfileData(emailTv, textName, totalWorkouts, totalCalories, state.profileData)
+                            updateProfileData(emailTv, textName, totalWorkouts, totalCalories,state.profileData)
                             Toast.makeText(requireContext(), "Sync completed!", Toast.LENGTH_SHORT).show()
                         }
 
@@ -194,6 +193,8 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         lifecycleScope.launch {
             try {
                 val wearOSStatusTextView = view?.findViewById<TextView>(R.id.wearOSStatus)
+                val heartRateStatus = view?.findViewById<TextView>(R.id.heartRateStatus)  // Aggiungi questa riga
+
                 wearOSStatusTextView?.text = "Check in progress..."
 
                 val connectedNodes = getConnectedWearOSDevices(requireContext())
@@ -205,6 +206,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                     Log.d("WearOS", "Connected devices: $deviceNames")
                 } else {
                     wearOSStatusTextView?.text = "No devices connected"
+                    heartRateStatus?.text = "heartRate: N/A"
                     Toast.makeText(requireContext(), "No Wear Os Device connected", Toast.LENGTH_SHORT).show()
                     Log.d("WearOS", "No connected devices found")
                 }
@@ -228,8 +230,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
     }
 
     private fun updateHeartRateDisplay(heartRate: Int, timestamp: Long, heartRateStatus: TextView) {
-        val timeFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
-        heartRateStatus.text = "Battito: $heartRate BPM"
+        heartRateStatus.text = "heartRate: $heartRate BPM"
     }
     
     private fun testHeartRateService() {

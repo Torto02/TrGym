@@ -85,6 +85,7 @@ class WorkoutSessionDetailFragment : Fragment(R.layout.fragment_workout_session_
             viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch { observeWorkoutSession() }
                 launch { observeExercises() }
+                launch { observeCalories() }
                 launch { observeUiState() }
             }
         }
@@ -100,7 +101,6 @@ class WorkoutSessionDetailFragment : Fragment(R.layout.fragment_workout_session_
                 val durationMs = it.endTime?.minus(it.startTime) ?: 0L
                 workoutDate.text = dateFormat.format(Date(it.startTime))
                 workoutDuration.text = formatDuration(durationMs)
-                burnedCalories.text = " Burned ${viewModel.totalCalories.value} kcal"
             }
         }
     }
@@ -109,6 +109,12 @@ class WorkoutSessionDetailFragment : Fragment(R.layout.fragment_workout_session_
         viewModel.exercisesWithSets.collect { exercises ->
             exercisesAdapter.submitList(exercises)
             updateEmptyState(exercises.isEmpty())
+        }
+    }
+
+    private suspend fun observeCalories() {
+        viewModel.totalCalories.collect { calories ->
+            burnedCalories.text = "Burned $calories kcal"
         }
     }
     private fun formatDuration(durationMs: Long): String {
