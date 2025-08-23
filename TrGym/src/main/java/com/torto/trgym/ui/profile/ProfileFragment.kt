@@ -20,6 +20,7 @@ import androidx.navigation.fragment.findNavController
 import com.google.android.gms.wearable.Node
 import com.google.android.gms.wearable.Wearable
 import com.google.android.material.card.MaterialCardView
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.torto.trgym.R
 import com.torto.trgym.service.HeartRateDataListenerService
 import com.torto.trgym.viewmodel.profile.ProfileViewModel
@@ -85,7 +86,14 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         wearOSCard: MaterialCardView
     ) {
         logoutCard.setOnClickListener {
-            viewModel.logout()
+            MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_App_MaterialAlertDialog)
+                .setTitle("Logout")
+                .setMessage("Are you sure you want to logout?")
+                .setPositiveButton("Logout") { _, _ ->
+                    viewModel.logout()
+                }
+                .setNegativeButton("Cancel", null)
+                .show()
         }
 
         workoutHistoryCard.setOnClickListener {

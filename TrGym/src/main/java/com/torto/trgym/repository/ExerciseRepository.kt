@@ -18,6 +18,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -98,8 +100,7 @@ class ExerciseRepository @Inject constructor(
     suspend fun syncStarredExercises() = withContext(Dispatchers.IO) {
         try {
             val userId = supabaseClient.auth.currentUserOrNull()?.id ?: return@withContext
-            
-            // SOLO upload: Carica le modifiche locali non sincronizzate su Supabase
+
             val unsyncedLocal = starredExerciseDao.getUnsyncedStarredExercises()
             unsyncedLocal.forEach { localStarred ->
                 try {
@@ -192,22 +193,21 @@ class ExerciseRepository @Inject constructor(
                         Log.w("ExerciseRepository", "Could not add to Supabase", e)
                     }
                 }
-                // Forza l'aggiornamento del flusso
-                getAllStarredExercises().collect { /* Trigger update */ }
             } catch (e: Exception) {
                 Log.e("ExerciseRepository", "Error toggling starred exercise", e)
             }
         }
     }
 
-    fun getAllStarredExercises(): Flow<List<ExerciseWithImage>> = flow {
-        val starredIds = starredExerciseDao.getAllStarredExerciseIds().firstOrNull() ?: emptyList()
-
-        if (starredIds.isNotEmpty()) {
-            val starredExercises = exerciseDao.getExercisesByIds(starredIds, 1).firstOrNull() ?: emptyList()
-            emit(starredExercises)
-        } else {
-            emit(emptyList())
-        }
-    }.flowOn(Dispatchers.IO)
+    fun getAllStarredExercises(): Flow<List<ExerciseWithImage>> {
+        return starredExerciseDao.getAllStarredExerciseIds()
+            .flatMapLatest { starredIds ->
+                if (starredIds.isNotEmpty()) {
+                    exerciseDao.getExercisesByIds(starredIds, 1)
+                } else {
+                    flowOf(emptyList())
+                }
+            }
+            .flowOn(Dispatchers.IO)
+    }
 }
