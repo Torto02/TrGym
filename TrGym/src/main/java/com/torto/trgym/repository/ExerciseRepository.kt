@@ -173,34 +173,27 @@ class ExerciseRepository @Inject constructor(
         withContext(Dispatchers.IO) {
             try {
                 if (isCurrentlyStarred) {
-                    // Rimuovi dall'locale
                     starredExerciseDao.removeFromStarred(exerciseId)
-
-                    // Prova a rimuovere da Supabase (se online)
                     try {
                         removeFromSupabaseStarred(exerciseId)
                     } catch (e: Exception) {
-                        Log.w("ExerciseRepository", "Could not remove from Supabase (offline?), will sync later", e)
-                        // L'operazione locale è già stata fatta, sync avverrà quando tornerà online
+                        Log.w("ExerciseRepository", "Could not remove from Supabase", e)
                     }
                 } else {
-                    // Aggiungi al locale con flag pendingSync se fallisce l'upload
                     val starredExercise = StarredExercise(
                         exerciseId = exerciseId,
                         syncedWithServer = false
                     )
                     starredExerciseDao.addToStarred(starredExercise)
-
-                    // Prova ad aggiungere a Supabase (se online)
                     try {
                         addToSupabaseStarred(exerciseId)
-                        // Se riuscito, aggiorna il flag sync
                         starredExerciseDao.markAsSynced(exerciseId)
                     } catch (e: Exception) {
-                        Log.w("ExerciseRepository", "Could not add to Supabase (offline?), will sync later", e)
-                        // Mantieni syncedWithServer = false per sincronizzare in seguito
+                        Log.w("ExerciseRepository", "Could not add to Supabase", e)
                     }
                 }
+                // Forza l'aggiornamento del flusso
+                getAllStarredExercises().collect { /* Trigger update */ }
             } catch (e: Exception) {
                 Log.e("ExerciseRepository", "Error toggling starred exercise", e)
             }
@@ -208,13 +201,9 @@ class ExerciseRepository @Inject constructor(
     }
 
     fun getAllStarredExercises(): Flow<List<ExerciseWithImage>> = flow {
-
-        // Otteniamo prima tutti gli ID degli esercizi preferiti
         val starredIds = starredExerciseDao.getAllStarredExerciseIds().firstOrNull() ?: emptyList()
 
-        // Se abbiamo degli ID, recuperiamo i dettagli completi degli esercizi
         if (starredIds.isNotEmpty()) {
-            // Nota: potrebbe essere necessario implementare questa funzione in ExerciseDao
             val starredExercises = exerciseDao.getExercisesByIds(starredIds, 1).firstOrNull() ?: emptyList()
             emit(starredExercises)
         } else {

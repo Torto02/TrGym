@@ -30,14 +30,12 @@ class ExercisesFragment : Fragment(R.layout.fragment_exercises) {
     private val viewModel: ExercisesViewModel by activityViewModels()
     private lateinit var adapter: ExercisesAdapter
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        // Configura l'adapter per il RecyclerView.
         adapter = ExercisesAdapter()
 
-        // Configura il RecyclerView per mostrare gli esercizi.
         view.findViewById<RecyclerView>(R.id.rvExercises).apply {
-            layoutManager = LinearLayoutManager(requireContext()) // Layout lineare per la lista.
-            setHasFixedSize(true) // Ottimizza le prestazioni per dimensioni fisse.
-            itemAnimator = null // Disabilita le animazioni per ridurre il jank.
+            layoutManager = LinearLayoutManager(requireContext())
+            setHasFixedSize(true)
+            itemAnimator = null
             adapter = this@ExercisesFragment.adapter
         }
 
@@ -48,7 +46,6 @@ class ExercisesFragment : Fragment(R.layout.fragment_exercises) {
         val selectedEquipment = view.findViewById<TextView>(R.id.selectedEquipment)
         val starBtn = view.findViewById<ImageView>(R.id.starButton)
 
-        // Osserva e aggiorna i testi selezionati
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.selectedMuscleName.collectLatest { selectedMuscle.text = it }
@@ -65,7 +62,6 @@ class ExercisesFragment : Fragment(R.layout.fragment_exercises) {
             viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect { state ->
                     if (state is ExercisesViewModel.ExercisesUiState.Data) {
-                        // Aggiorna la lista degli esercizi nell'adapter.
                         adapter.submitList(state.exercises)
                     }
                 }
@@ -74,7 +70,6 @@ class ExercisesFragment : Fragment(R.layout.fragment_exercises) {
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                //osserva il valore del filtro degli esercizi preferiti
                 viewModel.starredFilter.collectLatest { isStarred ->
                     updateStarButton(starBtn, isStarred)
                 }
@@ -142,9 +137,6 @@ class ExercisesFragment : Fragment(R.layout.fragment_exercises) {
             viewModel.starredExercise()
             updateStarButton(starBtn, viewModel.starredFilter.value)
         }
-
-
-
 
     }
     private fun updateStarButton(starButton: ImageView, isStarred: Boolean) {

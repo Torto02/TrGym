@@ -36,7 +36,7 @@ class ExerciseDetailFragment : Fragment(R.layout.fragment_exercise_detail) {
         val backBtn = view.findViewById<TextView>(R.id.backButton)
         val starButton = view.findViewById<ImageView>(R.id.starButton)
 
-        // Avvia la raccolta dello stato del ViewModel per i dettagli dell'esercizio
+
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 vm.uiState.collect { state ->
@@ -62,7 +62,6 @@ class ExerciseDetailFragment : Fragment(R.layout.fragment_exercise_detail) {
             }
         }
 
-        // Avvia la raccolta dello stato del preferito
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 vm.isStarred.collect { isStarred ->
@@ -71,7 +70,6 @@ class ExerciseDetailFragment : Fragment(R.layout.fragment_exercise_detail) {
             }
         }
 
-        // Gestione click del pulsante back con logica per ritorno al WorkoutDetail
         backBtn.setOnClickListener {
             val workoutCardId = args.workoutCardId
             if (workoutCardId != null) {
@@ -87,16 +85,12 @@ class ExerciseDetailFragment : Fragment(R.layout.fragment_exercise_detail) {
             }
         }
 
-        // Gestione click del pulsante stella
         starButton.setOnClickListener {
             vm.toggleStarred()
             Log.d("ExerciseDetailFragment", "Star button clicked")
         }
     }
 
-    /**
-     * Aggiorna l'aspetto del pulsante stella in base allo stato del preferito
-     */
     private fun updateStarButton(starButton: ImageView, isStarred: Boolean) {
         if (isStarred) {
             starButton.setImageResource(R.drawable.ic_star_filled)

@@ -4,10 +4,6 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.health.READ_HEART_RATE"/>
-
-
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.VIBRATE" />
 
@@ -41,7 +37,6 @@
             </intent-filter>
         </activity>
 
-        <!-- Servizio per ricevere dati da Wear OS -->
         <service
             android:name=".service.HeartRateDataListenerService"
             android:exported="true">

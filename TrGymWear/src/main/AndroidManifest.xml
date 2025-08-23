@@ -3,14 +3,11 @@
 
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.health.READ_HEART_RATE" />
-    <!-- NUOVI PERMESSI AGGIUNTI -->
     <uses-permission android:name="android.permission.BODY_SENSORS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_HEALTH" />
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <uses-feature android:name="android.hardware.type.watch" />
-    <!-- NUOVA FEATURE AGGIUNTA -->
     <uses-feature android:name="android.hardware.sensor.heartrate" android:required="true" />
 
     <application
@@ -20,7 +17,6 @@
         android:supportsRtl="true"
         android:theme="@style/MainActivityTheme.Starting">
 
-        <!-- SERVIZIO MODIFICATO -->
         <service
             android:name=".service.HeartRateService"
             android:enabled="true"
