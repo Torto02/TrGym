@@ -67,8 +67,6 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     private fun setupViews(view: View) {
         val addWorkoutCardBtn = view.findViewById<MaterialButton>(R.id.addWorkoutCardBtn)
         activeWorkoutCard = view.findViewById(R.id.activeWorkoutCard)
-
-
         activeWorkoutTime = view.findViewById(R.id.activeWorkoutTime)
         continueWorkoutBtn = view.findViewById(R.id.continueWorkoutBtn)
         minutes = view.findViewById(R.id.minutes)
