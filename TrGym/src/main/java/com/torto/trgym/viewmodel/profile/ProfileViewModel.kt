@@ -8,6 +8,7 @@ import com.torto.trgym.repository.BodyMeasurementRepository
 import com.torto.trgym.repository.DataCleanupRepository
 import com.torto.trgym.repository.ExerciseRepository
 import com.torto.trgym.repository.WorkoutRepository
+import com.torto.trgym.utils.PreferencesManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,7 +21,8 @@ class ProfileViewModel @Inject constructor(
     private val workoutRepository: WorkoutRepository,
     private val bodyMeasurementRepository: BodyMeasurementRepository,
     private val exerciseRepository: ExerciseRepository,
-    private val dataCleanupRepository: DataCleanupRepository
+    private val dataCleanupRepository: DataCleanupRepository,
+    private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<ProfileUiState>(ProfileUiState.Loading)
@@ -34,27 +36,32 @@ class ProfileViewModel @Inject constructor(
     private fun fetchUserProfile() {
         viewModelScope.launch {
             try {
-                val user = authRepository.getCurrentUser()
-
-                if (user == null) {
-                    _uiState.value = ProfileUiState.LoggedOut
-                    return@launch
-                }
-
                 val totalWorkouts = workoutRepository.countWorkoutSessions()
                 val totalCalories = workoutRepository.getTotalCalories()
-                val profileData = ProfileData(
-                    email = user.email ?: "Ospite",
-                    displayName = (user.userMetadata?.get("display_name")?.toString()
-                        ?.removeSurrounding("\"")) ?: "Utente",
-                    totalWorkouts = totalWorkouts,
-                    totalCalories = totalCalories
-                )
+
+                val profileData =
+
+                    ProfileData(
+                        email = preferencesManager.getUserEmail() ?: "Ospite",
+                        displayName = preferencesManager.getDisplayName() ?: "Utente",
+                        totalWorkouts = totalWorkouts,
+                        totalCalories = totalCalories
+                    )
 
                 _uiState.value = ProfileUiState.Data(profileData)
 
             } catch (e: Exception) {
-                _uiState.value = ProfileUiState.Error("Loading profile error")
+                Log.e("ProfileViewModel", "Error loading profile", e)
+                // Fallback to offline mode on error
+                val totalWorkouts = workoutRepository.countWorkoutSessions()
+                val totalCalories = workoutRepository.getTotalCalories()
+                val profileData = ProfileData(
+                    email = preferencesManager.getUserEmail() ?: "Ospite",
+                    displayName = preferencesManager.getDisplayName() ?: "Utente",
+                    totalWorkouts = totalWorkouts,
+                    totalCalories = totalCalories
+                )
+                _uiState.value = ProfileUiState.Data(profileData)
             }
         }
     }
@@ -100,10 +107,24 @@ class ProfileViewModel @Inject constructor(
                 val totalWorkouts = workoutRepository.countWorkoutSessions()
                 val totalCalories = workoutRepository.getTotalCalories()
 
+                // Try different ways to get display_name for sync
+                var displayName = user.userMetadata?.get("display_name")?.toString()?.removeSurrounding("\"")
+                if (displayName.isNullOrEmpty()) {
+                    displayName = user.userMetadata?.get("username")?.toString()?.removeSurrounding("\"")
+                }
+                if (displayName.isNullOrEmpty()) {
+                    displayName = user.userMetadata?.get("name")?.toString()?.removeSurrounding("\"")
+                }
+                if (displayName.isNullOrEmpty()) {
+                    displayName = "Utente"
+                }
+                
+                // Save display_name to preferences for offline use
+                preferencesManager.setDisplayName(displayName)
+
                 val profileData = ProfileData(
                     email = user.email ?: "Ospite",
-                    // Usa il display_name dalla tabella di autenticazione invece dei metadata
-                    displayName = user.userMetadata?.get("display_name")?.toString() ?: "Utente",
+                    displayName = displayName,
                     totalWorkouts = totalWorkouts,
                     totalCalories = totalCalories
                 )

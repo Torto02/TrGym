@@ -69,8 +69,18 @@ class AuthRepository @Inject constructor(
             // Save login state to SharedPreferences
             preferencesManager.setLoggedIn(true)
             preferencesManager.setUserEmail(email)
-            auth.currentSessionOrNull()?.user?.id?.let { userId ->
-                preferencesManager.setUserId(userId)
+            auth.currentSessionOrNull()?.user?.let { user ->
+                preferencesManager.setUserId(user.id)
+                // Save display_name if available - try different metadata fields
+                var displayName = user.userMetadata?.get("display_name")?.toString()?.removeSurrounding("\"")
+                if (displayName.isNullOrEmpty()) {
+                    displayName = user.userMetadata?.get("username")?.toString()?.removeSurrounding("\"")
+                }
+                if (displayName.isNullOrEmpty()) {
+                    displayName = user.userMetadata?.get("name")?.toString()?.removeSurrounding("\"")
+                }
+                Log.d("AuthRepository", "Saving display_name: $displayName")
+                preferencesManager.setDisplayName(displayName)
             }
             
             Log.d("AuthRepository", "User login state saved to SharedPreferences")

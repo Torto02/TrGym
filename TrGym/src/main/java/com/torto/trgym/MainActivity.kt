@@ -181,6 +181,15 @@ class MainActivity : AppCompatActivity() {
                         preferencesManager.setLoggedIn(true)
                         currentUser?.email?.let { preferencesManager.setUserEmail(it) }
                         currentUser?.id?.let { preferencesManager.setUserId(it) }
+                        // Save display_name if available - try different metadata fields
+                        var displayName = currentUser?.userMetadata?.get("display_name")?.toString()?.removeSurrounding("\"")
+                        if (displayName.isNullOrEmpty()) {
+                            displayName = currentUser?.userMetadata?.get("username")?.toString()?.removeSurrounding("\"")
+                        }
+                        if (displayName.isNullOrEmpty()) {
+                            displayName = currentUser?.userMetadata?.get("name")?.toString()?.removeSurrounding("\"")
+                        }
+                        preferencesManager.setDisplayName(displayName)
 
                         downloadStarredExercisesInitial()
                         downloadWorkoutCardsInitial()

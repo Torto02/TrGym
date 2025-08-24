@@ -18,6 +18,7 @@ class PreferencesManager @Inject constructor(
         private const val KEY_IS_LOGGED_IN = "is_logged_in"
         private const val KEY_USER_EMAIL = "user_email"
         private const val KEY_USER_ID = "user_id"
+        private const val KEY_DISPLAY_NAME = "display_name"
     }
 
     fun setLoggedIn(isLoggedIn: Boolean) {
@@ -50,11 +51,22 @@ class PreferencesManager @Inject constructor(
         return sharedPreferences.getString(KEY_USER_ID, null)
     }
 
+    fun setDisplayName(displayName: String?) {
+        sharedPreferences.edit()
+            .putString(KEY_DISPLAY_NAME, displayName)
+            .apply()
+    }
+
+    fun getDisplayName(): String? {
+        return sharedPreferences.getString(KEY_DISPLAY_NAME, null)
+    }
+
     fun clearUserData() {
         sharedPreferences.edit()
             .putBoolean(KEY_IS_LOGGED_IN, false)
             .remove(KEY_USER_EMAIL)
             .remove(KEY_USER_ID)
+            .remove(KEY_DISPLAY_NAME)
             .apply()
     }
 }
