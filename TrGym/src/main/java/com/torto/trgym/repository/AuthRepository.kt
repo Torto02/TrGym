@@ -5,6 +5,7 @@ import android.content.Intent
 import android.util.Log
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.net.toUri
+import com.torto.trgym.utils.PreferencesManager
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.handleDeeplinks
@@ -19,7 +20,8 @@ import javax.inject.Singleton
 
 @Singleton
 class AuthRepository @Inject constructor(
-    private val client: SupabaseClient
+    private val client: SupabaseClient,
+    private val preferencesManager: PreferencesManager
 ) {
 
     private val auth = client.auth
@@ -59,10 +61,20 @@ class AuthRepository @Inject constructor(
 
     suspend fun signIn(email: String, password: String) = withContext(Dispatchers.IO) {
         try {
-            auth.signInWith(Email) {
+            val result = auth.signInWith(Email) {
                 this.email = email
                 this.password = password
             }
+            
+            // Save login state to SharedPreferences
+            preferencesManager.setLoggedIn(true)
+            preferencesManager.setUserEmail(email)
+            auth.currentSessionOrNull()?.user?.id?.let { userId ->
+                preferencesManager.setUserId(userId)
+            }
+            
+            Log.d("AuthRepository", "User login state saved to SharedPreferences")
+            result
         }catch (e: Exception) {
             Log.e("AuthRepository", "SignIn error", e)
             val errorMessage = e.message ?: ""
@@ -94,5 +106,11 @@ class AuthRepository @Inject constructor(
 
     fun getCurrentUser() = auth.currentSessionOrNull()?.user
 
-    suspend fun signOut() = auth.signOut()
+    suspend fun signOut() {
+        // Clear login state from SharedPreferences
+        preferencesManager.clearUserData()
+        Log.d("AuthRepository", "User login state cleared from SharedPreferences")
+        
+        auth.signOut()
+    }
 }

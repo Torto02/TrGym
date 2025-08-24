@@ -16,6 +16,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.torto.trgym.repository.AuthRepository
 import com.torto.trgym.repository.ExerciseRepository
 import com.torto.trgym.repository.WorkoutRepository
+import com.torto.trgym.utils.PreferencesManager
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.jan.supabase.auth.status.SessionStatus
 import kotlinx.coroutines.launch
@@ -31,6 +32,7 @@ class MainActivity : AppCompatActivity() {
     @Inject lateinit var authRepository: AuthRepository
     @Inject lateinit var exerciseRepo: ExerciseRepository
     @Inject lateinit var workoutRepo: WorkoutRepository
+    @Inject lateinit var preferencesManager: PreferencesManager
     private lateinit var navController: NavController
     private lateinit var bottomNavigationView: BottomNavigationView
     private var isAuthenticationResolved = false
@@ -46,6 +48,7 @@ class MainActivity : AppCompatActivity() {
         authRepository.handleDeeplinks(intent)
 
         setupNavigation()
+        checkOfflineLoginState()
         observeAuthenticationStatus()
     }
 
@@ -151,6 +154,21 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
+     * Checks the offline login state from SharedPreferences and navigates accordingly.
+     * If user was previously logged in, allows offline access to the app.
+     */
+    private fun checkOfflineLoginState() {
+        if (preferencesManager.isLoggedIn()) {
+            val navOptions = NavOptions.Builder()
+                .setPopUpTo(R.id.nav_graph, true)
+                .build()
+            navController.navigate(R.id.homeFragment, null, navOptions)
+            isAuthenticationResolved = true
+            Log.d("MainActivity", "User allowed offline access based on stored login state")
+        }
+    }
+
+    /**
      * Observes the authentication status and updates the UI and navigation accordingly.
      */
     private fun observeAuthenticationStatus() {
@@ -158,6 +176,11 @@ class MainActivity : AppCompatActivity() {
             authRepository.observeAuthStatus().collect { status ->
                 when (status) {
                     is SessionStatus.Authenticated -> {
+                        // Save login state when authenticated online
+                        val currentUser = authRepository.getCurrentUser()
+                        preferencesManager.setLoggedIn(true)
+                        currentUser?.email?.let { preferencesManager.setUserEmail(it) }
+                        currentUser?.id?.let { preferencesManager.setUserId(it) }
 
                         downloadStarredExercisesInitial()
                         downloadWorkoutCardsInitial()
@@ -175,10 +198,13 @@ class MainActivity : AppCompatActivity() {
                     }
                     else -> {
 //                    is SessionStatus.NotAuthenticated -> {
-                        val navOptions = NavOptions.Builder()
-                            .setPopUpTo(R.id.nav_graph, true)
-                            .build()
-                        navController.navigate(R.id.loginFragment, null, navOptions)
+                        // Only navigate to login if user is not already logged in offline
+                        if (!preferencesManager.isLoggedIn()) {
+                            val navOptions = NavOptions.Builder()
+                                .setPopUpTo(R.id.nav_graph, true)
+                                .build()
+                            navController.navigate(R.id.loginFragment, null, navOptions)
+                        }
                         isAuthenticationResolved = true
                     }
 

@@ -64,4 +64,10 @@ object DatabaseModule {
     fun provideBodyMeasurementDao(db: AppDatabase): BodyMeasurementDao {
         return db.bodyMeasurementDao()
     }
+
+    @Provides
+    @Singleton
+    fun provideApplicationContext(@ApplicationContext context: Context): Context {
+        return context
+    }
 }
