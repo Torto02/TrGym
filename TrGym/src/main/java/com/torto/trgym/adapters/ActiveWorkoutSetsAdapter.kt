@@ -26,11 +26,9 @@ class ActiveWorkoutSetsAdapter(
         
         completedSets.clear()
         completedSets.putAll(setCompletionMap)
-
         setIdMapping.clear()
         setIdMapping.putAll(mapping)
 
-        // Only update items where completion status actually changed
         var hasChanges = false
         for (position in 0 until itemCount) {
             val set = getItem(position)
@@ -43,8 +41,7 @@ class ActiveWorkoutSetsAdapter(
                 hasChanges = true
             }
         }
-        
-        // Only notify if mappings changed and no individual items were updated
+
         if (!hasChanges && oldSetIdMapping != setIdMapping) {
             notifyItemRangeChanged(0, itemCount, "mapping_changed")
         }
@@ -62,7 +59,6 @@ class ActiveWorkoutSetsAdapter(
     
     override fun onBindViewHolder(holder: SetViewHolder, position: Int, payloads: MutableList<Any>) {
         if (payloads.isNotEmpty()) {
-            // Handle partial updates for better performance
             val payload = payloads[0] as? String
             when (payload) {
                 "completion_changed" -> holder.updateCompletionOnly(getItem(position))
@@ -91,7 +87,6 @@ class ActiveWorkoutSetsAdapter(
             setCompletedCheckbox.setOnCheckedChangeListener { _, isChecked ->
                 if (!isBindingData) {
                     currentSet?.let { set ->
-                        // Use the session set ID invece of the original set ID
                         val sessionSetId = setIdMapping[set.id] ?: set.id
                         onSetCompletionChanged(sessionSetId, isChecked)
                     }
@@ -106,18 +101,13 @@ class ActiveWorkoutSetsAdapter(
             setNumber.text = set.setNumber.toString()
             weightInput.setText(set.weightKg?.toString() ?: "")
             repsInput.setText(set.reps?.toString() ?: "")
-
-
-            // Nascondi sempre gli elementi di edit mode
             setMenu.visibility = View.GONE
             setCompletedCheckbox.visibility = View.VISIBLE
 
-            // Get session set completion state - ensure it defaults to unchecked
             val sessionSetId = setIdMapping[set.id] ?: set.id
             val isCompleted = completedSets[sessionSetId] ?: false
             setCompletedCheckbox.isChecked = isCompleted
 
-            // Highlight the entire row if completed
             itemView.background.setTint(
                 if (isCompleted)
                     ContextCompat.getColor(itemView.context, R.color.completed_set_background)
@@ -125,7 +115,6 @@ class ActiveWorkoutSetsAdapter(
                     ContextCompat.getColor(itemView.context, R.color.transparent)
             )
 
-            // Abilita gli input durante l'allenamento attivo
             weightInput.isEnabled = false
             repsInput.isEnabled = false
 
@@ -135,13 +124,10 @@ class ActiveWorkoutSetsAdapter(
         fun updateCompletionOnly(set: ExerciseSet) {
             isBindingData = true
             currentSet = set
-            
-            // Only update checkbox state and background
             val sessionSetId = setIdMapping[set.id] ?: set.id
             val isCompleted = completedSets[sessionSetId] ?: false
             setCompletedCheckbox.isChecked = isCompleted
-            
-            // Update background color
+
             itemView.background.setTint(
                 if (isCompleted)
                     ContextCompat.getColor(itemView.context, R.color.completed_set_background)
@@ -153,7 +139,6 @@ class ActiveWorkoutSetsAdapter(
         }
         
         fun updateMappingOnly(set: ExerciseSet) {
-            // Just update the current set reference, no UI changes needed
             currentSet = set
         }
 

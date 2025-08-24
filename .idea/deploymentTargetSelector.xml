@@ -15,7 +15,7 @@
       </SelectionState>
       <SelectionState runConfigName="TrGym">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-08-23T09:45:33.664489Z">
+        <DropdownSelection timestamp="2025-08-24T21:32:37.388477Z">
           <Target type="DEFAULT_BOOT">
             <handle>
               <DeviceId pluginId="LocalEmulator" identifier="path=/Users/riccardotortorelli/.android/avd/Pixel_9_Pro.avd" />

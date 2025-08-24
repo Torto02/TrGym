@@ -23,8 +23,6 @@ class ExercisesAdapter :
         RecyclerView.ViewHolder(binding.root) {
         fun bind(item: ExerciseWithImage) {
             val defaultRes = com.torto.trgym.R.drawable.ic_fitness_center
-
-            // Sempre usa Coil per caricare l'immagine, anche per il default
             val fileName = item.imagePath
             if (!fileName.isNullOrBlank()) {
                 val assetUri = "file:///android_asset/images/$fileName"

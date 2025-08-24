@@ -14,7 +14,11 @@
             android:id="@+id/action_login"
             app:destination="@id/homeFragment"
             app:popUpTo="@id/nav_graph"
-            app:popUpToInclusive="true" />
+            app:popUpToInclusive="true"
+            app:enterAnim="@anim/slide_in_up"
+            app:exitAnim="@anim/fade_out"
+            app:popEnterAnim="@anim/fade_in"
+            app:popExitAnim="@anim/slide_out_down" />
         <action
             android:id="@+id/action_loginFragment_to_registerFragment"
             app:destination="@id/registerFragment" />
@@ -28,20 +32,34 @@
         <action
             android:id="@+id/action_home_to_exercises"
             app:destination="@id/exercisesFragment"
-            app:restoreState="true" />
+            app:restoreState="true"
+            app:enterAnim="@anim/slide_in_up"
+            app:exitAnim="@anim/fade_out"
+            app:popEnterAnim="@anim/fade_in"
+            app:popExitAnim="@anim/slide_out_down" />
         <action
             android:id="@+id/action_home_to_profile"
             app:destination="@id/profileFragment"
-            app:restoreState="true" />
+            app:restoreState="true"
+            app:enterAnim="@anim/slide_in_up"
+            app:popEnterAnim="@anim/fade_in" />
         <action
             android:id="@+id/action_home_to_workoutDetail"
-            app:destination="@id/workoutDetailFragment" />
-
+            app:destination="@id/workoutDetailFragment"
+            app:enterAnim="@anim/slide_in_up"
+            app:exitAnim="@anim/fade_out"
+            app:popEnterAnim="@anim/fade_in"
+            app:popExitAnim="@anim/slide_out_down"  />
         <action
             android:id="@+id/action_homeFragment_to_activeWorkoutFragment"
             app:destination="@id/activeWorkoutFragment"
+            app:enterAnim="@anim/slide_in_up"
+            app:exitAnim="@anim/fade_out"
+            app:popEnterAnim="@anim/fade_in"
+            app:popExitAnim="@anim/slide_out_down"
+            />
 
-             />
+
     </fragment>
 
     <!-- Workout Detail Fragment -->
@@ -49,28 +67,33 @@
         android:id="@+id/workoutDetailFragment"
         android:name="com.torto.trgym.ui.workout.WorkoutDetailFragment"
         tools:layout="@layout/fragment_workout_detail">
-
         <argument
             android:name="workoutCardId"
             app:argType="string" />
         <action
             android:id="@+id/action_workoutDetailFragment_to_exerciseDetailFragment"
-            app:destination="@id/exerciseDetailFragment" />
-
-        <!-- Add this action to navigate from WorkoutDetailFragment to ActiveWorkoutFragment -->
+            app:destination="@id/exerciseDetailFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
         <action
             android:id="@+id/action_workoutDetailFragment_to_activeWorkoutFragment"
-            app:destination="@id/activeWorkoutFragment" />
+            app:destination="@id/activeWorkoutFragment"
+            app:enterAnim="@anim/slide_in_up"
+            app:exitAnim="@anim/slide_out_down"
+            app:popEnterAnim="@anim/slide_in_down"
+            app:popExitAnim="@anim/slide_out_up" />
         <action
             android:id="@+id/action_workoutDetailFragment_to_homeFragment"
-            app:destination="@id/homeFragment" />
-        <!-- Aggiungi questa action al workoutDetailFragment esistente se non c'è già -->
-
-
-
+            app:destination="@id/homeFragment"
+            app:enterAnim="@anim/fade_in"
+            app:exitAnim="@anim/slide_out_down"
+            app:popEnterAnim="@anim/slide_in_up"
+            app:popExitAnim="@anim/fade_out" />
     </fragment>
 
-    <!-- Exercise Detail Fragment (existing) -->
+    <!-- Exercise Detail Fragment -->
     <fragment
         android:id="@+id/exerciseDetailFragment"
         android:name="com.torto.trgym.ui.exercises.ExerciseDetailFragment"
@@ -85,14 +108,19 @@
             android:defaultValue="@null" />
         <action
             android:id="@+id/action_exerciseDetailFragment_to_exercisesFragment"
-            app:destination="@id/exercisesFragment" />
+            app:destination="@id/exercisesFragment"
+            app:enterAnim="@anim/slide_in_left"
+            app:exitAnim="@anim/slide_out_right"
+            app:popEnterAnim="@anim/slide_in_right"
+            app:popExitAnim="@anim/slide_out_left" />
         <action
             android:id="@+id/action_exerciseDetailFragment_to_workoutDetailFragment"
-            app:destination="@id/workoutDetailFragment" />
+            app:destination="@id/workoutDetailFragment"
+            app:enterAnim="@anim/slide_in_left"
+            app:exitAnim="@anim/slide_out_right"
+            app:popEnterAnim="@anim/slide_in_right"
+            app:popExitAnim="@anim/slide_out_left" />
     </fragment>
-
-    <!-- Free Workout Fragment (placeholder) -->
-
 
     <fragment
         android:id="@+id/registerFragment"
@@ -103,28 +131,48 @@
             android:id="@+id/action_registerFragment_to_homeFragment"
             app:destination="@id/homeFragment"
             app:popUpTo="@id/nav_graph"
-            app:popUpToInclusive="true" />
+            app:popUpToInclusive="true"
+            app:enterAnim="@anim/slide_in_up"
+            app:exitAnim="@anim/fade_out"
+            app:popEnterAnim="@anim/fade_in"
+            app:popExitAnim="@anim/slide_out_down" />
         <action
             android:id="@+id/action_registerFragment_to_loginFragment"
             app:destination="@id/loginFragment" />
     </fragment>
+
     <fragment
         android:id="@+id/profileFragment"
         android:name="com.torto.trgym.ui.profile.ProfileFragment"
         tools:layout="@layout/fragment_profile">
         <action
             android:id="@+id/action_profileFragment_to_loginFragment"
-            app:destination="@id/loginFragment" />
-        <!-- Aggiungi queste action al profileFragment esistente -->
+            app:destination="@id/loginFragment"
+            app:enterAnim="@anim/fade_in"
+            app:exitAnim="@anim/slide_out_down"
+            app:popEnterAnim="@anim/slide_in_up"
+            app:popExitAnim="@anim/fade_out" />
         <action
             android:id="@+id/action_profileFragment_to_workoutHistoryFragment"
-            app:destination="@id/workoutHistoryFragment" />
+            app:destination="@id/workoutHistoryFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
         <action
             android:id="@+id/action_profileFragment_to_homeFragment"
-            app:destination="@id/homeFragment" />
+            app:destination="@id/homeFragment"
+            app:enterAnim="@anim/fade_in"
+            app:exitAnim="@anim/slide_out_up"
+            app:popEnterAnim="@anim/slide_in_up"
+            app:popExitAnim="@anim/fade_out" />
         <action
             android:id="@+id/action_profileFragment_to_bodyMeasurementsFragment"
-            app:destination="@id/bodyMeasurementsFragment" />
+            app:destination="@id/bodyMeasurementsFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
     </fragment>
 
     <fragment
@@ -134,10 +182,13 @@
         <action
             android:id="@+id/action_exercisesFragment_to_exerciseDetailFragment"
             app:destination="@id/exerciseDetailFragment"
-            />
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
     </fragment>
 
-    <!-- Add the ActiveWorkoutFragment destination -->
+    <!-- ActiveWorkout Fragment -->
     <fragment
         android:id="@+id/activeWorkoutFragment"
         android:name="com.torto.trgym.ui.workout.ActiveWorkoutFragment"
@@ -148,62 +199,88 @@
             app:argType="string" />
         <action
             android:id="@+id/action_activeWorkoutFragment_to_homeFragment"
-            app:destination="@id/homeFragment" />
+            app:destination="@id/homeFragment"
+            app:enterAnim="@anim/fade_in"
+            app:exitAnim="@anim/slide_out_down"
+            app:popEnterAnim="@anim/slide_in_up"
+            app:popExitAnim="@anim/fade_out"/>
     </fragment>
 
-    <!-- Fragment per lo storico allenamenti -->
+    <!-- Workout History Fragment -->
     <fragment
         android:id="@+id/workoutHistoryFragment"
         android:name="com.torto.trgym.ui.workout.WorkoutHistoryFragment"
         android:label="Storico Allenamenti"
         tools:layout="@layout/fragment_workout_history">
-
         <action
             android:id="@+id/action_workoutHistoryFragment_to_workoutSessionDetailFragment"
-            app:destination="@id/workoutSessionDetailFragment" />
+            app:destination="@id/workoutSessionDetailFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
         <action
             android:id="@+id/action_workoutHistoryFragment_to_profileFragment"
-            app:destination="@id/profileFragment" />
+            app:destination="@id/profileFragment"
+            app:enterAnim="@anim/slide_in_left"
+            app:exitAnim="@anim/slide_out_right"
+            app:popEnterAnim="@anim/slide_in_right"
+            app:popExitAnim="@anim/slide_out_left" />
     </fragment>
 
-    <!-- Fragment per i dettagli della sessione -->
+    <!-- Workout Session Detail Fragment -->
     <fragment
         android:id="@+id/workoutSessionDetailFragment"
         android:name="com.torto.trgym.ui.workout.WorkoutSessionDetailFragment"
         android:label="Dettaglio Allenamento"
         tools:layout="@layout/fragment_workout_session_detail">
-
         <argument
             android:name="sessionId"
             app:argType="string" />
         <action
             android:id="@+id/action_workoutSessionDetailFragment_to_workoutHistoryFragment"
-            app:destination="@id/workoutHistoryFragment" />
+            app:destination="@id/workoutHistoryFragment"
+            app:enterAnim="@anim/slide_in_left"
+            app:exitAnim="@anim/slide_out_right"
+            app:popEnterAnim="@anim/slide_in_right"
+            app:popExitAnim="@anim/slide_out_left" />
     </fragment>
-    <!-- Aggiungi questi nuovi fragments -->
+
+    <!-- Body Measurements Fragment -->
     <fragment
         android:id="@+id/bodyMeasurementsFragment"
         android:name="com.torto.trgym.ui.bodymeasurement.BodyMeasurementsFragment"
         android:label="Body Measurements"
         tools:layout="@layout/fragment_body_measurements">
-
         <action
             android:id="@+id/action_bodyMeasurementsFragment_to_measurementDetailFragment"
-            app:destination="@id/measurementDetailFragment" />
+            app:destination="@id/measurementDetailFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
         <action
             android:id="@+id/action_bodyMeasurementsFragment_to_profileFragment"
-            app:destination="@id/profileFragment" />
+            app:destination="@id/profileFragment"
+            app:enterAnim="@anim/slide_in_left"
+            app:exitAnim="@anim/slide_out_right"
+            app:popEnterAnim="@anim/slide_in_right"
+            app:popExitAnim="@anim/slide_out_left" />
     </fragment>
 
+    <!-- Measurement Detail Fragment -->
     <fragment
         android:id="@+id/measurementDetailFragment"
         android:name="com.torto.trgym.ui.bodymeasurement.MeasurementDetailFragment"
         android:label="Measurement Detail"
-        tools:layout="@layout/fragment_measurement_detail" >
+        tools:layout="@layout/fragment_measurement_detail">
         <action
             android:id="@+id/action_measurementDetailFragment_to_bodyMeasurementsFragment"
-            app:destination="@id/bodyMeasurementsFragment" />
+            app:destination="@id/bodyMeasurementsFragment"
+            app:enterAnim="@anim/slide_in_left"
+            app:exitAnim="@anim/slide_out_right"
+            app:popEnterAnim="@anim/slide_in_right"
+            app:popExitAnim="@anim/slide_out_left" />
     </fragment>
-
 
 </navigation>

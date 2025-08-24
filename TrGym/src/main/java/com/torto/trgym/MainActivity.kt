@@ -3,7 +3,6 @@ package com.torto.trgym
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import android.view.Menu
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -37,7 +36,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var bottomNavigationView: BottomNavigationView
     private var isAuthenticationResolved = false
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
             .setKeepOnScreenCondition { !isAuthenticationResolved }
@@ -51,6 +49,8 @@ class MainActivity : AppCompatActivity() {
         checkOfflineLoginState()
         observeAuthenticationStatus()
     }
+
+
 
     /**
      * Sets up the navigation controller and bottom navigation view.
@@ -66,37 +66,210 @@ class MainActivity : AppCompatActivity() {
         bottomNavigationView = findViewById(R.id.bottom_nav)
         bottomNavigationView.visibility = View.GONE
 
-        // Handle bottom navigation item selection
         bottomNavigationView.setOnItemSelectedListener { item ->
-            val builder = NavOptions.Builder()
-                .setLaunchSingleTop(true)
-                .setRestoreState(item.itemId != R.id.workoutDetailFragment)
-
-            // Configure navigation options based on the selected item
-            if (item.order and Menu.CATEGORY_SECONDARY == 0) {
-                builder.setPopUpTo(
-                    navController.graph.findStartDestination().id,
-                    inclusive = false,
-                    saveState = item.itemId != R.id.workoutDetailFragment
-                )
-            }
-
-            val options = builder.build()
-            try {
-                navController.navigate(item.itemId, null, options)
-                true
-            } catch (e: IllegalArgumentException) {
-                false
-            }
+            navigateWithBottomNavAnimations(item.itemId)
+            true
         }
 
-        // Update bottom navigation visibility and selection based on the current destination
         navController.addOnDestinationChangedListener { _, destination, _ ->
             bottomNavigationView.visibility = when (destination.id) {
                 R.id.loginFragment, R.id.registerFragment -> View.GONE
                 else -> View.VISIBLE
             }
             bottomNavigationView.menu.findItem(destination.id)?.isChecked = true
+        }
+    }
+
+    /**
+     * Handles navigation from bottom navigation with appropriate animations.
+     */
+    private fun navigateWithBottomNavAnimations(destinationId: Int) {
+        val currentDestinationId = navController.currentDestination?.id
+
+        // Skip navigation if already on the same destination
+        if (currentDestinationId == destinationId) {
+            return
+        }
+
+        val navOptionsBuilder = NavOptions.Builder()
+            .setLaunchSingleTop(true)
+            .setRestoreState(destinationId != R.id.workoutDetailFragment)
+
+        // Set appropriate animations based on navigation direction
+        when (// From home to other tabs
+            currentDestinationId) {
+            R.id.homeFragment -> {
+                when (destinationId) {
+                    R.id.exercisesFragment, R.id.profileFragment -> {
+                        navOptionsBuilder
+                            .setEnterAnim(R.anim.slide_in_up)
+                            .setExitAnim(R.anim.fade_out)
+                            .setPopEnterAnim(R.anim.fade_in)
+                            .setPopExitAnim(R.anim.slide_out_down)
+                    }
+                }
+            }
+            // From exercises to home or profile
+            R.id.exercisesFragment -> {
+                when (destinationId) {
+                    R.id.homeFragment -> {
+                        navOptionsBuilder
+                            .setEnterAnim(R.anim.fade_in)
+                            .setExitAnim(R.anim.slide_out_down)
+                            .setPopEnterAnim(R.anim.slide_in_up)
+                            .setPopExitAnim(R.anim.fade_out)
+                    }
+
+                    R.id.profileFragment -> {
+                        navOptionsBuilder
+                            .setEnterAnim(R.anim.slide_in_right)
+                            .setExitAnim(R.anim.slide_out_left)
+                            .setPopEnterAnim(R.anim.slide_in_left)
+                            .setPopExitAnim(R.anim.slide_out_right)
+                    }
+                }
+            }
+            // From profile to home or exercises
+            R.id.profileFragment -> {
+                when (destinationId) {
+                    R.id.homeFragment -> {
+                        navOptionsBuilder
+                            .setEnterAnim(R.anim.fade_in)
+                            .setExitAnim(R.anim.slide_out_down)
+                            .setPopEnterAnim(R.anim.slide_in_up)
+                            .setPopExitAnim(R.anim.fade_out)
+                    }
+
+                    R.id.exercisesFragment -> {
+                        navOptionsBuilder
+                            .setEnterAnim(R.anim.slide_in_left)
+                            .setExitAnim(R.anim.slide_out_right)
+                            .setPopEnterAnim(R.anim.slide_in_right)
+                            .setPopExitAnim(R.anim.slide_out_left)
+                    }
+                }
+            }
+            // From detail fragments to main tabs (same animations as their "parent" fragments)
+            R.id.workoutDetailFragment, R.id.activeWorkoutFragment -> {
+                when (destinationId) {
+                    R.id.homeFragment -> {
+                        // Same as exercises -> home (since workouts are typically accessed from home)
+                        navOptionsBuilder
+                            .setEnterAnim(R.anim.fade_in)
+                            .setExitAnim(R.anim.slide_out_down)
+                            .setPopEnterAnim(R.anim.slide_in_up)
+                            .setPopExitAnim(R.anim.fade_out)
+                    }
+
+                    R.id.exercisesFragment -> {
+                        navOptionsBuilder
+                            .setEnterAnim(R.anim.slide_in_up)
+                            .setExitAnim(R.anim.fade_out)
+                            .setPopEnterAnim(R.anim.fade_in)
+                            .setPopExitAnim(R.anim.slide_out_down)
+                    }
+
+                    R.id.profileFragment -> {
+                        navOptionsBuilder
+                            .setEnterAnim(R.anim.slide_in_up)
+                            .setExitAnim(R.anim.fade_out)
+                            .setPopEnterAnim(R.anim.fade_in)
+                            .setPopExitAnim(R.anim.slide_out_down)
+                    }
+                }
+            }
+
+            R.id.exerciseDetailFragment -> {
+                when (destinationId) {
+                    R.id.homeFragment -> {
+                        navOptionsBuilder
+                            .setEnterAnim(R.anim.fade_in)
+                            .setExitAnim(R.anim.slide_out_down)
+                            .setPopEnterAnim(R.anim.slide_in_up)
+                            .setPopExitAnim(R.anim.fade_out)
+                    }
+
+                    R.id.exercisesFragment -> {
+                        // Same as exercises -> exercises (stay put, but with subtle transition)
+                        navOptionsBuilder
+                            .setEnterAnim(R.anim.slide_in_left)
+                            .setExitAnim(R.anim.slide_out_right)
+                            .setPopEnterAnim(R.anim.slide_in_right)
+                            .setPopExitAnim(R.anim.slide_out_left)
+                    }
+
+                    R.id.profileFragment -> {
+                        navOptionsBuilder
+                            .setEnterAnim(R.anim.slide_in_right)
+                            .setExitAnim(R.anim.slide_out_left)
+                            .setPopEnterAnim(R.anim.slide_in_left)
+                            .setPopExitAnim(R.anim.slide_out_right)
+                    }
+                }
+            }
+            // From profile-related fragments (history, measurements, etc.)
+            R.id.workoutHistoryFragment, R.id.workoutSessionDetailFragment, R.id.bodyMeasurementsFragment, R.id.measurementDetailFragment -> {
+                when (destinationId) {
+                    R.id.homeFragment -> {
+                        // Same as profile -> home
+                        navOptionsBuilder
+                            .setEnterAnim(R.anim.fade_in)
+                            .setExitAnim(R.anim.slide_out_down)
+                            .setPopEnterAnim(R.anim.slide_in_up)
+                            .setPopExitAnim(R.anim.fade_out)
+                    }
+
+                    R.id.exercisesFragment -> {
+                        navOptionsBuilder
+                            .setEnterAnim(R.anim.slide_in_left)
+                            .setExitAnim(R.anim.slide_out_right)
+                            .setPopEnterAnim(R.anim.slide_in_right)
+                            .setPopExitAnim(R.anim.slide_out_left)
+                    }
+
+                    R.id.profileFragment -> {
+                        // Back to profile from its sub-screens
+                        navOptionsBuilder
+                            .setEnterAnim(R.anim.slide_in_left)
+                            .setExitAnim(R.anim.slide_out_right)
+                            .setPopEnterAnim(R.anim.slide_in_right)
+                            .setPopExitAnim(R.anim.slide_out_left)
+                    }
+                }
+            }
+            // Default horizontal slide animations for other cases
+            else -> {
+                navOptionsBuilder
+                    .setEnterAnim(R.anim.slide_in_right)
+                    .setExitAnim(R.anim.slide_out_left)
+                    .setPopEnterAnim(R.anim.slide_in_left)
+                    .setPopExitAnim(R.anim.slide_out_right)
+            }
+        }
+
+        // Configure pop behavior for bottom navigation
+        if (destinationId == R.id.homeFragment) {
+            // When going to home, clear the back stack
+            navOptionsBuilder.setPopUpTo(
+                navController.graph.findStartDestination().id,
+                inclusive = false,
+                saveState = false
+            )
+        } else {
+            // For other destinations, maintain the back stack
+            navOptionsBuilder.setPopUpTo(
+                navController.graph.findStartDestination().id,
+                inclusive = false,
+                saveState = destinationId != R.id.workoutDetailFragment
+            )
+        }
+
+        val options = navOptionsBuilder.build()
+
+        try {
+            navController.navigate(destinationId, null, options)
+        } catch (e: IllegalArgumentException) {
+            Log.e("MainActivity", "Navigation error: ${e.message}")
         }
     }
 
@@ -132,10 +305,8 @@ class MainActivity : AppCompatActivity() {
     private fun uploadPendingWorkoutSessions() {
         lifecycleScope.launch {
             try {
-                // Retrieve the active workout session
                 val activeSession = workoutRepo.getActiveWorkoutSession()
                 if (activeSession != null) {
-                    // Update the session and its associated exercises and sets
                     workoutRepo.updateWorkoutSession(activeSession)
                     val exercises = workoutRepo.getSessionExercises(activeSession.id)
                     exercises.forEach { exercise ->
@@ -146,7 +317,6 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                 }
-                Log.d("MainActivity", "Upload of pending workout sessions completed")
             } catch (e: Exception) {
                 Log.e("MainActivity", "Error uploading pending workout sessions", e)
             }
@@ -161,6 +331,8 @@ class MainActivity : AppCompatActivity() {
         if (preferencesManager.isLoggedIn()) {
             val navOptions = NavOptions.Builder()
                 .setPopUpTo(R.id.nav_graph, true)
+                .setEnterAnim(R.anim.fade_in)
+                .setExitAnim(R.anim.fade_out)
                 .build()
             navController.navigate(R.id.homeFragment, null, navOptions)
             isAuthenticationResolved = true
@@ -199,6 +371,8 @@ class MainActivity : AppCompatActivity() {
                             if (current == R.id.loginFragment || current == R.id.registerFragment) {
                                 val navOptions = NavOptions.Builder()
                                     .setPopUpTo(R.id.nav_graph, true)
+                                    .setEnterAnim(R.anim.slide_in_right)
+                                    .setExitAnim(R.anim.slide_out_left)
                                     .build()
                                 navController.navigate(R.id.homeFragment, null, navOptions)
                             }
@@ -206,17 +380,16 @@ class MainActivity : AppCompatActivity() {
                         isAuthenticationResolved = true
                     }
                     else -> {
-//                    is SessionStatus.NotAuthenticated -> {
-                        // Only navigate to login if user is not already logged in offline
                         if (!preferencesManager.isLoggedIn()) {
                             val navOptions = NavOptions.Builder()
                                 .setPopUpTo(R.id.nav_graph, true)
+                                .setEnterAnim(R.anim.fade_in)
+                                .setExitAnim(R.anim.fade_out)
                                 .build()
                             navController.navigate(R.id.loginFragment, null, navOptions)
                         }
                         isAuthenticationResolved = true
                     }
-
                 }
             }
         }

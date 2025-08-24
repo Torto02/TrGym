@@ -18,14 +18,8 @@ import com.torto.trgym.database.dto.WorkoutExerciseDetail
 class ActiveWorkoutExercisesAdapter(
     private val onSetCompletionChanged: (String, Boolean) -> Unit,
 ) : ListAdapter<WorkoutExerciseDetail, ActiveWorkoutExercisesAdapter.ExerciseViewHolder>(ExerciseDiffCallback()) {
-
-    // Map to track the completion status of sets
     private val completedSets = mutableMapOf<String, Boolean>()
-
-    // Map to associate original ExerciseSet IDs with WorkoutSessionSet IDs
     private val setIdMapping = mutableMapOf<String, String>()
-    
-    // Flag to prevent unnecessary refreshes during user interactions
     private var suppressUpdates = false
 
     fun updateCompletedSets(setCompletionMap: Map<String, Boolean>) {
@@ -34,18 +28,15 @@ class ActiveWorkoutExercisesAdapter(
         val oldCompletedSets = completedSets.toMap()
         completedSets.clear()
         completedSets.putAll(setCompletionMap)
-        
-        // Only update items where completion status actually changed
+
         if (oldCompletedSets != completedSets) {
-            notifyDataSetChanged() // For exercises adapter, it's safer to refresh all since it affects nested adapters
+            notifyDataSetChanged()
         }
     }
     
     fun updateCompletedSetDirectly(sessionSetId: String, isCompleted: Boolean) {
-        // Update local state without triggering refresh
         completedSets[sessionSetId] = isCompleted
-        
-        // Update the specific sets adapter if needed
+
         for (i in 0 until itemCount) {
             val holder = currentList[i]
             // Find the exercise that contains this set
@@ -119,14 +110,12 @@ class ActiveWorkoutExercisesAdapter(
 
             exerciseName.text = exercise.name
 
-            // Calculate exercise completion status
             val totalSets = sets.size
             val completedSetsCount = sets.count { set ->
                 val sessionSetId = setIdMapping[set.id]
                 sessionSetId != null && completedSets[sessionSetId] == true
             }
 
-            // Update exercise info text
             exerciseInfo.text = "$completedSetsCount/$totalSets serie"
 
 
@@ -147,24 +136,18 @@ class ActiveWorkoutExercisesAdapter(
                 }
             }
 
-            // Show/hide sets header based on whether we have sets
             setsHeaderLayout.visibility = if (sets.isNotEmpty()) View.VISIBLE else View.GONE
 
-            // Update sets adapter
             if (setsAdapter == null) {
                 setsAdapter = ActiveWorkoutSetsAdapter(
                     onSetCompletionChanged = { setId, isCompleted ->
-                        // The setId passed here is the original set ID, but we need to use
-                        // the session set ID for completion tracking
                         val sessionSetId = setIdMapping[setId] ?: setId
                         
-                        // Update completion state directly in the parent adapter
+
                         this@ActiveWorkoutExercisesAdapter.updateCompletedSetDirectly(sessionSetId, isCompleted)
-                        
-                        // Notify the ViewModel but suppress flow updates temporarily
+
                         suppressUpdates = true
                         onSetCompletionChanged(sessionSetId, isCompleted)
-                        // Reset the flag after a short delay
                         setsRecyclerView.post { suppressUpdates = false }
                     }
                 )
@@ -172,25 +155,20 @@ class ActiveWorkoutExercisesAdapter(
             }
 
             setsAdapter?.submitList(sets) {
-                // Update completion status only after the list is updated
                 setsAdapter?.updateCompletedSets(completedSets, setIdMapping)
             }
         }
         
         fun updateCompletionInfo(exerciseDetail: WorkoutExerciseDetail) {
             val sets = exerciseDetail.sets
-            
-            // Calculate exercise completion status
             val totalSets = sets.size
             val completedSetsCount = sets.count { set ->
                 val sessionSetId = setIdMapping[set.id]
                 sessionSetId != null && completedSets[sessionSetId] == true
             }
 
-            // Update exercise info text
             exerciseInfo.text = "$completedSetsCount/$totalSets serie"
-            
-            // Update the sets adapter with new completion state
+
             setsAdapter?.updateCompletedSets(completedSets, setIdMapping)
         }
     }

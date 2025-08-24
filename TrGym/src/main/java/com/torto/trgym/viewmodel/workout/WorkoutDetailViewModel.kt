@@ -53,37 +53,6 @@ class WorkoutDetailViewModel @Inject constructor(
 
     // Fixed version of the exercisesWithSets flow
     val exercisesWithSets = _localExercisesWithSets
-//    _isEditMode
-//        .flatMapLatest { isEditMode ->
-//            if (isEditMode) {
-//                // In edit mode, use our locally managed list that includes pending changes
-//                _localExercisesWithSets
-//            } else {
-//                // Not in edit mode, use database data directly
-//                workoutRepository.getExercisesForCard(workoutCardId)
-//                    .flatMapLatest { exercises ->
-//                        if (exercises.isEmpty()) {
-//                            flowOf(emptyList())
-//                        } else {
-//                            // Create a flow of WorkoutExerciseDetail for each exercise
-//                            val exerciseFlows = exercises.map { exercise ->
-//                                workoutRepository.getSetsForExercise(exercise.id)
-//                                    .map { sets -> WorkoutExerciseDetail(exercise, sets) }
-//                            }
-//
-//                            // Combine all the flows into a single list flow
-//                            combine(exerciseFlows) { exerciseDetails ->
-//                                exerciseDetails.toList().sortedBy { it.exercise.orderIndex }
-//                            }
-//                        }
-//                    }
-//            }
-//        }.stateIn(
-//            scope = viewModelScope,
-//            started = SharingStarted.Companion.WhileSubscribed(5000),
-//            initialValue = emptyList()
-//        )
-
     init {
         loadWorkoutCard()
         viewModelScope.launch {

@@ -27,7 +27,7 @@
             android:textSize="18sp"
             android:textStyle="bold"
             app:icon="@drawable/ic_ios_back"
-            android:backgroundTint="@color/white"
+            android:backgroundTint="#80FFFFFF"
             app:iconTint="@color/primary"
             app:strokeColor="@color/lightGray"
             app:strokeWidth="1dp"

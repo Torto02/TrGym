@@ -51,7 +51,6 @@ class ExerciseSetsAdapter(
         if (payloads.isEmpty()) {
             super.onBindViewHolder(holder, position, payloads)
         } else {
-            // Partial update - only update specific fields
             val set = getItem(position)
             for (payload in payloads) {
                 when (payload) {
@@ -72,30 +71,20 @@ class ExerciseSetsAdapter(
 
         private var currentSet: ExerciseSet? = null
         private var isBindingData = false
-
-        // Coroutine per debouncing delle modifiche
         private var updateJob: Job? = null
         private val updateScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
-
-        // Cache locale per le modifiche pending
         private var pendingWeight: Double? = null
         private var pendingReps: Int? = null
-
-        // TextWatcher references to avoid multiple registrations
         private var weightTextWatcher: TextWatcher? = null
         private var repsTextWatcher: TextWatcher? = null
 
         fun bind(set: ExerciseSet) {
             isBindingData = true
             currentSet = set
-
-            // Reset pending changes
             pendingWeight = set.weightKg
             pendingReps = set.reps
-
             setNumber.text = set.setNumber.toString()
 
-            // Only update text if it's actually different to avoid cursor movement
             if (weightInput.text.toString() != (set.weightKg?.toString() ?: "")) {
                 weightInput.setText(set.weightKg?.toString() ?: "")
             }
@@ -103,15 +92,12 @@ class ExerciseSetsAdapter(
                 repsInput.setText(set.reps?.toString() ?: "")
             }
 
-            // Configure edit mode
             weightInput.isEnabled = isEditMode
             repsInput.isEnabled = isEditMode
             setMenu.visibility = if (isEditMode) View.VISIBLE else View.GONE
             setCompletedCheckbox.visibility = View.GONE
 
-            // Set visual cues for edit mode
             if (isEditMode) {
-                // In edit mode, make inputs more prominent
                 weightInput.alpha = 1.0f
                 repsInput.alpha = 1.0f
                 weightInput.setBackgroundResource(R.drawable.bg_input_field_editing)

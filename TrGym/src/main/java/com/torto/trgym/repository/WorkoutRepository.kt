@@ -690,7 +690,8 @@ class WorkoutRepository @Inject constructor(
     }
 
     suspend fun updateWorkoutSession(session: WorkoutSession) = withContext(Dispatchers.IO) {
-        workoutDao.updateWorkoutSession(session)
+        val sessionToInsert = session.copy(pendingSync = true, syncedWithServer = false)
+        workoutDao.updateWorkoutSession(sessionToInsert)
         
         try {
             currentUserId?.let { userId ->
@@ -707,6 +708,7 @@ class WorkoutRepository @Inject constructor(
                     heartRateAvg = session.averageHeartRate
                 )
                 supabaseClient.from("workout_sessions").upsert(listOf(supabaseSession))
+                workoutDao.markWorkoutSessionAsSynced(session.id)
                 Log.d("WorkoutRepository", "Synced workout_sessions item ${session.id} to Supabase")
             }
         } catch (e: Exception) {
@@ -715,13 +717,14 @@ class WorkoutRepository @Inject constructor(
     }
 
     suspend fun deleteWorkoutSession(session: WorkoutSession) = withContext(Dispatchers.IO) {
-        workoutDao.deleteWorkoutSession(session)
-        
+        val sessionToDelete = session.copy(pendingSync = true, syncedWithServer = false)
+        workoutDao.deleteWorkoutSession(sessionToDelete)
         try {
             currentUserId?.let {
                 supabaseClient.from("workout_sessions").delete {
                     filter { eq("id", session.id) }
                 }
+                workoutDao.markWorkoutSessionAsSynced(session.id)
                 Log.d("WorkoutRepository", "Deleted workout_sessions item ${session.id} from Supabase")
             }
         } catch (e: Exception) {
@@ -1265,7 +1268,7 @@ class WorkoutRepository @Inject constructor(
                     val avgHeartBeat = heartRateData?.averageHeartRate
 
 
-                    if (startTime != null && endTime != null && avgHeartBeat != null) {
+                    if (startTime != null && endTime != null && avgHeartBeat != null && avgHeartBeat > 0) {
                         val time = endTime - startTime
                         val minutes = time / 60000.0
                         val calories = ((-55.0969 + (0.6309 * avgHeartBeat) + (0.1988 * 70) + (0.2017 * 30)) * minutes) / 4.184
