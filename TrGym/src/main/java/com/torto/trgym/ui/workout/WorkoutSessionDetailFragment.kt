@@ -95,8 +95,6 @@ class WorkoutSessionDetailFragment : Fragment(R.layout.fragment_workout_session_
         viewModel.workoutSession.collect { session ->
             session?.let {
                 workoutTitle.text = it.name
-
-
                 val dateFormat = SimpleDateFormat("EEEE, dd MMMM yyyy 'at' HH:mm", Locale.getDefault())
                 val durationMs = it.endTime?.minus(it.startTime) ?: 0L
                 workoutDate.text = dateFormat.format(Date(it.startTime))

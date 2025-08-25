@@ -19,7 +19,7 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- Header dell'esercizio -->
+        <!-- Header dell'esercizio ottimizzato -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -27,7 +27,6 @@
             android:gravity="center_vertical"
             android:layout_marginBottom="12dp">
 
-            <!-- Drag Handle (visibile solo in modalità edit) -->
             <ImageView
                 android:id="@+id/dragHandle"
                 android:layout_width="24dp"
@@ -38,53 +37,46 @@
                 app:tint="@color/ios_secondaryLabel"
                 tools:visibility="visible" />
 
-
-
             <ImageView
                 android:id="@+id/exercisePreviewIcon"
-                tools:src="@tools:sample/avatars"
-                android:layout_width="70dp"
-                android:elevation="12dp"
-                android:layout_height="70dp"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
                 android:layout_marginEnd="12dp"
-                tools:visibility="visible" />
+                android:scaleType="fitCenter"
+                tools:src="@tools:sample/avatars" />
 
             <LinearLayout
-                android:id="@+id/exerciseInfoLayout"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:orientation="vertical">
 
-                <!-- Nome esercizio -->
                 <TextView
                     android:id="@+id/exerciseName"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Panca piana"
                     android:textColor="@color/ios_label"
                     android:textSize="18sp"
                     android:textStyle="bold"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:background="?attr/selectableItemBackground"
-                    android:padding="4dp"
+                    android:singleLine="true"
+                    android:ellipsize="end"
                     tools:text="Panca piana" />
 
-                <!-- Informazioni esercizio -->
                 <TextView
                     android:id="@+id/exerciseInfo"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="3 serie • Petto, Tricipiti"
                     android:textColor="@color/ios_secondaryLabel"
                     android:textSize="14sp"
                     android:layout_marginTop="2dp"
+                    android:singleLine="true"
+                    android:ellipsize="end"
                     tools:text="3 serie • Petto, Tricipiti" />
 
             </LinearLayout>
 
-            <!-- Menu esercizio -->
             <ImageView
                 android:id="@+id/exerciseMenu"
                 android:layout_width="32dp"
@@ -98,23 +90,15 @@
 
         </LinearLayout>
 
-    <com.google.android.material.card.MaterialCardView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:backgroundTint="@color/white"
-        app:cardCornerRadius="10dp">
-
+        <!-- Header sets ottimizzato -->
         <LinearLayout
-            android:id="@+id/setsHeaderLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:paddingHorizontal="8dp"
-            android:paddingTop="5dp"
+            android:paddingVertical="8dp"
             android:layout_marginBottom="4dp"
-            android:background="@color/transparent"
-            app:cornerRadius="12dp"
-            app:layout_constraintTop_toBottomOf="@id/exerciseInfo">
+            android:background="@color/ios_systemGray6">
 
             <TextView
                 android:layout_width="40dp"
@@ -145,22 +129,21 @@
                 android:textStyle="bold"
                 android:gravity="center" />
 
-
-
+            <View
+                android:layout_width="80dp"
+                android:layout_height="0dp" />
 
         </LinearLayout>
 
-</com.google.android.material.card.MaterialCardView>
-
-        <!-- Lista serie -->
+        <!-- RecyclerView sets -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/setsRecyclerView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:nestedScrollingEnabled="true"
+            android:nestedScrollingEnabled="false"
             tools:listitem="@layout/item_exercise_set" />
 
-        <!-- Pulsante Aggiungi Serie -->
+        <!-- Add set button -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/addSetButton"
             android:layout_width="match_parent"

@@ -79,7 +79,7 @@ class ActiveWorkoutExercisesAdapter(
         private val exerciseName: TextView = itemView.findViewById(R.id.exerciseName)
         private val exerciseInfo: TextView = itemView.findViewById(R.id.exerciseInfo)
         private val exerciseMenu: ImageView = itemView.findViewById(R.id.exerciseMenu)
-        private val setsHeaderLayout: View = itemView.findViewById(R.id.setsHeaderLayout)
+//        private val setsHeaderLayout: View = itemView.findViewById(R.id.setsHeaderLayout)
         private val setsRecyclerView: RecyclerView = itemView.findViewById(R.id.setsRecyclerView)
         private val addSetButton: MaterialButton = itemView.findViewById(R.id.addSetButton)
         private val dragHandle: ImageView = itemView.findViewById(R.id.dragHandle)
@@ -136,7 +136,7 @@ class ActiveWorkoutExercisesAdapter(
                 }
             }
 
-            setsHeaderLayout.visibility = if (sets.isNotEmpty()) View.VISIBLE else View.GONE
+//            setsHeaderLayout.visibility = if (sets.isNotEmpty()) View.VISIBLE else View.GONE
 
             if (setsAdapter == null) {
                 setsAdapter = ActiveWorkoutSetsAdapter(

@@ -73,7 +73,7 @@ class WorkoutExercisesAdapter(
         private val exerciseName: TextView = itemView.findViewById(R.id.exerciseName)
         private val exerciseInfo: TextView = itemView.findViewById(R.id.exerciseInfo)
         private val exerciseMenu: ImageView = itemView.findViewById(R.id.exerciseMenu)
-        private val setsHeaderLayout: View = itemView.findViewById(R.id.setsHeaderLayout)
+//        private val setsHeaderLayout: View = itemView.findViewById(R.id.setsHeaderLayout)
         private val setsRecyclerView: RecyclerView = itemView.findViewById(R.id.setsRecyclerView)
         private val addSetButton: MaterialButton = itemView.findViewById(R.id.addSetButton)
         private val exercisePreview: ImageView = itemView.findViewById(R.id.exercisePreviewIcon)
@@ -134,7 +134,7 @@ class WorkoutExercisesAdapter(
             exerciseInfo.text = exerciseInfoText
 
             // Show/hide sets header based on whether we have sets
-            setsHeaderLayout.visibility = if (sets.isNotEmpty()) View.VISIBLE else View.GONE
+//            setsHeaderLayout.visibility = if (sets.isNotEmpty()) View.VISIBLE else View.GONE
 
             // Update sets adapter
             if (setsAdapter == null) {
@@ -155,7 +155,7 @@ class WorkoutExercisesAdapter(
             exerciseInfo.text = exerciseInfoText
 
             // Show/hide sets header based on whether we have sets
-            setsHeaderLayout.visibility = if (sets.isNotEmpty()) View.VISIBLE else View.GONE
+//            setsHeaderLayout.visibility = if (sets.isNotEmpty()) View.VISIBLE else View.GONE
 
             // Update sets adapter
             setsAdapter?.submitList(sets)
