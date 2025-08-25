@@ -19,6 +19,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.bumptech.glide.Glide
 import androidx.core.content.ContextCompat
+import androidx.activity.OnBackPressedCallback
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
@@ -71,23 +72,37 @@ class ExerciseDetailFragment : Fragment(R.layout.fragment_exercise_detail) {
         }
 
         backBtn.setOnClickListener {
-            val workoutCardId = args.workoutCardId
-            if (workoutCardId != null) {
-                // Torniamo al WorkoutDetailFragment passando l'ID della scheda
-                val action = ExerciseDetailFragmentDirections
-                    .actionExerciseDetailFragmentToWorkoutDetailFragment(workoutCardId)
-                findNavController().navigate(action)
-                Log.d("ExerciseDetailFragment", "Navigazione a WorkoutDetail con ID: $workoutCardId")
-            } else {
-                // Comportamento standard di navigazione indietro
-                findNavController().popBackStack()
-                Log.d("ExerciseDetailFragment", "Back button standard")
-            }
+            handleBackNavigation()
         }
 
         starButton.setOnClickListener {
             vm.toggleStarred()
             Log.d("ExerciseDetailFragment", "Star button clicked")
+        }
+
+        // Setup back press handler per gestire anche lo swipe back
+        requireActivity().onBackPressedDispatcher.addCallback(
+            viewLifecycleOwner,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    handleBackNavigation()
+                }
+            }
+        )
+    }
+
+    private fun handleBackNavigation() {
+        val workoutCardId = args.workoutCardId
+        if (workoutCardId != null) {
+            // Torniamo al WorkoutDetailFragment passando l'ID della scheda
+            val action = ExerciseDetailFragmentDirections
+                .actionExerciseDetailFragmentToWorkoutDetailFragment(workoutCardId)
+            findNavController().navigate(action)
+            Log.d("ExerciseDetailFragment", "Navigazione a WorkoutDetail con ID: $workoutCardId")
+        } else {
+            // Comportamento standard di navigazione indietro
+            findNavController().popBackStack()
+            Log.d("ExerciseDetailFragment", "Back button standard")
         }
     }
 
