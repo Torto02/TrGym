@@ -7,7 +7,7 @@
     <string name="all_equipment">All equipments</string>
     <string name="app_logo">app logo</string>
     <string name="login_button">Login</string>
-    <string name="SignInGoogle">Signin with Google</string>
+    <string name="SignInGoogle">Sign in with Google</string>
     <string name="NoAccount">Don\'t have an account?</string>
     <string name="register_button">Create account</string>
     <string name="email_hint">Email\n</string>
